@@ -7,9 +7,8 @@ This project provides a comprehensive .NET implementation (C#) of the Task Dialo
 
 ## Screenshots
 
-![taskdialog-screenshot-1](https://user-images.githubusercontent.com/13289184/48226908-313b2680-e3a1-11e8-9f7f-c8b2dba6f053.png)
+![taskdialog-screenshot-1](https://user-images.githubusercontent.com/13289184/48226908-313b2680-e3a1-11e8-9f7f-c8b2dba6f053.png)   ![taskdialog-screenshot-2](https://user-images.githubusercontent.com/13289184/48226913-34cead80-e3a1-11e8-80b2-028c3422eacf.png)
 
-![taskdialog-screenshot-2](https://user-images.githubusercontent.com/13289184/48226913-34cead80-e3a1-11e8-80b2-028c3422eacf.png)
 
 ## Prerequisites
 
@@ -35,24 +34,24 @@ To use the Task Dialog, your application needs to be compiled with a manifest th
 </assembly>
 ```
 
-You can find a sample manifest file in the [`TaskDialog.Example`](/kpreisser/TaskDialog/tree/master/TaskDialog.Example) project.
+You can find a sample manifest file in the [`TaskDialog.Example`](/TaskDialog.Example) project.
 
 ## Using the Task Dialog
 
 Show a simple dialog:
 ```c#
-	TaskDialogResult result = TaskDialog.Show(
-		content: "This is a new dialog!",
-		instruction: "Hi there!",
-		title: "My Title",
-		buttons: TaskDialogButtons.Yes | TaskDialogButtons.No,
-		icon: TaskDialogIcon.Information);
+    TaskDialogResult result = TaskDialog.Show(
+        content: "This is a new dialog!",
+        instruction: "Hi there!",
+        title: "My Title",
+        buttons: TaskDialogButtons.Yes | TaskDialogButtons.No,
+        icon: TaskDialogIcon.Information);
 ```
 
 Show a more detailed Task Dialog that uses navigation and custom buttons with event handlers
 (see the two screenshots above):
 ```c#
-	var dialog = new TaskDialog()
+    var dialog = new TaskDialog()
     {
         Title = "Example 1",
         MainInstruction = "Hello Taskdialog!   👍",
