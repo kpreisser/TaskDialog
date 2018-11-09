@@ -169,7 +169,8 @@ namespace KPreisser.UI
 
 
         /// <summary>
-        /// The window handle of the dialog, or <see cref="IntPtr.Zero"/> if the dialog is not active.
+        /// The window handle of the active dialog, or <see cref="IntPtr.Zero"/>
+        /// if the dialog is not active.
         /// </summary>
         public IntPtr Handle
         {
@@ -537,7 +538,7 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="owner"></param>
+        /// <param name="owner">The owner window, or <c>null</c> to show a non-modal dialog.</param>
         /// <param name="content"></param>
         /// <param name="instruction"></param>
         /// <param name="title"></param>
@@ -558,7 +559,7 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="owner"></param>
+        /// <param name="owner">The owner window, or <c>null</c> to show a non-modal dialog.</param>
         /// <param name="content"></param>
         /// <param name="instruction"></param>
         /// <param name="title"></param>
@@ -579,7 +580,7 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="owner"></param>
+        /// <param name="owner">The owner window, or <c>null</c> to show a non-modal dialog.</param>
         /// <param name="content"></param>
         /// <param name="instruction"></param>
         /// <param name="title"></param>
@@ -600,7 +601,7 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="owner"></param>
+        /// <param name="owner">The owner window, or <c>null</c> to show a non-modal dialog.</param>
         /// <param name="content"></param>
         /// <param name="instruction"></param>
         /// <param name="title"></param>
@@ -622,7 +623,10 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="hwndOwner"></param>
+        /// <param name="hwndOwner">
+        /// The window handle of the owner, or <see cref="IntPtr.Zero"/> to show a non-modal
+        /// dialog.
+        /// </param>
         /// <param name="content"></param>
         /// <param name="instruction"></param>
         /// <param name="title"></param>
@@ -922,11 +926,11 @@ namespace KPreisser.UI
 
         /// <summary>
         /// Shows the dialog. After the dialog is created, the <see cref="Opened"/>
-        /// event occurs which allows to customize the dialog. When the dialog is closed, the
-        /// <see cref="Closing"/> event occurs.
+        /// event occurs which allows to customize the dialog. When the dialog is about to 
+        /// close, the <see cref="Closing"/> event occurs.
         /// 
-        /// Starting with the <see cref="Opened"/>, you can call methods on the active task dialog
-        /// to update its state until the <see cref="Closing"/> event occurs.
+        /// Starting with the <see cref="Opened"/> event, you can call methods on the active 
+        /// task dialog to update its state until the <see cref="Closing"/> event occurs.
         /// </summary>
         public void Show()
         {
@@ -936,13 +940,13 @@ namespace KPreisser.UI
 #if !NET_STANDARD
         /// <summary>
         /// Shows the dialog. After the dialog is created, the <see cref="Opened"/>
-        /// event occurs which allows to customize the dialog. When the dialog is closed, the
-        /// <see cref="Closing"/> event occurs.
+        /// event occurs which allows to customize the dialog. When the dialog is about to 
+        /// close, the <see cref="Closing"/> event occurs.
         /// 
-        /// Starting with the <see cref="Opened"/>, you can call methods on the active task dialog
-        /// to update its state until the <see cref="Closing"/> event occurs.
+        /// Starting with the <see cref="Opened"/> event, you can call methods on the active 
+        /// task dialog to update its state until the <see cref="Closing"/> event occurs.
         /// </summary>
-        /// <param name="owner">The window handle of the owner</param>
+        /// <param name="owner">The owner window, or <c>null</c> to show a non-modal dialog.</param>
         public void Show(System.Windows.Window owner)
         {
             Show(GetWindowHandle(owner));
@@ -950,13 +954,13 @@ namespace KPreisser.UI
 
         /// <summary>
         /// Shows the dialog. After the dialog is created, the <see cref="Opened"/>
-        /// event occurs which allows to customize the dialog. When the dialog is closed, the
-        /// <see cref="Closing"/> event occurs.
+        /// event occurs which allows to customize the dialog. When the dialog is about to 
+        /// close, the <see cref="Closing"/> event occurs.
         /// 
-        /// Starting with the <see cref="Opened"/>, you can call methods on the active task dialog
-        /// to update its state until the <see cref="Closing"/> event occurs.
+        /// Starting with the <see cref="Opened"/> event, you can call methods on the active 
+        /// task dialog to update its state until the <see cref="Closing"/> event occurs.
         /// </summary>
-        /// <param name="owner">The window handle of the owner</param>
+        /// <param name="owner">The owner window, or <c>null</c> to show a non-modal dialog.</param>
         public void Show(System.Windows.Interop.IWin32Window owner)
         {
             Show(GetWindowHandle(owner));
@@ -964,13 +968,13 @@ namespace KPreisser.UI
 
         /// <summary>
         /// Shows the dialog. After the dialog is created, the <see cref="Opened"/>
-        /// event occurs which allows to customize the dialog. When the dialog is closed, the
-        /// <see cref="Closing"/> event occurs.
+        /// event occurs which allows to customize the dialog. When the dialog is about to 
+        /// close, the <see cref="Closing"/> event occurs.
         /// 
-        /// Starting with the <see cref="Opened"/>, you can call methods on the active task dialog
-        /// to update its state until the <see cref="Closing"/> event occurs.
+        /// Starting with the <see cref="Opened"/> event, you can call methods on the active 
+        /// task dialog to update its state until the <see cref="Closing"/> event occurs.
         /// </summary>
-        /// <param name="owner">The window handle of the owner</param>
+        /// <param name="owner">The owner window, or <c>null</c> to show a non-modal dialog.</param>
         public void Show(System.Windows.Forms.IWin32Window owner)
         {
             Show(GetWindowHandle(owner));
@@ -979,13 +983,13 @@ namespace KPreisser.UI
 
         /// <summary>
         /// Shows the dialog. After the dialog is created, the <see cref="Opened"/>
-        /// event occurs which allows to customize the dialog. When the dialog is closed, the
-        /// <see cref="Closing"/> event occurs.
+        /// event occurs which allows to customize the dialog. When the dialog is about to 
+        /// close, the <see cref="Closing"/> event occurs.
         /// 
-        /// Starting with the <see cref="Opened"/>, you can call methods on the active task dialog
-        /// to update its state until the <see cref="Closing"/> event occurs.
+        /// Starting with the <see cref="Opened"/> event, you can call methods on the active 
+        /// task dialog to update its state until the <see cref="Closing"/> event occurs.
         /// </summary>
-        /// <param name="owner">The window handle of the owner</param>
+        /// <param name="owner">The owner window, or <c>null</c> to show a non-modal dialog.</param>
         public void Show(TaskDialog owner)
         {
             Show(owner.Handle);
@@ -993,13 +997,16 @@ namespace KPreisser.UI
 
         /// <summary>
         /// Shows the dialog. After the dialog is created, the <see cref="Opened"/>
-        /// event occurs which allows to customize the dialog. When the dialog is closed, the
-        /// <see cref="Closing"/> event occurs.
+        /// event occurs which allows to customize the dialog. When the dialog is about to 
+        /// close, the <see cref="Closing"/> event occurs.
         /// 
-        /// Starting with the <see cref="Opened"/>, you can call methods on the active task dialog
-        /// to update its state until the <see cref="Closing"/> event occurs.
+        /// Starting with the <see cref="Opened"/> event, you can call methods on the active 
+        /// task dialog to update its state until the <see cref="Closing"/> event occurs.
         /// </summary>
-        /// <param name="hwndOwner">The window handle of the owner</param>
+        /// <param name="hwndOwner">
+        /// The window handle of the owner, or <see cref="IntPtr.Zero"/> to show a non-modal
+        /// dialog.
+        /// </param>
         public void Show(IntPtr hwndOwner)
         {
             // Recursive Show() is not possible because we would incorrectly handle notifications.
@@ -1103,7 +1110,8 @@ namespace KPreisser.UI
         //// Messages that can be sent to the dialog while it is active.
 
         /// <summary>
-        /// Closes the active task dialog with a <see cref="TaskDialogResult.Cancel"/> result.
+        /// While the dialog is active, closes the dialog with a 
+        /// <see cref="TaskDialogResult.Cancel"/> result.
         /// </summary>
         public void Close(bool suppressCommonButtonClickedEvent = true)
         {
@@ -1122,11 +1130,15 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// Recreates the active task dialog with the current properties. After the dialog is recreated,
-        /// the <see cref="Navigated"/> event occurs which allows to customize the dialog.
+        /// While the dialog is active, recreates the dialog from the current properties.
+        /// After the dialog is recreated, the <see cref="Navigated"/> event occurs which allows
+        /// you to further customize the dialog (just like with the <see cref="Opened"/> event
+        /// after calling <see cref="Show(IntPtr)"/>).
+        /// </summary>
+        /// <remarks>
         /// Note that you should not call this method in the <see cref="Opened"/> event because the
         /// TaskDialog is not yet displayed in that state.
-        /// </summary>
+        /// </remarks>
         /// <param name="navigatedHandler"></param>
         public void Navigate(EventHandler navigatedHandler = null)
         {
@@ -1186,8 +1198,8 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// Specifies whether the command button icon of the active task dialog should be
-        /// changed to the UAC shield symbol.
+        /// While the dialog is active, enables or disables the UAC shield symbol for the
+        /// specified common button.
         /// </summary>
         /// <param name="buttonID"></param>
         /// <param name="requiresElevation"></param>
@@ -1199,7 +1211,9 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// 
+        /// While the dialog is active, sets the progress bar range.
+        /// The dialog must have been created with <see cref="ShowProgressBar"/>
+        /// set to <c>true</c>.
         /// </summary>
         /// <param name="min"></param>
         /// <param name="max"></param>
@@ -1218,7 +1232,9 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// 
+        /// While the dialog is active, sets the progress bar position.
+        /// The dialog must have been created with <see cref="ShowProgressBar"/>
+        /// set to <c>true</c>.
         /// </summary>
         /// <param name="pos"></param>
         public void SetProgressBarPos(int pos)
@@ -1233,7 +1249,9 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// 
+        /// While the dialog is active, sets the progress bar state.
+        /// The dialog must have been created with <see cref="ShowProgressBar"/>
+        /// set to <c>true</c>.
         /// </summary>
         /// <param name="state"></param>
         public void SetProgressBarState(TaskDialogProgressBarState state)
@@ -1245,7 +1263,9 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// 
+        /// While the dialog is active, enables or disables progress bar marquee.
+        /// The dialog must have been created with <see cref="ShowMarqueeProgressBar"/>
+        /// set to <c>true</c>.
         /// </summary>
         /// <param name="enableMarquee"></param>
         public void SetProgressBarMarquee(bool enableMarquee)
@@ -1257,7 +1277,7 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// Enables or disables a button of an active task dialog.
+        /// While the dialog is active, enables or disables a common button.
         /// </summary>
         /// <param name="button"></param>
         /// <param name="enable"></param>
@@ -1267,7 +1287,8 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// Updates the specified dialog elements with the values from the current properties.
+        /// While the dialog is active, updates the specified dialog elements with the
+        /// values from the current properties.
         /// Note that when updating the main icon, the bar color will not change.
         /// </summary>
         /// <param name="updateFlags"></param>
@@ -1306,7 +1327,7 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// 
+        /// While the dialog is active, sets the verification checkbox to the specified state.
         /// </summary>
         /// <param name="isChecked"></param>
         /// <param name="focus"></param>
@@ -1317,7 +1338,7 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// 
+        /// While the dialog is active, clicks the specified common button.
         /// </summary>
         /// <param name="button"></param>
         public void ClickCommonButton(TaskDialogResult button)
@@ -1430,6 +1451,9 @@ namespace KPreisser.UI
                     this.radioButtons?.Count > int.MaxValue - RadioButtonStartID)
                 throw new InvalidOperationException(
                         "Too many custom buttons or radio buttons have been added.");
+
+            if (this.CommonButtons < 0 || this.CommonButtons >= (TaskDialogButtons)(1 << 6))
+                throw new InvalidOperationException("Invalid common buttons.");            
         }
 
         private void PrepareButtonConfig(

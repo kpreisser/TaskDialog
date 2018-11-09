@@ -24,8 +24,8 @@ namespace TaskDialogExample
                 ExpandedInformation = "Expanded Information!",
                 Footer = "This is the <A HREF=\"link2\">footer</A>.",
 
-                MainIcon = TaskDialogIcon.SecuritySuccessBar,
-                FooterIcon = TaskDialogIcon.RecycleBin,
+                MainIcon = TaskDialogIcon.SecuritySuccessGreenBar,
+                FooterIcon = TaskDialogIcon.Warning,
 
                 CommonButtons = TaskDialogButtons.Yes | TaskDialogButtons.No,
                 ExpandFooterArea = true,
@@ -81,8 +81,8 @@ namespace TaskDialogExample
 
             // Create custom buttons that are shown as command links.
             var button1 = dialog.AddCustomButton("Change Icon + Enable Buttons ✔");
-            var button2 = dialog.AddCustomButton("Some Admin Action…\nNavigates to a new dialog page.");
-            var button3 = dialog.AddCustomButton("Disabled Button 🎵🎶\nAfter enabling, can show a new dialog.");
+            var button2 = dialog.AddCustomButton("Disabled Button 🎵🎶\nAfter enabling, can show a new dialog.");
+            var button3 = dialog.AddCustomButton("Some Admin Action…\nNavigates to a new dialog page.");
 
             TaskDialogIcon nextIcon = 0;
             button1.ButtonClicked = (s, e) =>
@@ -99,16 +99,34 @@ namespace TaskDialogExample
 
                 // Enable the "Yes" button and the 3rd button when the checkbox is set.
                 dialog.SetCommonButtonEnabled(TaskDialogResult.Yes, true);
-                button3.Enabled = true;
+                button2.Enabled = true;
 
                 // Don't close the dialog.
                 return false;
             };
 
-            button2.ButtonElevationRequiredState = true;
+            button2.Enabled = false;
             button2.ButtonClicked = (s, e) =>
             {
                 Console.WriteLine("Button2 clicked!");
+
+                // Show a new Taskdialog
+                var result = TaskDialog.Show(
+                        content: "This is a new non-modal dialog!",
+                        instruction: "Hi there!",
+                        title: "My Title",
+                        buttons: TaskDialogButtons.Close,
+                        icon: TaskDialogIcon.Information);
+
+                Console.WriteLine("Result of new dialog: " + result);
+
+                return false;
+            };
+
+            button3.ButtonElevationRequiredState = true;
+            button3.ButtonClicked = (s, e) =>
+            {
+                Console.WriteLine("Button3 clicked!");
 
                 // Navigate to a new page.
                 // Reset the dialog properties. Note that the event handlers will NOT be reset.
@@ -131,6 +149,13 @@ namespace TaskDialogExample
 
                 // Create a custom button that will be shown as regular button.
                 var customButton = dialog.AddCustomButton("My Button :)");
+
+                // Add radio buttons.
+                var radioButton1 = dialog.AddRadioButton("My Radio Button 1");
+                var radioButton2 = dialog.AddRadioButton("My Radio Button 2");
+
+                radioButton1.RadioButtonClicked += (s2, e2) => Console.WriteLine("Radio Button 1 clicked!");
+                radioButton2.RadioButtonClicked += (s2, e2) => Console.WriteLine("Radio Button 2 clicked!");
 
                 dialog.Navigated += (s2, e2) =>
                 {
@@ -159,24 +184,6 @@ namespace TaskDialogExample
                 return false;
             };
 
-            button3.Enabled = false;
-            button3.ButtonClicked = (s, e) =>
-            {
-                Console.WriteLine("Button3 clicked!");
-
-                // Show a new Taskdialog
-                var result = TaskDialog.Show(
-                        content: "This is a new dialog! (Not using an owner window, so the old dialog is still usable)",
-                        instruction: "Hi there!",
-                        title: "My Title",
-                        buttons: TaskDialogButtons.Close,
-                        icon: TaskDialogIcon.Information);
-
-                Console.WriteLine("Result of new dialog: " + result);
-
-                return false;
-            };
-
             dialog.CommonButtonClicked = (s, e) =>
             {
                 Console.WriteLine("Common Button clicked!");
@@ -191,3 +198,4 @@ namespace TaskDialogExample
         }
     }
 }
+

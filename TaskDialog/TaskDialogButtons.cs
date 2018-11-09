@@ -11,31 +11,31 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
-        OK = 0x0001,
+        OK = 1 << 0,
 
         /// <summary>
         /// 
         /// </summary>
-        Yes = 0x0002,
+        Yes = 1 << 1,
 
         /// <summary>
         /// 
         /// </summary>
-        No = 0x0004,
+        No = 1 << 2,
 
         /// <summary>
         /// 
         /// </summary>
-        Cancel = 0x0008,
+        Cancel = 1 << 3,
 
         /// <summary>
         /// 
         /// </summary>
-        Retry = 0x0010,
+        Retry = 1 << 4,
 
         /// <summary>
         /// 
         /// </summary>
-        Close = 0x0020
+        Close = 1 << 5
     }
 }

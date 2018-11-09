@@ -39,17 +39,17 @@
         /// <summary>
         /// 
         /// </summary>
-        SecurityWarningBar = ushort.MaxValue - 5,
+        SecurityWarningYellowBar = ushort.MaxValue - 5,
 
         /// <summary>
         /// 
         /// </summary>
-        SecurityErrorBar = ushort.MaxValue - 6,
+        SecurityErrorRedBar = ushort.MaxValue - 6,
 
         /// <summary>
         /// 
         /// </summary>
-        SecuritySuccessBar = ushort.MaxValue - 7,
+        SecuritySuccessGreenBar = ushort.MaxValue - 7,
 
 
         /// <summary>
