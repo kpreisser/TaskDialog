@@ -19,13 +19,13 @@ namespace TaskDialogExample
             var dialog = new TaskDialog()
             {
                 Title = "Example 1",
-                MainInstruction = "Hello Taskdialog!   👍",
+                MainInstruction = "Hello Task Dialog!   👍",
                 Content = "Hi, this is <A HREF=\"link1\">the Content</A>.\nBlah blah blah…",
                 ExpandedInformation = "Expanded Information!",
                 Footer = "This is the <A HREF=\"link2\">footer</A>.",
 
                 MainIcon = TaskDialogIcon.SecuritySuccessGreenBar,
-                FooterIcon = TaskDialogIcon.Warning,
+                FooterIcon = TaskDialogIcon.QuestionNoSound,
 
                 CommonButtons = TaskDialogButtons.Yes | TaskDialogButtons.No,
                 ExpandFooterArea = true,
@@ -80,7 +80,7 @@ namespace TaskDialogExample
             };
 
             // Create custom buttons that are shown as command links.
-            var button1 = dialog.AddCustomButton("Change Icon + Enable Buttons ✔");
+            var button1 = dialog.AddCustomButton("Change Icon + Enable Buttons  ✔");
             var button2 = dialog.AddCustomButton("Disabled Button 🎵🎶\nAfter enabling, can show a new dialog.");
             var button3 = dialog.AddCustomButton("Some Admin Action…\nNavigates to a new dialog page.");
 
@@ -157,8 +157,20 @@ namespace TaskDialogExample
                 radioButton1.RadioButtonClicked += (s2, e2) => Console.WriteLine("Radio Button 1 clicked!");
                 radioButton2.RadioButtonClicked += (s2, e2) => Console.WriteLine("Radio Button 2 clicked!");
 
-                dialog.Navigated += (s2, e2) =>
+                
+
+                dialog.VerificationClicked += (s2, e2) =>
                 {
+                    Console.WriteLine("Verification clicked!");
+
+                    dialog.SetCommonButtonEnabled(TaskDialogResult.Cancel, e2.Status);
+                };
+
+                // Now navigate the dialog.
+                // Instead of adding a event handler to the Navigated event, we supply a handler
+                // in the Navigate() method which will only be called once (so if we do
+                // another navigation, we can supply a different handler there).
+                dialog.Navigate((s2, e2) => {
                     Console.WriteLine("Dialog navigated!");
 
                     // Occurs after the dialog navigated (just like "Opened"
@@ -168,17 +180,7 @@ namespace TaskDialogExample
 
                     // Enable the marquee progress bar.
                     dialog.SetProgressBarMarquee(true);
-                };
-
-                dialog.VerificationClicked += (s2, e2) =>
-                {
-                    Console.WriteLine("Verification clicked!");
-
-                    dialog.SetCommonButtonEnabled(TaskDialogResult.Cancel, e2.Status);
-                };
-
-                // Actually navigate the dialog.
-                dialog.Navigate();
+                });
 
                 // Don't close the dialog from the previous button click.
                 return false;

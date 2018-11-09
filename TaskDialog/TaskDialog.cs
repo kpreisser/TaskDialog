@@ -1133,13 +1133,18 @@ namespace KPreisser.UI
         /// While the dialog is active, recreates the dialog from the current properties.
         /// After the dialog is recreated, the <see cref="Navigated"/> event occurs which allows
         /// you to further customize the dialog (just like with the <see cref="Opened"/> event
-        /// after calling <see cref="Show(IntPtr)"/>).
+        /// after calling <see cref="Show(IntPtr)"/>). However, instead of handling the
+        /// <see cref="Navigated"/> you can also supply a handler to the
+        /// <paramref name="navigatedHandler"/> parameter that will only be called for this
+        /// specific navigation (instead of for all navigations).
         /// </summary>
         /// <remarks>
         /// Note that you should not call this method in the <see cref="Opened"/> event because the
         /// TaskDialog is not yet displayed in that state.
         /// </remarks>
-        /// <param name="navigatedHandler"></param>
+        /// <param name="navigatedHandler">
+        /// A handler that will be called after the dialog is navigated/recreated.
+        /// </param>
         public void Navigate(EventHandler navigatedHandler = null)
         {
             // Need to check the button config before releasing the old one and preparing the new one.

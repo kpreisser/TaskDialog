@@ -13,7 +13,7 @@ are also available in the native APIs, with all the marshalling and memory manag
 * Can be shown modal or non-modal
 * Additionally to standard icons, supports security icons that show a green, yellow, red, gray or blue bar
 
-![taskdialog-screenshot-1](https://user-images.githubusercontent.com/13289184/48226908-313b2680-e3a1-11e8-9f7f-c8b2dba6f053.png)   ![taskdialog-screenshot-2](https://user-images.githubusercontent.com/13289184/48226913-34cead80-e3a1-11e8-80b2-028c3422eacf.png)
+![taskdialog-screenshot-1](https://user-images.githubusercontent.com/13289184/48280515-1b3a6e00-e454-11e8-96f3-b22a3bcff22e.png)   ![taskdialog-screenshot-2](https://user-images.githubusercontent.com/13289184/48280347-9cddcc00-e453-11e8-9bc1-605a55e8aaec.png)
 
 ## Prerequisites
 
@@ -90,8 +90,8 @@ in contrast to other implementations like `Form.Show()` (WinForms) where `Show()
 displays the window and then returns immediately.
 
 This means that when you simultaneously show multiple non-modal Task Dialogs, the `Show()`
-method will occur multiple times in the stack (as each will run the event loop), and
+method will occur multiple times in the call stack (as each will run the event loop), and
 therefore when you close an older dialog, its corresponding `Show()` method cannot return
-until all other Task Dialogs are also closed.
+until all other (newer) Task Dialogs are also closed.
 E.g. if you repeatedly open a new dialog and then close a previously opened one, the 
 call stack will fill with more and more `Show()` calls until all the dialogs are closed.
