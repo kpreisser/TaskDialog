@@ -76,7 +76,7 @@ namespace TaskDialogExample
             dialog.HyperlinkClicked += (s, e) =>
             {
                 Console.WriteLine("Hyperlink clicked!");
-                TaskDialog.Show("Clicked Hyperlink: " + e.Hyperlink, icon: TaskDialogIcon.InformationNoSound);
+                TaskDialog.Show(dialog, "Clicked Hyperlink: " + e.Hyperlink, icon: TaskDialogIcon.InformationNoSound);
             };
 
             // Create custom buttons that are shown as command links.
@@ -165,8 +165,8 @@ namespace TaskDialogExample
                 Console.WriteLine("Button3 clicked!");
 
                 // Show a new Taskdialog
-                var result = TaskDialog.Show(dialog.Handle,
-                        content: "This is a new dialog!",
+                var result = TaskDialog.Show(
+                        content: "This is a new dialog! (Not using an owner window, so the old dialog is still usable)",
                         instruction: "Hi there!",
                         title: "My Title",
                         buttons: TaskDialogButtons.Close,
@@ -184,7 +184,7 @@ namespace TaskDialogExample
                 return true;
             };
 
-            dialog.Show(new System.Windows.Forms.Form());
+            dialog.Show();
 
             Console.WriteLine("Result of main dialog: " +
                     (dialog.ResultCustomButton?.Text ?? dialog.ResultCommonButton.ToString()));

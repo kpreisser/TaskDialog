@@ -155,6 +155,14 @@ namespace KPreisser.UI
         /// </summary>
         public TaskDialog()
         {
+            // TaskDialog is only supported on Windows.
+#if NET451
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+#else
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+#endif
+                throw new PlatformNotSupportedException();
+
             // Set default values.
             Reset();
         }
@@ -832,7 +840,7 @@ namespace KPreisser.UI
 
         /// <summary>
         /// Creates and returns a new <see cref="ITaskDialogCustomButton"/> instance with
-        /// the specified text and adds it to this <see cref="TaskDialog"/>.
+        /// the specified text, and adds it to this <see cref="TaskDialog"/>.
         /// </summary>
         /// <param name="text"></param>
         /// <returns></returns>
@@ -849,7 +857,7 @@ namespace KPreisser.UI
 
         /// <summary>
         /// Creates and returns a new <see cref="ITaskDialogRadioButton"/> instance with
-        /// the specified text and adds it to this <see cref="TaskDialog"/>.
+        /// the specified text, and adds it to this <see cref="TaskDialog"/>.
         /// </summary>
         /// <param name="text"></param>
         /// <returns></returns>
@@ -1092,7 +1100,7 @@ namespace KPreisser.UI
             }
         }
 
-        // Messages that can be sent to the dialog while it is active.
+        //// Messages that can be sent to the dialog while it is active.
 
         /// <summary>
         /// Closes the active task dialog with a <see cref="TaskDialogResult.Cancel"/> result.
