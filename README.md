@@ -92,6 +92,11 @@ displays the window and then returns immediately.
 This means that when you simultaneously show multiple non-modal Task Dialogs, the `Show()`
 method will occur multiple times in the call stack (as each will run the event loop), and
 therefore when you close an older dialog, its corresponding `Show()` method cannot return
-until all other (newer) Task Dialogs are also closed.
+until all other (newer) Task Dialogs are also closed. However, the corresponding
+`TaskDialog.CommonButtonClicked` and `ITaskDialogCustomButton.ButtonClicked` events will
+be called just before the dialog is closed.
+
 E.g. if you repeatedly open a new dialog and then close a previously opened one, the 
 call stack will fill with more and more `Show()` calls until all the dialogs are closed.
+Note that in that case, the `TimerTick` event will also continue to be called for the
+already closed dialogs until their `Show()` method can return.

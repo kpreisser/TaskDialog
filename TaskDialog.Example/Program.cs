@@ -111,14 +111,24 @@ namespace TaskDialogExample
                 Console.WriteLine("Button2 clicked!");
 
                 // Show a new Taskdialog
-                var result = TaskDialog.Show(
-                        content: "This is a new non-modal dialog!",
-                        instruction: "Hi there!",
-                        title: "My Title",
-                        buttons: TaskDialogButtons.Close,
-                        icon: TaskDialogIcon.Information);
+                var innerDialog = new TaskDialog() {
+                    Content = "This is a new non-modal dialog!",
+                    MainInstruction = "Hi there!  Number: 0",
+                    CommonButtons = TaskDialogButtons.Close,
+                    MainIcon = TaskDialogIcon.Information,
+                    UseTimer = true,
+                };
 
-                Console.WriteLine("Result of new dialog: " + result);
+                int number = 0;
+                innerDialog.TimerTick += (s2, e2) => {
+                    number++;
+                    // Update the instruction with the new number.
+                    innerDialog.MainInstruction = "Hi there!  Number: " + number.ToString();
+                    innerDialog.UpdateElements(TaskDialogUpdateElements.MainInstruction);
+                };
+
+                innerDialog.Show();
+                Console.WriteLine("Result of new dialog: " + innerDialog.ResultCommonButton);
 
                 return false;
             };
