@@ -165,9 +165,7 @@ namespace TaskDialogExample
                 var radioButton2 = dialog.AddRadioButton("My Radio Button 2");
 
                 radioButton1.RadioButtonClicked += (s2, e2) => Console.WriteLine("Radio Button 1 clicked!");
-                radioButton2.RadioButtonClicked += (s2, e2) => Console.WriteLine("Radio Button 2 clicked!");
-
-                
+                radioButton2.RadioButtonClicked += (s2, e2) => Console.WriteLine("Radio Button 2 clicked!");                
 
                 dialog.VerificationClicked += (s2, e2) =>
                 {

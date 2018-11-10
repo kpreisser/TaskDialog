@@ -398,7 +398,7 @@ namespace KPreisser.UI
         /// properties by calling <see cref="SetProgressBarState(TaskDialogProgressBarState)"/>,
         /// <see cref="SetProgressBarRange(int, int)"/> and <see cref="SetProgressBarPos(int)"/>,
         /// or you can switch it to a marquee progress bar with
-        /// <see cref="SwitchProgressBarType(bool)"/>.
+        /// <see cref="SwitchProgressBarMode(bool)"/>.
         /// </summary>
         public bool ShowProgressBar
         {
@@ -410,7 +410,7 @@ namespace KPreisser.UI
         /// Gets or sets a value that indicates whether a marquee progress bar will be
         /// shown in the task dialog. After the dialog is created/navigated, you can enable
         /// marquee by calling <see cref="SetProgressBarMarquee(bool, int)"/>, or you can
-        /// switch to a regular progress bar with <see cref="SwitchProgressBarType(bool)"/>.
+        /// switch to a regular progress bar with <see cref="SwitchProgressBarMode(bool)"/>.
         /// </summary>
         public bool ShowMarqueeProgressBar
         {
@@ -1295,7 +1295,7 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// While the dialog is active, switches the progress bar type to either a
+        /// While the dialog is active, switches the progress bar mode to either a
         /// marquee progress bar or to a regular progress bar. The dialog must have
         /// been created with either <see cref="ShowProgressBar"/> or
         /// <see cref="ShowMarqueeProgressBar"/> set to <c>true</c>.
@@ -1303,7 +1303,7 @@ namespace KPreisser.UI
         /// <see cref="SetProgressBarMarquee(bool, int)"/>.
         /// </summary>
         /// <param name="marqueeProgressBar"></param>
-        public void SwitchProgressBarType(bool marqueeProgressBar)
+        public void SwitchProgressBarMode(bool marqueeProgressBar)
         {
             SendTaskDialogMessage(
                     TaskDialogMessages.SetMarqueeProgressBar,
@@ -1315,7 +1315,7 @@ namespace KPreisser.UI
         /// While the dialog is active, enables or disables progress bar marquee when
         /// an marquee progress bar is displayed.
         /// The dialog must have been created with <see cref="ShowMarqueeProgressBar"/>
-        /// set to <c>true</c> or you must call <see cref="SwitchProgressBarType(bool)"/>
+        /// set to <c>true</c> or you must call <see cref="SwitchProgressBarMode(bool)"/>
         /// with value <c>true</c> to switch the regular progress bar to a marquee
         /// progress bar.
         /// </summary>
@@ -1338,7 +1338,7 @@ namespace KPreisser.UI
         /// <summary>
         /// While the dialog is active, sets the progress bar range.
         /// The dialog must have been created with <see cref="ShowProgressBar"/>
-        /// set to <c>true</c> or you must call <see cref="SwitchProgressBarType(bool)"/>
+        /// set to <c>true</c> or you must call <see cref="SwitchProgressBarMode(bool)"/>
         /// with value <c>false</c> to switch the marquee progress bar to a 
         /// regular progress bar.
         /// </summary>
@@ -1361,7 +1361,7 @@ namespace KPreisser.UI
         /// <summary>
         /// While the dialog is active, sets the progress bar position.
         /// The dialog must have been created with <see cref="ShowProgressBar"/>
-        /// set to <c>true</c> or you must call <see cref="SwitchProgressBarType(bool)"/>
+        /// set to <c>true</c> or you must call <see cref="SwitchProgressBarMode(bool)"/>
         /// with value <c>false</c> to switch the marquee progress bar to a 
         /// regular progress bar.
         /// </summary>
@@ -1380,7 +1380,7 @@ namespace KPreisser.UI
         /// <summary>
         /// While the dialog is active, sets the progress bar state.
         /// The dialog must have been created with <see cref="ShowProgressBar"/>
-        /// set to <c>true</c> or you must call <see cref="SwitchProgressBarType(bool)"/>
+        /// set to <c>true</c> or you must call <see cref="SwitchProgressBarMode(bool)"/>
         /// with value <c>false</c> to switch the marquee progress bar to a 
         /// regular progress bar.
         /// </summary>
@@ -1440,7 +1440,9 @@ namespace KPreisser.UI
         /// <param name="focus"></param>
         public void ClickVerification(bool isChecked, bool focus = false)
         {
-            SendTaskDialogMessage(TaskDialogMessages.ClickVerification, isChecked ? 1 : 0,
+            SendTaskDialogMessage(
+                    TaskDialogMessages.ClickVerification,
+                    isChecked ? 1 : 0,
                     (IntPtr)(focus ? 1 : 0));
         }
 
@@ -1751,7 +1753,9 @@ namespace KPreisser.UI
         /// <param name="enable"></param>
         private void SetRadioButtonEnabled(int buttonID, bool enable)
         {
-            SendTaskDialogMessage(TaskDialogMessages.EnableRadioButton, buttonID,
+            SendTaskDialogMessage(
+                    TaskDialogMessages.EnableRadioButton,
+                    buttonID,
                     (IntPtr)(enable ? 1 : 0));
         }
 
