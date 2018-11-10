@@ -409,8 +409,8 @@ namespace KPreisser.UI
         /// <summary>
         /// Gets or sets a value that indicates whether a marquee progress bar will be
         /// shown in the task dialog. After the dialog is created/navigated, you can enable
-        /// marquee by calling <see cref="SetProgressBarMarquee(bool)"/>, or you can switch
-        /// to a regular progress bar with <see cref="SwitchProgressBarType(bool)"/>.
+        /// marquee by calling <see cref="SetProgressBarMarquee(bool, int)"/>, or you can
+        /// switch to a regular progress bar with <see cref="SwitchProgressBarType(bool)"/>.
         /// </summary>
         public bool ShowMarqueeProgressBar
         {
@@ -1300,7 +1300,7 @@ namespace KPreisser.UI
         /// been created with either <see cref="ShowProgressBar"/> or
         /// <see cref="ShowMarqueeProgressBar"/> set to <c>true</c>.
         /// For a marquee progress bar, you can enable or disable the marquee using
-        /// <see cref="SetProgressBarMarquee(bool)"/>.
+        /// <see cref="SetProgressBarMarquee(bool, int)"/>.
         /// </summary>
         /// <param name="marqueeProgressBar"></param>
         public void SwitchProgressBarType(bool marqueeProgressBar)
@@ -1320,12 +1320,19 @@ namespace KPreisser.UI
         /// progress bar.
         /// </summary>
         /// <param name="enableMarquee"></param>
-        public void SetProgressBarMarquee(bool enableMarquee)
+        /// <param name="animationSpeed">
+        /// The time in milliseconds between marquee animation updates. If <c>0</c>, the animation
+        /// will be updated every 30 milliseconds.
+        /// </param>
+        public void SetProgressBarMarquee(bool enableMarquee, int animationSpeed = 0)
         {
+            if (animationSpeed < 0)
+                throw new ArgumentOutOfRangeException(nameof(animationSpeed));
+
             SendTaskDialogMessage(
                     TaskDialogMessages.SetProgressBarMarquee,
                     enableMarquee ? 1 : 0,
-                    IntPtr.Zero);
+                    (IntPtr)animationSpeed);
         }
 
         /// <summary>
