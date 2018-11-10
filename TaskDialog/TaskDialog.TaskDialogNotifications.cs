@@ -24,7 +24,7 @@
 
             Help = 9,
 
-            ExpandButtonClicked = 10
+            ExpandoButtonClicked = 10
         }
     }
 }

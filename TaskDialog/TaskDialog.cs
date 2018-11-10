@@ -850,7 +850,7 @@ namespace KPreisser.UI
                         radioButton.OnRadioButtonClicked(EventArgs.Empty);
                         break;
 
-                    case TaskDialogNotifications.ExpandButtonClicked:
+                    case TaskDialogNotifications.ExpandoButtonClicked:
                         instance.OnExpandoButtonClicked(new TaskDialogBooleanStatusEventArgs(
                                 wparam != IntPtr.Zero));
                         break;
