@@ -1,10 +1,14 @@
-﻿# Task Dialog (Windows)
+﻿# Task Dialog for .NET (Windows)
 
 The Task Dialog is the successor of a MessageBox and available starting with Windows Vista. For more information,
 see [About Task Dialogs](https://docs.microsoft.com/en-us/windows/desktop/Controls/task-dialogs-overview).
 
 This project aims to provide a complete .NET implementation (C#) of the Task Dialog with nearly all the features that
 are also available in the native APIs, with all the marshalling and memory management done under the hood.
+
+The project targets .NET Framework 4.5.1 and .NET Standard 2.0. 
+(For .NET Standard, there are not yet overloads of `Show()` that
+use a `Form` (WinForms) or `Window` (WPF) instance as that will have to wait until .NET Core 3.0.)
 
 **Task Dialog Features:**
 * Supports all of the native Task Dialog elements (like custom buttons/command links, progress bar, radio buttons, checkbox, expanded area, footer)
@@ -14,6 +18,7 @@ are also available in the native APIs, with all the marshalling and memory manag
 * Additionally to standard icons, supports security icons that show a green, yellow, red, gray or blue bar
 
 ![taskdialog-screenshot-1](https://user-images.githubusercontent.com/13289184/48280515-1b3a6e00-e454-11e8-96f3-b22a3bcff22e.png)   ![taskdialog-screenshot-2](https://user-images.githubusercontent.com/13289184/48280347-9cddcc00-e453-11e8-9bc1-605a55e8aaec.png)
+
 
 ## Prerequisites
 
@@ -43,7 +48,10 @@ You can find a sample manifest file in the [`TaskDialog.Example`](/TaskDialog.Ex
 
 Also, please make sure your `Main()` method has the
 [`[STAThread]`](https://docs.microsoft.com/dotnet/api/system.stathreadattribute) attribute
-(WinForms and WPF projects will have this by default).
+(WinForms and WPF projects will have this by default). If you use the Task Dialog from a
+different thread than the Main Thread, you will need to set it to
+[ApartmentState.STA](https://docs.microsoft.com/dotnet/api/system.threading.apartmentstate).
+
 
 ## Using the Task Dialog
 
@@ -83,6 +91,7 @@ For a more detailed example of a TaskDialog that uses progress bars, a timer,
 navigation and various event handlers (as shown by the screenshots), please see the 
 [`TaskDialog.Example`](/TaskDialog.Example/Program.cs) project.
 
+
 ### Non-modal dialog
 Be aware that when you show a non-modal Task Dialog by specifying `null` or `IntPtr` as
 owner, the `TaskDialog.Show()` method will still not return until the dialog is closed;
@@ -100,3 +109,12 @@ E.g. if you repeatedly open a new dialog and then close a previously opened one,
 call stack will fill with more and more `Show()` calls until all the dialogs are closed.
 Note that in that case, the `TimerTick` event will also continue to be called for the
 already closed dialogs until their `Show()` method can return.
+
+
+## Internal details/notes
+
+For the Task Dialog callback, a static delegate is used to avoid the overhead of creating
+native functions during runtime for each new Task Dialog instance. A
+[GCHandle](https://docs.microsoft.com/dotnet/api/system.runtime.interopservices.gchandle)
+is used in the callback to map the supplied reference data back to the actual Task Dialog
+instance.
