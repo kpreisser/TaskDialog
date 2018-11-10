@@ -104,7 +104,7 @@ namespace KPreisser.UI
         public event EventHandler Opened;
 
         /// <summary>
-        /// Occurs when the TaskDialog is about to close.
+        /// Occurs when the TaskDialog is about to be destroyed.
         /// </summary>
         public event EventHandler Closing;
 
@@ -178,7 +178,7 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// 
+        /// Gets or sets the title of the task dialog window.
         /// </summary>
         public string Title
         {
@@ -187,7 +187,7 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// 
+        /// Gets or sets the main instruction text.
         /// </summary>
         public string MainInstruction
         {
@@ -196,7 +196,7 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// 
+        /// Gets or sets the dialog's primary content.
         /// </summary>
         public string Content
         {
@@ -205,7 +205,7 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// 
+        /// Gets or sets the text to be used in the dialog's footer area.
         /// </summary>
         public string Footer
         {
@@ -214,7 +214,7 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// 
+        /// Gets or sets the text that is displayed for the verification checkbox.
         /// </summary>
         public string VerificationText
         {
@@ -250,7 +250,8 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// The main icon, if <see cref="MainIconHandle"/> is <see cref="IntPtr.Zero"/>.
+        /// Gets or sets the main icon, if <see cref="MainIconHandle"/> is
+        /// <see cref="IntPtr.Zero"/>.
         /// </summary>
         public TaskDialogIcon MainIcon
         {
@@ -259,8 +260,9 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// A handle to the main icon. When this member is not <see cref="IntPtr.Zero"/>, the
-        /// <see cref="MainIcon"/> property will be ignored.
+        /// Gets or sets the handle to the main icon. When this member is not
+        /// <see cref="IntPtr.Zero"/>, the <see cref="MainIcon"/> property will
+        /// be ignored.
         /// </summary>
         public IntPtr MainIconHandle
         {
@@ -269,10 +271,11 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// If specified, after the TaskDialog is opened or navigated, its main icon will be updated
-        /// to the specified one.
+        /// If specified, after the TaskDialog is opened or navigated, its main icon will
+        /// be updated to the specified one.
         /// Note: This will not always work, e.g. when running on Windows Server Core.
-        /// Note: This member will be ignored if <see cref="MainIconHandle"/> is not <see cref="IntPtr.Zero"/>.
+        /// Note: This member will be ignored if <see cref="MainIconHandle"/> is not
+        /// <see cref="IntPtr.Zero"/>.
         /// </summary>
         public TaskDialogIcon MainUpdateIcon
         {
@@ -281,7 +284,8 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// The footer icon, if <see cref="FooterIconHandle"/> is <see cref="IntPtr.Zero"/>.
+        /// Gets or sets the footer icon, if <see cref="FooterIconHandle"/> is
+        /// <see cref="IntPtr.Zero"/>.
         /// </summary>
         public TaskDialogIcon FooterIcon
         {
@@ -290,8 +294,9 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// A handle to the footer icon. When this member is not <see cref="IntPtr.Zero"/>, the
-        /// <see cref="FooterIcon"/> property will be ignored.
+        /// Gets or sets the handle to the footer icon. When this member is not
+        /// <see cref="IntPtr.Zero"/>, the <see cref="FooterIcon"/> property will
+        /// be ignored.
         /// </summary>
         public IntPtr FooterIconHandle
         {
@@ -300,9 +305,22 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// 
+        /// Gets or sets the common buttons that are to be displayed in the dialog.
+        /// If no common button and no custom button is specified, the dialog will
+        /// contain the <see cref="TaskDialogButtons.OK"/> button by default.
         /// </summary>
         public TaskDialogButtons CommonButtons
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets the width in dialog units that the dialog's client area will get
+        /// when the dialog is is created or navigated.
+        /// If <c>0</c>, the width will be automatically calculated by the system.
+        /// </summary>
+        public int Width
         {
             get;
             set;
@@ -318,7 +336,10 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// 
+        /// Gets or sets a value that indicates whether the task dialog can be canceled
+        /// by pressing ESC, Alt+F4 or clicking the title bar's close button even if no
+        /// <see cref="TaskDialogButtons.Cancel"/> button is specified in
+        /// <see cref="CommonButtons"/>.
         /// </summary>
         public bool AllowCancel
         {
@@ -363,7 +384,12 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// 
+        /// Gets or sets a value that indicates whether a progress bar will be shown in the
+        /// task dialog. After the dialog is created/navigated, you can modify the progress bar
+        /// properties by calling <see cref="SetProgressBarState(TaskDialogProgressBarState)"/>,
+        /// <see cref="SetProgressBarRange(int, int)"/> and <see cref="SetProgressBarPos(int)"/>,
+        /// or you can switch it to a marquee progress bar with
+        /// <see cref="SwitchProgressBarType(bool)"/>.
         /// </summary>
         public bool ShowProgressBar
         {
@@ -372,7 +398,10 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// 
+        /// Gets or sets a value that indicates whether a marquee progress bar will be
+        /// shown in the task dialog. After the dialog is created/navigated, you can enable
+        /// marquee by calling <see cref="SetProgressBarMarquee(bool)"/>, or you can switch
+        /// to a regular progress bar with <see cref="SwitchProgressBarType(bool)"/>.
         /// </summary>
         public bool ShowMarqueeProgressBar
         {
@@ -381,7 +410,9 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// 
+        /// Gets or sets a value that indicates whether the <see cref="TimerTick"/> 
+        /// event should be raised approximately every 200 milliseconds while the dialog
+        /// is active.
         /// </summary>
         public bool UseTimer
         {
@@ -408,7 +439,8 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// 
+        /// Gets or sets a value that indicates whether no radio button will be selected
+        /// by default.
         /// </summary>
         public bool NoDefaultRadioButton
         {
@@ -417,7 +449,7 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// 
+        /// Gets or sets a value that indicates whether the task dialog can be minimized.
         /// </summary>
         public bool CanBeMinimized
         {
@@ -765,12 +797,10 @@ namespace KPreisser.UI
                         // continue to send any notifications to the dialog after the callback
                         // function has returned from being called with the 'Destroyed'
                         // notification.
-                        // It is also important to do this here instead of when the
-                        // TaskDialogIndirect() function returns, because e.g. if the current
-                        // TaskDialogIndirect() shows another task dialog and then the first
-                        // dialog is closed, the first TaskDialogIndirect() call can only return
-                        // after the second dialog is closed, but the Destroyed event should
-                        // already be called.
+                        // Note: When multiple dialogs are shown (so Show() will occur multiple
+                        // times in the call stack) and a previously opened dialog is closed,
+                        // the Destroyed notification for the closed dialog will only occur after
+                        // the newer dialogs are also closed.
                         instance.hwndDialog = IntPtr.Zero;
                         break;
 
@@ -843,11 +873,13 @@ namespace KPreisser.UI
 
 
         /// <summary>
-        /// Creates and returns a new <see cref="ITaskDialogCustomButton"/> instance with
-        /// the specified text, and adds it to this <see cref="TaskDialog"/>.
+        /// Creates and returns a new custom button with the specified text, and adds
+        /// it to this <see cref="TaskDialog"/>.
         /// </summary>
         /// <param name="text"></param>
-        /// <returns></returns>
+        /// <returns>
+        /// The <see cref="ITaskDialogCustomButton"/> instance representing the custom button.
+        /// </returns>
         public ITaskDialogCustomButton AddCustomButton(string text)
         {
             var button = new TaskDialogCustomButton(this, text);
@@ -860,11 +892,13 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// Creates and returns a new <see cref="ITaskDialogRadioButton"/> instance with
-        /// the specified text, and adds it to this <see cref="TaskDialog"/>.
+        /// Creates and returns a new radio button with the specified text, and adds
+        /// it to this <see cref="TaskDialog"/>.
         /// </summary>
         /// <param name="text"></param>
-        /// <returns></returns>
+        /// <returns>
+        /// The <see cref="ITaskDialogRadioButton"/> instance representing the radio button.
+        /// </returns>
         public ITaskDialogRadioButton AddRadioButton(string text)
         {
             var button = new TaskDialogRadioButton(this, text);
@@ -918,6 +952,7 @@ namespace KPreisser.UI
             this.DefaultCommonButton = default;
             this.DefaultCustomButton = null;
             this.DefaultRadioButton = null;
+            this.Width = default;
             this.CommonButtonClicked = null;
 
             ClearCustomButtons();
@@ -1012,18 +1047,19 @@ namespace KPreisser.UI
             // Recursive Show() is not possible because we would incorrectly handle notifications.
             if (this.instanceHandlePtr != IntPtr.Zero)
                 throw new InvalidOperationException(
-                    "Cannot recursively show the same task dialog instance.");
+                        "Cannot recursively show the same task dialog instance.");
+
+            // Validate the settings.
+            CheckButtonConfig();
 
             // Allocate a GCHandle which we will use for the callback data.
             var instanceHandle = GCHandle.Alloc(this);
             try
             {
                 this.instanceHandlePtr = GCHandle.ToIntPtr(instanceHandle);
-
-                CheckButtonConfig();
-                PrepareButtonConfig(out this.currentCustomButtons, out this.currentRadioButtons);
-
                 this.currentOwnerHwnd = hwndOwner;
+
+                PrepareButtonConfig(out this.currentCustomButtons, out this.currentRadioButtons);
                 CreateConfig(
                         out var config,
                         out this.currentMainIconIsFromHandle,
@@ -1139,15 +1175,16 @@ namespace KPreisser.UI
         /// specific navigation (instead of for all navigations).
         /// </summary>
         /// <remarks>
-        /// Note that you should not call this method in the <see cref="Opened"/> event because the
-        /// TaskDialog is not yet displayed in that state.
+        /// Note that you should not call this method in the <see cref="Opened"/> event
+        /// because the task dialog is not yet displayed in that state.
         /// </remarks>
         /// <param name="navigatedHandler">
         /// A handler that will be called after the dialog is navigated/recreated.
         /// </param>
         public void Navigate(EventHandler navigatedHandler = null)
         {
-            // Need to check the button config before releasing the old one and preparing the new one.
+            // Need to check the button config before releasing the old one and
+            // preparing the new one.
             CheckButtonConfig();
 
             // OK, create the new button config.
@@ -1215,10 +1252,48 @@ namespace KPreisser.UI
             SetButtonElevationRequiredStateCore((int)buttonID, requiresElevation);
         }
 
+
+
+        /// <summary>
+        /// While the dialog is active, switches the progress bar type to either a
+        /// marquee progress bar or to a regular progress bar. The dialog must have
+        /// been created with either <see cref="ShowProgressBar"/> or
+        /// <see cref="ShowMarqueeProgressBar"/> set to <c>true</c>.
+        /// For a marquee progress bar, you can enable or disable the marquee using
+        /// <see cref="SetProgressBarMarquee(bool)"/>.
+        /// </summary>
+        /// <param name="marqueeProgressBar"></param>
+        public void SwitchProgressBarType(bool marqueeProgressBar)
+        {
+            SendTaskDialogMessage(
+                    TaskDialogMessages.SetMarqueeProgressBar,
+                    marqueeProgressBar ? 1 : 0,
+                    IntPtr.Zero);
+        }
+
+        /// <summary>
+        /// While the dialog is active, enables or disables progress bar marquee when
+        /// an marquee progress bar is displayed.
+        /// The dialog must have been created with <see cref="ShowMarqueeProgressBar"/>
+        /// set to <c>true</c> or you must call <see cref="SwitchProgressBarType(bool)"/>
+        /// with value <c>true</c> to switch the regular progress bar to a marquee
+        /// progress bar.
+        /// </summary>
+        /// <param name="enableMarquee"></param>
+        public void SetProgressBarMarquee(bool enableMarquee)
+        {
+            SendTaskDialogMessage(
+                    TaskDialogMessages.SetProgressBarMarquee,
+                    enableMarquee ? 1 : 0,
+                    IntPtr.Zero);
+        }
+
         /// <summary>
         /// While the dialog is active, sets the progress bar range.
         /// The dialog must have been created with <see cref="ShowProgressBar"/>
-        /// set to <c>true</c>.
+        /// set to <c>true</c> or you must call <see cref="SwitchProgressBarType(bool)"/>
+        /// with value <c>false</c> to switch the marquee progress bar to a 
+        /// regular progress bar.
         /// </summary>
         /// <param name="min"></param>
         /// <param name="max"></param>
@@ -1239,7 +1314,9 @@ namespace KPreisser.UI
         /// <summary>
         /// While the dialog is active, sets the progress bar position.
         /// The dialog must have been created with <see cref="ShowProgressBar"/>
-        /// set to <c>true</c>.
+        /// set to <c>true</c> or you must call <see cref="SwitchProgressBarType(bool)"/>
+        /// with value <c>false</c> to switch the marquee progress bar to a 
+        /// regular progress bar.
         /// </summary>
         /// <param name="pos"></param>
         public void SetProgressBarPos(int pos)
@@ -1256,7 +1333,9 @@ namespace KPreisser.UI
         /// <summary>
         /// While the dialog is active, sets the progress bar state.
         /// The dialog must have been created with <see cref="ShowProgressBar"/>
-        /// set to <c>true</c>.
+        /// set to <c>true</c> or you must call <see cref="SwitchProgressBarType(bool)"/>
+        /// with value <c>false</c> to switch the marquee progress bar to a 
+        /// regular progress bar.
         /// </summary>
         /// <param name="state"></param>
         public void SetProgressBarState(TaskDialogProgressBarState state)
@@ -1264,20 +1343,6 @@ namespace KPreisser.UI
             SendTaskDialogMessage(
                     TaskDialogMessages.SetProgressBarState,
                     (int)state,
-                    IntPtr.Zero);
-        }
-
-        /// <summary>
-        /// While the dialog is active, enables or disables progress bar marquee.
-        /// The dialog must have been created with <see cref="ShowMarqueeProgressBar"/>
-        /// set to <c>true</c>.
-        /// </summary>
-        /// <param name="enableMarquee"></param>
-        public void SetProgressBarMarquee(bool enableMarquee)
-        {
-            SendTaskDialogMessage(
-                    TaskDialogMessages.SetProgressBarMarquee,
-                    enableMarquee ? 1 : 0,
                     IntPtr.Zero);
         }
 
@@ -1472,7 +1537,7 @@ namespace KPreisser.UI
 
             if (this.customButtons?.Count > 0)
             {
-                currentCustomButtons = new SortedDictionary<int, TaskDialogCustomButton>();
+                currentCustomButtons = new Dictionary<int, TaskDialogCustomButton>();
 
                 int currentCustomButtonID = CustomButtonStartID;
                 foreach (var button in this.customButtons)
@@ -1486,7 +1551,7 @@ namespace KPreisser.UI
 
             if (this.radioButtons?.Count > 0)
             {
-                currentRadioButtons = new SortedDictionary<int, TaskDialogRadioButton>();
+                currentRadioButtons = new Dictionary<int, TaskDialogRadioButton>();
 
                 int currentRadioButtonID = RadioButtonStartID;
                 foreach (var button in this.radioButtons)
@@ -1530,7 +1595,8 @@ namespace KPreisser.UI
                         (int)this.DefaultCommonButton,
                 nDefaultRadioButton = (this.DefaultRadioButton as TaskDialogRadioButton)?.ButtonID ?? 0,
                 pfCallback = callbackProcDelegatePtr,
-                lpCallbackData = this.instanceHandlePtr
+                lpCallbackData = this.instanceHandlePtr,
+                cxWidth = this.Width
             };
 
             currentMainIconIsFromHandle = this.MainIconHandle != IntPtr.Zero;

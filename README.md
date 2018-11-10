@@ -3,7 +3,7 @@
 The Task Dialog is the successor of a MessageBox and available starting with Windows Vista. For more information,
 see [About Task Dialogs](https://docs.microsoft.com/en-us/windows/desktop/Controls/task-dialogs-overview).
 
-This project provides a comprehensive .NET implementation (C#) of the Task Dialog with all the features that
+This project aims to provide a complete .NET implementation (C#) of the Task Dialog with nearly all the features that
 are also available in the native APIs, with all the marshalling and memory management done under the hood.
 
 **Task Dialog Features:**
