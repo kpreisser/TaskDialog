@@ -1272,19 +1272,27 @@ namespace KPreisser.UI
         }
 
         /// <summary>
+        /// While the dialog is active, enables or disables a common button.
+        /// </summary>
+        /// <param name="button"></param>
+        /// <param name="enable"></param>
+        public void SetCommonButtonEnabled(TaskDialogResult button, bool enable)
+        {
+            SetButtonEnabledCore((int)button, enable);
+        }
+
+        /// <summary>
         /// While the dialog is active, enables or disables the UAC shield symbol for the
         /// specified common button.
         /// </summary>
         /// <param name="buttonID"></param>
         /// <param name="requiresElevation"></param>
-        public void SetButtonElevationRequiredState(
+        public void SetCommonButtonElevationRequired(
                 TaskDialogResult buttonID,
                 bool requiresElevation)
         {
             SetButtonElevationRequiredStateCore((int)buttonID, requiresElevation);
         }
-
-
 
         /// <summary>
         /// While the dialog is active, switches the progress bar type to either a
@@ -1376,16 +1384,6 @@ namespace KPreisser.UI
                     TaskDialogMessages.SetProgressBarState,
                     (int)state,
                     IntPtr.Zero);
-        }
-
-        /// <summary>
-        /// While the dialog is active, enables or disables a common button.
-        /// </summary>
-        /// <param name="button"></param>
-        /// <param name="enable"></param>
-        public void SetCommonButtonEnabled(TaskDialogResult button, bool enable)
-        {
-            SetButtonEnabledCore((int)button, enable);
         }
 
         /// <summary>

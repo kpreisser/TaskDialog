@@ -186,7 +186,7 @@ namespace TaskDialogExample
                     // Occurs after the dialog navigated (just like "Opened"
                     // occurs after the dialog opened).
                     dialog.SetCommonButtonEnabled(TaskDialogResult.Cancel, false);
-                    dialog.SetButtonElevationRequiredState(TaskDialogResult.Cancel, true);
+                    dialog.SetCommonButtonElevationRequired(TaskDialogResult.Cancel, true);
 
                     // Enable the marquee progress bar.
                     dialog.SetProgressBarMarquee(true);
