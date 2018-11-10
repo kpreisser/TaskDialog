@@ -48,7 +48,6 @@ namespace TaskDialogExample
 
                 // Set the progress bar range and state. We will update its state
                 // in the timer event.
-                dialog.SetProgressBarRange(0, 100);
                 dialog.SetProgressBarPos(1);
             };
 

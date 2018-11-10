@@ -1336,7 +1336,7 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// While the dialog is active, sets the progress bar range.
+        /// While the dialog is active, sets the progress bar range. The default range is 0 to 100.
         /// The dialog must have been created with <see cref="ShowProgressBar"/>
         /// set to <c>true</c> or you must call <see cref="SwitchProgressBarMode(bool)"/>
         /// with value <c>false</c> to switch the marquee progress bar to a 
