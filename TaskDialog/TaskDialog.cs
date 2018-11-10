@@ -887,12 +887,13 @@ namespace KPreisser.UI
         /// it to this <see cref="TaskDialog"/>.
         /// </summary>
         /// <param name="text"></param>
+        /// <param name="elevationRequired"></param>
         /// <returns>
         /// The <see cref="ITaskDialogCustomButton"/> instance representing the custom button.
         /// </returns>
-        public ITaskDialogCustomButton AddCustomButton(string text)
+        public ITaskDialogCustomButton AddCustomButton(string text, bool elevationRequired = false)
         {
-            var button = new TaskDialogCustomButton(this, text);
+            var button = new TaskDialogCustomButton(this, text, elevationRequired);
 
             (this.customButtons ?? (this.customButtons = new List<TaskDialogCustomButton>()))
                     .Add(button);
@@ -920,7 +921,7 @@ namespace KPreisser.UI
 
         /// <summary>
         /// Removes the specified custom button that was added with
-        /// <see cref="AddCustomButton(string)"/>.
+        /// <see cref="AddCustomButton(string, bool)"/>.
         /// </summary>
         /// <param name="button"></param>
         /// <returns></returns>
@@ -942,7 +943,7 @@ namespace KPreisser.UI
 
         /// <summary>
         /// Removes all custom buttons added with
-        /// <see cref="AddCustomButton(string)"/>.
+        /// <see cref="AddCustomButton(string, bool)"/>.
         /// </summary>
         public void ClearCustomButtons()
         {
@@ -1669,8 +1670,8 @@ namespace KPreisser.UI
                 {
                     if (!btn.Enabled)
                         btn.Enabled = false;
-                    if (btn.ButtonElevationRequiredState)
-                        btn.ButtonElevationRequiredState = true;
+                    if (btn.ElevationRequired)
+                        btn.ElevationRequired = true;
                 }
             }
 

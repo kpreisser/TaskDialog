@@ -6,21 +6,19 @@ namespace KPreisser.UI
     {
         private abstract class TaskDialogButton : ITaskDialogButton
         {
+            protected readonly TaskDialog taskDialog;
+
+
             private bool enabled = true;
 
             
             public TaskDialogButton(TaskDialog taskDialog, string text)
                 : base()
             {
-                this.TaskDialog = taskDialog;
+                this.taskDialog = taskDialog;
                 this.Text = text;
             }
-
-            
-            public TaskDialog TaskDialog
-            {
-                get;
-            }
+                        
 
             public string Text
             {

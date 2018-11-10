@@ -6,11 +6,15 @@ namespace KPreisser.UI
     {
         private class TaskDialogCustomButton : TaskDialogButton, ITaskDialogCustomButton
         {
-            private bool buttonElevationRequiredState = false;
+            private bool elevationRequired = false;
 
-            public TaskDialogCustomButton(TaskDialog origin, string text)
+            public TaskDialogCustomButton(
+                    TaskDialog origin,
+                    string text,
+                    bool elevationRequired = false)
                 : base(origin, text)
             {
+                this.elevationRequired = elevationRequired;
             }
 
             
@@ -20,16 +24,16 @@ namespace KPreisser.UI
                 set;
             }
 
-            public bool ButtonElevationRequiredState
+            public bool ElevationRequired
             {
-                get => this.buttonElevationRequiredState;
+                get => this.elevationRequired;
 
                 set
                 {
                     // The TaskDialog will set this property on th Created/Navigated event.
                     if (TryVerifyState())
-                        this.TaskDialog.SetButtonElevationRequiredStateCore(this.ButtonID.Value, value);
-                    this.buttonElevationRequiredState = value;
+                        this.taskDialog.SetButtonElevationRequiredStateCore(this.ButtonID.Value, value);
+                    this.elevationRequired = value;
                 }
             }
 
@@ -37,7 +41,7 @@ namespace KPreisser.UI
             public override void Click()
             {
                 VerifyState();
-                this.TaskDialog.ClickButton(this.ButtonID.Value);
+                this.taskDialog.ClickButton(this.ButtonID.Value);
             }
 
 
@@ -48,9 +52,8 @@ namespace KPreisser.UI
 
             protected override void SetEnabledCore(bool enabled)
             {
-                // The Task dialog will set this property on th Created/Navigated event.
                 if (TryVerifyState())
-                    this.TaskDialog.SetButtonEnabledCore(this.ButtonID.Value, enabled);
+                    this.taskDialog.SetButtonEnabledCore(this.ButtonID.Value, enabled);
             }
         }
     }

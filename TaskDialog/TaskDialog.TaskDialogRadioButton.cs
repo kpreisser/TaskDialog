@@ -18,7 +18,7 @@ namespace KPreisser.UI
             public override void Click()
             {
                 VerifyState();
-                this.TaskDialog.ClickRadioButton(this.ButtonID.Value);
+                this.taskDialog.ClickRadioButton(this.ButtonID.Value);
             }
 
             protected internal void OnRadioButtonClicked(EventArgs e)
@@ -29,9 +29,8 @@ namespace KPreisser.UI
             
             protected override void SetEnabledCore(bool enabled)
             {
-                // The Task dialog will set this property on th Created/Navigated event.
                 if (TryVerifyState())
-                    this.TaskDialog.SetRadioButtonEnabled(this.ButtonID.Value, enabled);
+                    this.taskDialog.SetRadioButtonEnabled(this.ButtonID.Value, enabled);
             }
         }
     }

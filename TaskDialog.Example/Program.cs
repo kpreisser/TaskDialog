@@ -82,7 +82,8 @@ namespace TaskDialogExample
             // Create custom buttons that are shown as command links.
             var button1 = dialog.AddCustomButton("Change Icon + Enable Buttons  ✔");
             var button2 = dialog.AddCustomButton("Disabled Button 🎵🎶\nAfter enabling, can show a new dialog.");
-            var button3 = dialog.AddCustomButton("Some Admin Action…\nNavigates to a new dialog page.");
+            var button3 = dialog.AddCustomButton("Some Admin Action…\nNavigates to a new dialog page.",
+                    elevationRequired: true);
 
             TaskDialogIcon nextIcon = 0;
             button1.ButtonClicked = (s, e) =>
@@ -133,7 +134,6 @@ namespace TaskDialogExample
                 return false;
             };
 
-            button3.ButtonElevationRequiredState = true;
             button3.ButtonClicked = (s, e) =>
             {
                 Console.WriteLine("Button3 clicked!");

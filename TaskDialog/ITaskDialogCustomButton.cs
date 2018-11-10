@@ -17,7 +17,7 @@
         /// <summary>
         /// 
         /// </summary>
-        bool ButtonElevationRequiredState
+        bool ElevationRequired
         {
             get;
             set;
