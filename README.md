@@ -13,9 +13,9 @@ use a `Form` (WinForms) or `Window` (WPF) instance as that will have to wait unt
 **Task Dialog Features:**
 * Supports all of the native Task Dialog elements (like custom buttons/command links, progress bar, radio buttons, checkbox, expanded area, footer)
 * Some dialog elements can be updated while the dialog is opened
+* Additionally to standard icons, supports security icons that show a green, yellow, red, gray or blue bar
 * Can navigate to a new page (by reconstructing the dialog from current properties)
 * Can be shown modal or non-modal
-* Additionally to standard icons, supports security icons that show a green, yellow, red, gray or blue bar
 
 ![taskdialog-screenshot-1](https://user-images.githubusercontent.com/13289184/48280515-1b3a6e00-e454-11e8-96f3-b22a3bcff22e.png)   ![taskdialog-screenshot-2](https://user-images.githubusercontent.com/13289184/48280347-9cddcc00-e453-11e8-9bc1-605a55e8aaec.png)
 
@@ -64,7 +64,7 @@ Show a simple dialog:
         icon: TaskDialogIcon.Information);
 ```
 
-Show a dialog with custom buttons and a marquee progress bar:
+Show a dialog with command links and a marquee progress bar:
 ```c#
     TaskDialog dialog = new TaskDialog() {
         MainInstruction = "Hi there!",
@@ -88,13 +88,14 @@ Show a dialog with custom buttons and a marquee progress bar:
 
 
 For a more detailed example of a TaskDialog that uses progress bars, a timer,
-navigation and various event handlers (as shown by the screenshots), please see the 
-[`TaskDialog.Example`](/TaskDialog.Example/Program.cs) project.
+hyperlinks, navigation and various event handlers (as shown by the screenshots), please
+see the [`TaskDialog.Example`](/TaskDialog.Example/Program.cs) project.
 
 
 ### Non-modal dialog
-Be aware that when you show a non-modal Task Dialog by specifying `null` or `IntPtr` as
-owner, the `TaskDialog.Show()` method will still not return until the dialog is closed;
+
+Be aware that when you show a non-modal Task Dialog by specifying `null` or `IntPtr.Zero` as
+owner window, the `TaskDialog.Show()` method will still not return until the dialog is closed;
 in contrast to other implementations like `Form.Show()` (WinForms) where `Show()`
 displays the window and then returns immediately.
 
