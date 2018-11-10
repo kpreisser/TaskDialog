@@ -56,9 +56,9 @@ namespace KPreisser.UI
         private static readonly IntPtr callbackProcDelegatePtr;
 
 
-        private List<ITaskDialogCustomButton> customButtons;
+        private List<TaskDialogCustomButton> customButtons;
 
-        private List<ITaskDialogRadioButton> radioButtons;
+        private List<TaskDialogRadioButton> radioButtons;
 
         /// <summary>
         /// Window handle of the task dialog.
@@ -77,9 +77,9 @@ namespace KPreisser.UI
 
         private bool currentFooterIconIsFromHandle;
 
-        private IDictionary<int, TaskDialogCustomButton> currentCustomButtons;
+        private TaskDialogCustomButton[] currentCustomButtons;
 
-        private IDictionary<int, TaskDialogRadioButton> currentRadioButtons;
+        private TaskDialogRadioButton[] currentRadioButtons;
 
         private TaskDialogResult resultCommonButton;
 
@@ -688,18 +688,18 @@ namespace KPreisser.UI
 
 
         private static void ClearButtonConfig(
-                IDictionary<int, TaskDialogCustomButton> currentCustomButtons,
-                IDictionary<int, TaskDialogRadioButton> currentRadioButtons)
+                TaskDialogCustomButton[] currentCustomButtons,
+                TaskDialogRadioButton[] currentRadioButtons)
         {
             if (currentCustomButtons != null)
             {
-                foreach (var bt in currentCustomButtons.Values)
+                foreach (var bt in currentCustomButtons)
                     bt.ButtonID = null;
             }
 
             if (currentRadioButtons != null)
             {
-                foreach (var rbt in currentRadioButtons.Values)
+                foreach (var rbt in currentRadioButtons)
                     rbt.ButtonID = null;
             }
         }
@@ -818,26 +818,27 @@ namespace KPreisser.UI
                         if (instance.suppressCommonButtonClickedEvent)
                             return HResultOk;
 
-                        // Check if the button is part of the custom buttons.
                         int buttonID = wparam.ToInt32();
 
-                        if (instance.currentCustomButtons != null &&
-                                instance.currentCustomButtons.TryGetValue(buttonID, out var bt))
-                            return bt.ButtonClicked?.Invoke(bt, EventArgs.Empty) ?? true ?
-                                    HResultOk : HResultFalse;
+                        // Check if the button is part of the custom buttons.
+                        if (buttonID >= CustomButtonStartID)
+                        {
+                            return instance.currentCustomButtons[buttonID - CustomButtonStartID]
+                                    .OnButtonClicked(EventArgs.Empty) ? HResultOk : HResultFalse;
+                        }
                         else
-                            return instance.CommonButtonClicked?.Invoke(
-                                    instance,
+                        {
+                            return instance.OnCommonButtonClicked(
                                     new TaskDialogCommonButtonClickedEventArgs(
-                                        (TaskDialogResult)buttonID)) ?? true ? HResultOk : HResultFalse;
+                                        (TaskDialogResult)buttonID)) ? HResultOk : HResultFalse;
+                        }
 
                     case TaskDialogNotifications.RadioButtonClicked:
-                        int rbuttonID = wparam.ToInt32();
-                        TaskDialogRadioButton rbt;
-                        // Note: It should not happen that we don't find the radio button id.
-                        if (instance.currentRadioButtons != null &&
-                                instance.currentRadioButtons.TryGetValue(rbuttonID, out rbt))
-                            rbt.OnRadioButtonClicked(EventArgs.Empty);
+                        int radioButtonID = wparam.ToInt32();
+
+                        var radioButton = instance.currentRadioButtons
+                                [radioButtonID - RadioButtonStartID];
+                        radioButton.OnRadioButtonClicked(EventArgs.Empty);
                         break;
 
                     case TaskDialogNotifications.ExpandButtonClicked:
@@ -885,7 +886,7 @@ namespace KPreisser.UI
             var button = new TaskDialogCustomButton(this, text);
 
             if (this.customButtons == null)
-                this.customButtons = new List<ITaskDialogCustomButton>();
+                this.customButtons = new List<TaskDialogCustomButton>();
             this.customButtons.Add(button);
 
             return button;
@@ -904,7 +905,7 @@ namespace KPreisser.UI
             var button = new TaskDialogRadioButton(this, text);
 
             if (this.radioButtons == null)
-                this.radioButtons = new List<ITaskDialogRadioButton>();
+                this.radioButtons = new List<TaskDialogRadioButton>();
             this.radioButtons.Add(button);
 
             return button;
@@ -1095,22 +1096,23 @@ namespace KPreisser.UI
                     if (ret != HResultOk)
                         Marshal.ThrowExceptionForHR(ret);
 
-                    // Set the result fields
-                    var myResultCustomButton = null as TaskDialogCustomButton;
-                    if (this.currentCustomButtons?.TryGetValue(resultButtonID, out myResultCustomButton) == true)
+                    // Set the result fields.
+                    if (resultButtonID >= CustomButtonStartID)
                     {
-                        this.resultCustomButton = myResultCustomButton;
+                        this.resultCustomButton = this.currentCustomButtons
+                                [resultButtonID - CustomButtonStartID];
                         this.resultCommonButton = 0;
                     }
                     else
                     {
-                        this.resultCommonButton = (TaskDialogResult)resultButtonID;
                         this.resultCustomButton = null;
+                        this.resultCommonButton = (TaskDialogResult)resultButtonID;
                     }
 
                     // Note that even if we have radio buttons, it could be that the user didn't select one.
-                    if (!(this.currentRadioButtons?.TryGetValue(resultRadioButtonID, out this.resultRadioButton) == true))
-                        this.resultRadioButton = null;
+                    this.resultRadioButton = resultRadioButtonID >= RadioButtonStartID ?
+                            this.currentRadioButtons[resultRadioButtonID - RadioButtonStartID] :
+                            null;
                 }
                 finally
                 {
@@ -1413,7 +1415,11 @@ namespace KPreisser.UI
         /// <param name="button"></param>
         public void ClickCommonButton(TaskDialogResult button)
         {
-            ClickButton((int)button);
+            int buttonID = (int)button;
+            if (buttonID >= CustomButtonStartID)
+                throw new ArgumentException("Invalid button.");
+
+            ClickButton(buttonID);
         }
 
 
@@ -1451,6 +1457,16 @@ namespace KPreisser.UI
         protected void OnHelp(EventArgs e)
         {
             this.Help?.Invoke(this, e);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="e"></param>
+        /// <returns></returns>
+        protected bool OnCommonButtonClicked(TaskDialogCommonButtonClickedEventArgs e)
+        {
+            return this.CommonButtonClicked?.Invoke(this, e) ?? true;
         }
 
         /// <summary>
@@ -1527,40 +1543,26 @@ namespace KPreisser.UI
         }
 
         private void PrepareButtonConfig(
-                out IDictionary<int, TaskDialogCustomButton> currentCustomButtons,
-                out IDictionary<int, TaskDialogRadioButton> currentRadioButtons)
+                out TaskDialogCustomButton[] currentCustomButtons,
+                out TaskDialogRadioButton[] currentRadioButtons)
         {
-            // Assign IDs to the custom buttons and populate the dictionaries.
-            // Note: This method assumes CheckButtonConfig() has already been called.
+            // Assign IDs to the buttons based on their index.
+            // This method assumes CheckButtonConfig() has already been called.
             currentCustomButtons = null;
             currentRadioButtons = null;
 
             if (this.customButtons?.Count > 0)
             {
-                currentCustomButtons = new Dictionary<int, TaskDialogCustomButton>();
-
-                int currentCustomButtonID = CustomButtonStartID;
-                foreach (var button in this.customButtons)
-                {
-                    var bt = (TaskDialogCustomButton)button;
-                    int buttonId = currentCustomButtonID++;
-                    bt.ButtonID = buttonId;
-                    currentCustomButtons.Add(buttonId, bt);
-                }
+                currentCustomButtons = this.customButtons.ToArray();
+                for (int i = 0; i < currentCustomButtons.Length; i++)
+                    currentCustomButtons[i].ButtonID = CustomButtonStartID + i;
             }
 
             if (this.radioButtons?.Count > 0)
             {
-                currentRadioButtons = new Dictionary<int, TaskDialogRadioButton>();
-
-                int currentRadioButtonID = RadioButtonStartID;
-                foreach (var button in this.radioButtons)
-                {
-                    var bt = (TaskDialogRadioButton)button;
-                    int buttonId = currentRadioButtonID++;
-                    bt.ButtonID = buttonId;
-                    currentRadioButtons.Add(buttonId, bt);
-                }
+                currentRadioButtons = this.radioButtons.ToArray();
+                for (int i = 0; i < currentRadioButtons.Length; i++)
+                    currentRadioButtons[i].ButtonID = RadioButtonStartID + i;
             }
         }
 
@@ -1602,9 +1604,9 @@ namespace KPreisser.UI
             currentMainIconIsFromHandle = this.MainIconHandle != IntPtr.Zero;
             currentFooterIconIsFromHandle = this.FooterIconHandle != IntPtr.Zero;
 
-            if (this.currentCustomButtons?.Count > 0)
+            if (this.currentCustomButtons?.Length > 0)
             {
-                var structs = this.currentCustomButtons.Values.Select(e =>
+                var structs = this.currentCustomButtons.Select(e =>
                         new TaskDialogButtonStruct()
                         {
                             ButtonID = e.ButtonID.Value,
@@ -1614,9 +1616,9 @@ namespace KPreisser.UI
                 config.cButtons = structs.Length;
             }
 
-            if (this.currentRadioButtons?.Count > 0)
+            if (this.currentRadioButtons?.Length > 0)
             {
-                var structs = this.currentRadioButtons.Values.Select(e =>
+                var structs = this.currentRadioButtons.Select(e =>
                         new TaskDialogButtonStruct()
                         {
                             ButtonID = e.ButtonID.Value,
@@ -1632,7 +1634,7 @@ namespace KPreisser.UI
             // Apply current properties of buttons after the dialog has been created.
             if (this.currentCustomButtons != null)
             {
-                foreach (var btn in this.currentCustomButtons.Values)
+                foreach (var btn in this.currentCustomButtons)
                 {
                     if (!btn.Enabled)
                         btn.Enabled = false;
@@ -1643,7 +1645,7 @@ namespace KPreisser.UI
 
             if (this.currentRadioButtons != null)
             {
-                foreach (var btn in this.currentRadioButtons.Values)
+                foreach (var btn in this.currentRadioButtons)
                 {
                     if (!btn.Enabled)
                         btn.Enabled = false;

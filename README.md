@@ -115,6 +115,6 @@ already closed dialogs until their `Show()` method can return.
 
 For the Task Dialog callback, a static delegate is used to avoid the overhead of creating
 native functions during runtime for each new Task Dialog instance. A
-[GCHandle](https://docs.microsoft.com/dotnet/api/system.runtime.interopservices.gchandle)
+[`GCHandle`](https://docs.microsoft.com/dotnet/api/system.runtime.interopservices.gchandle)
 is used in the callback to map the supplied reference data back to the actual Task Dialog
 instance.
