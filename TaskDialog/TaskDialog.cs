@@ -359,6 +359,15 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
+        public bool UseCommandLinksWithoutIcon
+        {
+            get => GetFlag(TaskDialogFlags.UseNoIconCommandLinks);
+            set => SetFlag(TaskDialogFlags.UseNoIconCommandLinks, value);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         public bool ExpandFooterArea
         {
             get => GetFlag(TaskDialogFlags.ExpandFooterArea);
@@ -885,9 +894,8 @@ namespace KPreisser.UI
         {
             var button = new TaskDialogCustomButton(this, text);
 
-            if (this.customButtons == null)
-                this.customButtons = new List<TaskDialogCustomButton>();
-            this.customButtons.Add(button);
+            (this.customButtons ?? (this.customButtons = new List<TaskDialogCustomButton>()))
+                    .Add(button);
 
             return button;
         }
@@ -904,15 +912,36 @@ namespace KPreisser.UI
         {
             var button = new TaskDialogRadioButton(this, text);
 
-            if (this.radioButtons == null)
-                this.radioButtons = new List<TaskDialogRadioButton>();
-            this.radioButtons.Add(button);
+            (this.radioButtons ?? (this.radioButtons = new List<TaskDialogRadioButton>()))
+                    .Add(button);
 
             return button;
         }
 
         /// <summary>
-        /// Removes all <see cref="ITaskDialogCustomButton"/> instances added with
+        /// Removes the specified custom button that was added with
+        /// <see cref="AddCustomButton(string)"/>.
+        /// </summary>
+        /// <param name="button"></param>
+        /// <returns></returns>
+        public bool RemoveCustomButton(ITaskDialogCustomButton button)
+        {
+            return this.customButtons?.Remove(button as TaskDialogCustomButton) ?? false;
+        }
+
+        /// <summary>
+        /// Removes the specified radio button that was aded with
+        /// <see cref="AddRadioButton(string)"/>.
+        /// </summary>
+        /// <param name="button"></param>
+        /// <returns></returns>
+        public bool RemoveRadioButton(ITaskDialogRadioButton button)
+        {
+            return this.radioButtons?.Remove(button as TaskDialogRadioButton) ?? false;
+        }
+
+        /// <summary>
+        /// Removes all custom buttons added with
         /// <see cref="AddCustomButton(string)"/>.
         /// </summary>
         public void ClearCustomButtons()
@@ -921,7 +950,7 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// Removes all <see cref="ITaskDialogRadioButton"/> instances added with
+        /// Removes all radio buttons added with
         /// <see cref="AddRadioButton(string)"/>.
         /// </summary>
         public void ClearRadioButtons()
@@ -1527,10 +1556,12 @@ namespace KPreisser.UI
                         $"The default radio button must have been added with " +
                         $"{nameof(AddRadioButton)}().");
 
-            if (GetFlag(TaskDialogFlags.UseCommandLinks) && !(this.customButtons?.Count > 0))
+            if ((this.UseCommandLinks || this.UseCommandLinksWithoutIcon) &&
+                    !(this.customButtons?.Count > 0))
                 throw new InvalidOperationException(
-                        $"When specifying the {nameof(TaskDialogFlags.UseCommandLinks)} " +
-                        $"flag, at least one custom button must have been added " +
+                        $"When enabling {nameof(this.UseCommandLinks)} or " +
+                        $"{nameof(this.UseCommandLinksWithoutIcon)}, at " +
+                        $"least one custom button needs to be added " +
                         $"with {nameof(AddCustomButton)}().");
 
             if (this.customButtons?.Count > int.MaxValue - CustomButtonStartID ||

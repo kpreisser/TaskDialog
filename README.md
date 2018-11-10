@@ -6,7 +6,7 @@ see [About Task Dialogs](https://docs.microsoft.com/en-us/windows/desktop/Contro
 This project aims to provide a complete .NET implementation (C#) of the Task Dialog with nearly all the features that
 are also available in the native APIs, with all the marshalling and memory management done under the hood.
 
-The project targets .NET Framework 4.5.1 and .NET Standard 2.0. 
+The project targets .NET Framework 4.5.1 and .NET Standard 2.0.<br>
 (For .NET Standard, there are not yet overloads of `Show()` that
 use a `Form` (WinForms) or `Window` (WPF) instance as that will have to wait until .NET Core 3.0.)
 
@@ -23,7 +23,7 @@ use a `Form` (WinForms) or `Window` (WPF) instance as that will have to wait unt
 ## Prerequisites
 
 To use the Task Dialog, your application needs to be compiled with a manifest that contains a dependency to
-`Microsoft.Windows.Common-Controls` (6.0.0.0). E.g.:
+`Microsoft.Windows.Common-Controls` (6.0.0.0):
 ```xml
 <assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1">
   <!-- ..... -->
