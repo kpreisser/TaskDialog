@@ -906,8 +906,10 @@ namespace KPreisser.UI
         /// </returns>
         public ITaskDialogCustomButton AddCustomButton(string text, bool elevationRequired = false)
         {
-            var button = new TaskDialogCustomButton(this, text, elevationRequired);
+            if (text == null)
+                throw new ArgumentNullException(nameof(text));
 
+            var button = new TaskDialogCustomButton(this, text, elevationRequired);
             (this.customButtons ?? (this.customButtons = new List<TaskDialogCustomButton>()))
                     .Add(button);
 
@@ -924,8 +926,10 @@ namespace KPreisser.UI
         /// </returns>
         public ITaskDialogRadioButton AddRadioButton(string text)
         {
-            var button = new TaskDialogRadioButton(this, text);
+            if (text == null)
+                throw new ArgumentNullException(nameof(text));
 
+            var button = new TaskDialogRadioButton(this, text);
             (this.radioButtons ?? (this.radioButtons = new List<TaskDialogRadioButton>()))
                     .Add(button);
 
