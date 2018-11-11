@@ -11,7 +11,7 @@ namespace KPreisser.UI
         /// 
         /// </summary>
         /// <param name="status"></param>
-        public TaskDialogBooleanStatusEventArgs(bool status)
+        internal TaskDialogBooleanStatusEventArgs(bool status)
             : base()
         {
             this.Status = status;

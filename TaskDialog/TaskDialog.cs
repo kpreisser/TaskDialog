@@ -730,18 +730,18 @@ namespace KPreisser.UI
         private static IntPtr AllocateAndMarshalButtons(TaskDialogButtonStruct[] structs)
         {
             // Allocate memory for the array.
-            var initialPtr = Marshal.AllocHGlobal(
+            var pointer = Marshal.AllocHGlobal(
                     Marshal.SizeOf<TaskDialogButtonStruct>() * structs.Length);
 
-            var currentPtr = initialPtr;
+            var currentPtr = pointer;
             foreach (var button in structs)
             {
                 // Marshal the struct element. This will allocate memory for the strings.
                 Marshal.StructureToPtr(button, currentPtr, false);
-                currentPtr = IntPtr.Add(currentPtr, Marshal.SizeOf<TaskDialogButtonStruct>());
+                currentPtr += Marshal.SizeOf<TaskDialogButtonStruct>();
             }
 
-            return initialPtr;
+            return pointer;
         }
 
         private static void FreeButtons(IntPtr pointer, int length)
@@ -753,7 +753,7 @@ namespace KPreisser.UI
             for (int i = 0; i < length; i++)
             {
                 Marshal.DestroyStructure<TaskDialogButtonStruct>(currentPtr);
-                currentPtr = IntPtr.Add(currentPtr, Marshal.SizeOf<TaskDialogButtonStruct>());
+                currentPtr += Marshal.SizeOf<TaskDialogButtonStruct>();
             }
 
             Marshal.FreeHGlobal(pointer);
