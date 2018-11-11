@@ -779,8 +779,8 @@ namespace KPreisser.UI
         private static int HandleTaskDialogCallback(
                 IntPtr hWnd,
                 TaskDialogNotifications notification,
-                IntPtr wparam,
-                IntPtr lparam,
+                IntPtr wParam,
+                IntPtr lParam,
                 IntPtr referenceData)
         {
             try
@@ -816,7 +816,7 @@ namespace KPreisser.UI
                         break;
 
                     case TaskDialogNotifications.HyperlinkClicked:
-                        string link = Marshal.PtrToStringUni(lparam);
+                        string link = Marshal.PtrToStringUni(lParam);
                         instance.OnHyperlinkClicked(new TaskDialogHyperlinkClickedEventArgs(link));
                         break;
 
@@ -824,7 +824,7 @@ namespace KPreisser.UI
                         if (instance.suppressCommonButtonClickedEvent)
                             return HResultOk;
 
-                        int buttonID = wparam.ToInt32();
+                        int buttonID = wParam.ToInt32();
 
                         // Check if the button is part of the custom buttons.
                         bool cancelClose;
@@ -846,7 +846,7 @@ namespace KPreisser.UI
                         return cancelClose ? HResultFalse : HResultOk;
 
                     case TaskDialogNotifications.RadioButtonClicked:
-                        int radioButtonID = wparam.ToInt32();
+                        int radioButtonID = wParam.ToInt32();
 
                         var radioButton = instance.currentRadioButtons
                                 [radioButtonID - RadioButtonStartID];
@@ -855,12 +855,12 @@ namespace KPreisser.UI
 
                     case TaskDialogNotifications.ExpandoButtonClicked:
                         instance.OnExpandoButtonClicked(new TaskDialogBooleanStatusEventArgs(
-                                wparam != IntPtr.Zero));
+                                wParam != IntPtr.Zero));
                         break;
 
                     case TaskDialogNotifications.VerificationClicked:
                         instance.OnVerificationClicked(new TaskDialogBooleanStatusEventArgs(
-                                wparam != IntPtr.Zero));
+                                wParam != IntPtr.Zero));
                         break;
 
                     case TaskDialogNotifications.Help:
@@ -868,8 +868,15 @@ namespace KPreisser.UI
                         break;
 
                     case TaskDialogNotifications.Timer:
-                        var tickEventArgs = new TaskDialogTimerTickEventArgs(
-                                wparam.ToInt32());
+                        // Note: The documentation specifies that wParam contains a DWORD,
+                        // which might mean that on 64-bit platforms the highest bit (63)
+                        // will be zero even if the DWORD has its highest bit (31) set. In
+                        // that case, IntPtr.ToInt32() would throw an OverflowException.
+                        // Therefore, we use .ToInt64() and then convert it to an int.
+                        int ticks = IntPtr.Size == 8 ?
+                                unchecked((int)wParam.ToInt64()) :
+                                wParam.ToInt32();
+                        var tickEventArgs = new TaskDialogTimerTickEventArgs(ticks);
                         instance.OnTimerTick(tickEventArgs);
 
                         return tickEventArgs.ResetTickCount ? HResultFalse : HResultOk;
