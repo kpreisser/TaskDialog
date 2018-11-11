@@ -8,6 +8,10 @@ namespace KPreisser.UI
         {
             private bool elevationRequired = false;
 
+
+            public event EventHandler<TaskDialogCustomButtonClickedEventArgs> ButtonClicked;
+
+
             public TaskDialogCustomButton(
                     TaskDialog origin,
                     string text,
@@ -18,12 +22,6 @@ namespace KPreisser.UI
             }
 
             
-            public TaskDialogCustomButtonClickedDelegate ButtonClicked
-            {
-                get;
-                set;
-            }
-
             public bool ElevationRequired
             {
                 get => this.elevationRequired;
@@ -45,9 +43,9 @@ namespace KPreisser.UI
             }
 
 
-            protected internal bool OnButtonClicked(EventArgs e)
+            internal protected void OnButtonClicked(TaskDialogCustomButtonClickedEventArgs e)
             {
-                return this.ButtonClicked?.Invoke(this, e) ?? true;
+                this.ButtonClicked?.Invoke(this, e);
             }
 
             protected override void SetEnabledCore(bool enabled)

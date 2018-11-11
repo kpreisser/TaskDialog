@@ -21,7 +21,7 @@ namespace KPreisser.UI
                 this.taskDialog.ClickRadioButton(this.ButtonID.Value);
             }
 
-            protected internal void OnRadioButtonClicked(EventArgs e)
+            internal protected void OnRadioButtonClicked(EventArgs e)
             {
                 this.RadioButtonClicked?.Invoke(this, e);
             }

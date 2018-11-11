@@ -134,9 +134,15 @@ namespace KPreisser.UI
         public event EventHandler<TaskDialogBooleanStatusEventArgs> VerificationClicked;
 
         /// <summary>
+        /// Occurs when one of the dialog's <see cref="CommonButtons"/> has been
+        /// clicked.
+        /// </summary>
+        public event EventHandler<TaskDialogCommonButtonClickedEventArgs> CommonButtonClicked;
+
+        /// <summary>
         /// 
         /// </summary>
-        public event EventHandler TimerTick;
+        public event EventHandler<TaskDialogTimerTickEventArgs> TimerTick;
 
 
         static TaskDialog()
@@ -546,15 +552,6 @@ namespace KPreisser.UI
             get => this.resultVerificationFlagChecked;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public TaskDialogCommonButtonClickedDelegate CommonButtonClicked
-        {
-            get;
-            set;
-        }
-
 
         /// <summary>
         /// 
@@ -830,17 +827,23 @@ namespace KPreisser.UI
                         int buttonID = wparam.ToInt32();
 
                         // Check if the button is part of the custom buttons.
+                        bool cancelClose;
                         if (buttonID >= CustomButtonStartID)
                         {
-                            return instance.currentCustomButtons[buttonID - CustomButtonStartID]
-                                    .OnButtonClicked(EventArgs.Empty) ? HResultOk : HResultFalse;
+                            var eventArgs = new TaskDialogCustomButtonClickedEventArgs();
+                            instance.currentCustomButtons[buttonID - CustomButtonStartID]
+                                    .OnButtonClicked(eventArgs);
+                            cancelClose = eventArgs.CancelClose;
                         }
                         else
                         {
-                            return instance.OnCommonButtonClicked(
-                                    new TaskDialogCommonButtonClickedEventArgs(
-                                        (TaskDialogResult)buttonID)) ? HResultOk : HResultFalse;
+                            var eventArgs = new TaskDialogCommonButtonClickedEventArgs(
+                                    (TaskDialogResult)buttonID);
+                            instance.OnCommonButtonClicked(eventArgs);
+                            cancelClose = eventArgs.CancelClose;
                         }
+
+                        return cancelClose ? HResultFalse : HResultOk;
 
                     case TaskDialogNotifications.RadioButtonClicked:
                         int radioButtonID = wparam.ToInt32();
@@ -865,8 +868,11 @@ namespace KPreisser.UI
                         break;
 
                     case TaskDialogNotifications.Timer:
-                        instance.OnTimerTick(EventArgs.Empty);
-                        break;
+                        var tickEventArgs = new TaskDialogTimerTickEventArgs(
+                                wparam.ToInt32());
+                        instance.OnTimerTick(tickEventArgs);
+
+                        return tickEventArgs.ResetTickCount ? HResultFalse : HResultOk;
                 }
 
                 return HResultOk;
@@ -961,9 +967,13 @@ namespace KPreisser.UI
 
         /// <summary>
         /// Resets all properties to their default values, e.g. for calling <see cref="Navigate"/>
-        /// with new values. Note that the event handlers will not be cleared.
+        /// with new values. You can specify to also clear the event handlers (except
+        /// <see cref="Opened"/> and <see cref="Closing"/>).
         /// </summary>
-        public void Reset()
+        /// <param name="clearEventHandlers">
+        /// <c>true</c> to also clear the event handlers
+        /// (except <see cref="Opened"/>, <see cref="Closing"/>).</param>
+        public void Reset(bool clearEventHandlers = false)
         {
             this.Flags = TaskDialogFlags.PositionRelativeToWindow;
             this.Title =
@@ -984,10 +994,20 @@ namespace KPreisser.UI
             this.DefaultCustomButton = null;
             this.DefaultRadioButton = null;
             this.Width = default;
-            this.CommonButtonClicked = null;
 
             ClearCustomButtons();
             ClearRadioButtons();
+
+            if (clearEventHandlers)
+            {
+                this.Navigated = null;
+                this.Help = null;
+                this.HyperlinkClicked = null;
+                this.ExpandoButtonClicked = null;
+                this.VerificationClicked = null;
+                this.CommonButtonClicked = null;
+                this.TimerTick = null;                
+            }
         }
 
         /// <summary>
@@ -1501,9 +1521,9 @@ namespace KPreisser.UI
         /// </summary>
         /// <param name="e"></param>
         /// <returns></returns>
-        protected bool OnCommonButtonClicked(TaskDialogCommonButtonClickedEventArgs e)
+        protected void OnCommonButtonClicked(TaskDialogCommonButtonClickedEventArgs e)
         {
-            return this.CommonButtonClicked?.Invoke(this, e) ?? true;
+            this.CommonButtonClicked?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1537,7 +1557,7 @@ namespace KPreisser.UI
         /// 
         /// </summary>
         /// <param name="e"></param>
-        protected void OnTimerTick(EventArgs e)
+        protected void OnTimerTick(TaskDialogTimerTickEventArgs e)
         {
             this.TimerTick?.Invoke(this, e);
         }

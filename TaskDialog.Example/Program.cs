@@ -52,13 +52,8 @@ namespace TaskDialogExample
             };
 
             long timerCount = 2;
-            bool stillShowsFirstPage = true;
             dialog.TimerTick += (s, e) =>
             {
-                // Don't do anything if the dialog navigated to another page.
-                if (!stillShowsFirstPage)
-                    return;
-
                 // Update the progress bar if value <= 35.
                 if (timerCount <= 35)
                 {
@@ -85,9 +80,12 @@ namespace TaskDialogExample
                     elevationRequired: true);
 
             TaskDialogIcon nextIcon = 0;
-            button1.ButtonClicked = (s, e) =>
+            button1.ButtonClicked += (s, e) =>
             {
                 Console.WriteLine("Button1 clicked!");
+
+                // Don't close the dialog.
+                e.CancelClose = true;
 
                 nextIcon++;
 
@@ -100,15 +98,15 @@ namespace TaskDialogExample
                 // Enable the "Yes" button and the 3rd button when the checkbox is set.
                 dialog.SetCommonButtonEnabled(TaskDialogResult.Yes, true);
                 button2.Enabled = true;
-
-                // Don't close the dialog.
-                return false;
             };
 
             button2.Enabled = false;
-            button2.ButtonClicked = (s, e) =>
+            button2.ButtonClicked += (s, e) =>
             {
                 Console.WriteLine("Button2 clicked!");
+
+                // Don't close the dialog.
+                e.CancelClose = true;
 
                 // Show a new Taskdialog
                 var innerDialog = new TaskDialog() {
@@ -129,20 +127,18 @@ namespace TaskDialogExample
 
                 innerDialog.Show();
                 Console.WriteLine("Result of new dialog: " + innerDialog.ResultCommonButton);
-
-                return false;
             };
 
-            button3.ButtonClicked = (s, e) =>
+            button3.ButtonClicked += (s, e) =>
             {
                 Console.WriteLine("Button3 clicked!");
 
-                // Navigate to a new page.
-                // Reset the dialog properties. Note that the event handlers will NOT be reset.
-                dialog.Reset();
+                // Don't close the dialog from the button click.
+                e.CancelClose = true;
 
-                // Ensure the timer doesn't do anything that was intended for the original page.
-                stillShowsFirstPage = false;
+                // Navigate to a new page.
+                // Reset the dialog properties and event handlers.
+                dialog.Reset(true);
 
                 dialog.MainInstruction = "Page 2";
                 dialog.Content = "Welcome to the second page!";
@@ -153,7 +149,6 @@ namespace TaskDialogExample
                 dialog.MainUpdateIcon = TaskDialogIcon.Warning;
                 dialog.ShowMarqueeProgressBar = true;
                 dialog.SizeToContent = true;
-
                 dialog.CommonButtons = TaskDialogButtons.Cancel;
 
                 // Create a custom button that will be shown as regular button.
@@ -173,6 +168,11 @@ namespace TaskDialogExample
                     dialog.SetCommonButtonEnabled(TaskDialogResult.Cancel, e2.Status);
                 };
 
+                dialog.CommonButtonClicked += (s2, e2) =>
+                {
+                    Console.WriteLine("Common Button clicked (navigated dialog)!");
+                };
+
                 // Now navigate the dialog.
                 // Instead of adding a event handler to the Navigated event, we supply a handler
                 // in the Navigate() method which will only be called once (so if we do
@@ -188,16 +188,11 @@ namespace TaskDialogExample
                     // Enable the marquee progress bar.
                     dialog.SetProgressBarMarquee(true);
                 });
-
-                // Don't close the dialog from the previous button click.
-                return false;
             };
 
-            dialog.CommonButtonClicked = (s, e) =>
+            dialog.CommonButtonClicked += (s, e) =>
             {
-                Console.WriteLine("Common Button clicked!");
-
-                return true;
+                Console.WriteLine("Common Button clicked (main dialog)!");
             };
 
             dialog.Show();
