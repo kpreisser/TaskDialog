@@ -176,7 +176,9 @@ namespace KPreisser.UI
 
         /// <summary>
         /// The window handle of the active dialog, or <see cref="IntPtr.Zero"/>
-        /// if the dialog is not active.
+        /// if the dialog is not active. When showing the dialog, the handle will be
+        /// available first in the <see cref="Opened"/> event, and last in the
+        /// <see cref="Closing"/> after which you shouldn't use it any more.
         /// </summary>
         public IntPtr Handle
         {

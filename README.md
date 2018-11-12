@@ -16,6 +16,7 @@ use a `Form` (WinForms) or `Window` (WPF) instance as that will have to wait unt
 * Additionally to standard icons, supports security icons that show a green, yellow, red, gray or blue bar
 * Can navigate to a new page (by reconstructing the dialog from current properties)
 * Can be shown modal or non-modal
+* Exposes its window handle (`hWnd`) through the `Handle` property so that the dialog window can be further manipulated (or used as owner for another window)
 
 ![taskdialog-screenshot-1](https://user-images.githubusercontent.com/13289184/48280515-1b3a6e00-e454-11e8-96f3-b22a3bcff22e.png)   ![taskdialog-screenshot-2](https://user-images.githubusercontent.com/13289184/48280347-9cddcc00-e453-11e8-9bc1-605a55e8aaec.png)
 
