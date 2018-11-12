@@ -789,8 +789,8 @@ namespace KPreisser.UI
             {
                 // Get the instance from the GCHandle pointer.
                 var instance = (TaskDialog)GCHandle.FromIntPtr(referenceData).Target;
-
                 instance.hwndDialog = hWnd;
+
                 switch (notification)
                 {
                     case TaskDialogNotifications.Created:
