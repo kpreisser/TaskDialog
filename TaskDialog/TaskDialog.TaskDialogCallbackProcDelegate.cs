@@ -7,8 +7,8 @@ namespace KPreisser.UI
         private delegate int TaskDialogCallbackProcDelegate(
                 IntPtr hWnd,
                 TaskDialogNotifications notification,
-                IntPtr wparam,
-                IntPtr lparam,
+                IntPtr wParam,
+                IntPtr lParam,
                 IntPtr referenceData);
     }
 }
