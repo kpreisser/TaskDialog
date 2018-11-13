@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 
@@ -162,7 +163,7 @@ namespace KPreisser.UI
         public TaskDialog()
         {
             // TaskDialog is only supported on Windows.
-#if NET451
+#if NET46
             if (Environment.OSVersion.Platform != PlatformID.Win32NT)
 #else
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -712,53 +713,9 @@ namespace KPreisser.UI
             }
         }
 
-        private static void DisposeConfig(ref TaskDialogConfig config)
+        private static void FreeConfig(IntPtr configPtr)
         {
-            if (config.pButtons != IntPtr.Zero)
-            {
-                FreeButtons(config.pButtons, config.cButtons);
-                config.pButtons = IntPtr.Zero;
-                config.cButtons = 0;
-            }
-
-            if (config.pRadioButtons != IntPtr.Zero)
-            {
-                FreeButtons(config.pRadioButtons, config.cRadioButtons);
-                config.pRadioButtons = IntPtr.Zero;
-                config.cRadioButtons = 0;
-            }
-        }
-
-        private static IntPtr AllocateAndMarshalButtons(TaskDialogButtonStruct[] structs)
-        {
-            // Allocate memory for the array.
-            var pointer = Marshal.AllocHGlobal(
-                    Marshal.SizeOf<TaskDialogButtonStruct>() * structs.Length);
-
-            var currentPtr = pointer;
-            foreach (var button in structs)
-            {
-                // Marshal the struct element. This will allocate memory for the strings.
-                Marshal.StructureToPtr(button, currentPtr, false);
-                currentPtr += Marshal.SizeOf<TaskDialogButtonStruct>();
-            }
-
-            return pointer;
-        }
-
-        private static void FreeButtons(IntPtr pointer, int length)
-        {
-            // We need to destroy each structure. Otherwise we will leak memory from the
-            // allocated strings (TaskDialogButton.ButtonText) which have been allocated
-            // using Marshal.StructureToPtr().
-            var currentPtr = pointer;
-            for (int i = 0; i < length; i++)
-            {
-                Marshal.DestroyStructure<TaskDialogButtonStruct>(currentPtr);
-                currentPtr += Marshal.SizeOf<TaskDialogButtonStruct>();
-            }
-
-            Marshal.FreeHGlobal(pointer);
+            Marshal.FreeHGlobal(configPtr);
         }
 
 #if !NET_STANDARD
@@ -1124,14 +1081,13 @@ namespace KPreisser.UI
                 this.currentOwnerHwnd = hwndOwner;
 
                 PrepareButtonConfig(out this.currentCustomButtons, out this.currentRadioButtons);
-                CreateConfig(
-                        out var config,
+                var configPtr = AllocateConfig(
                         out this.currentMainIconIsFromHandle,
                         out this.currentFooterIconIsFromHandle);
                 try
                 {
                     int ret = NativeMethods.TaskDialogIndirect(
-                                ref config,
+                                configPtr,
                                 out int resultButtonID,
                                 out int resultRadioButtonID,
                                 out this.resultVerificationFlagChecked);
@@ -1181,7 +1137,7 @@ namespace KPreisser.UI
                 {
                     // Clear the handles and free the memory.
                     this.currentOwnerHwnd = null;
-                    DisposeConfig(ref config);
+                    FreeConfig(configPtr);
 
                     ClearButtonConfig(this.currentCustomButtons, this.currentRadioButtons);
                     this.currentCustomButtons = null;
@@ -1271,28 +1227,21 @@ namespace KPreisser.UI
             try
             {
                 // Create a new config and marshal it.
-                CreateConfig(
-                        out var config,
+                var configPtr = AllocateConfig(
                         out this.currentMainIconIsFromHandle,
                         out this.currentFooterIconIsFromHandle);
-
-                var ptr = Marshal.AllocHGlobal(Marshal.SizeOf<TaskDialogConfig>());
-                Marshal.StructureToPtr(config, ptr, false);
                 try
                 {
                     // Note: If the task dialog cannot be recreated with the new contents,
                     // the dialog will close and TaskDialogIndirect() returns with an error
                     // code.
-                    SendTaskDialogMessage(TaskDialogMessages.NavigatePage, 0, ptr);
+                    SendTaskDialogMessage(TaskDialogMessages.NavigatePage, 0, configPtr);
                 }
                 finally
                 {
-                    // We can now destroy the structure because SendMessage does not return
+                    // We can now free the memory because SendMessage does not return
                     // until the message has been processed.
-                    Marshal.DestroyStructure<TaskDialogConfig>(ptr);
-                    Marshal.FreeHGlobal(ptr);
-
-                    DisposeConfig(ref config);
+                    FreeConfig(configPtr);
                 }
             }
             catch
@@ -1638,66 +1587,171 @@ namespace KPreisser.UI
             }
         }
 
-        private void CreateConfig(
-                out TaskDialogConfig config,
+        private unsafe IntPtr AllocateConfig(
                 out bool currentMainIconIsFromHandle,
                 out bool currentFooterIconIsFromHandle)
         {
-            var flags = this.Flags;
-            if (this.MainIconHandle != IntPtr.Zero)
-                flags |= TaskDialogFlags.UseMainIconHandle;
-            if (this.FooterIconHandle != IntPtr.Zero)
-                flags |= TaskDialogFlags.UseFooterIconHandle;
+            checked {
+                var flags = this.Flags;
+                if (this.MainIconHandle != IntPtr.Zero)
+                    flags |= TaskDialogFlags.UseMainIconHandle;
+                if (this.FooterIconHandle != IntPtr.Zero)
+                    flags |= TaskDialogFlags.UseFooterIconHandle;
 
-            config = new TaskDialogConfig()
-            {
-                cbSize = Marshal.SizeOf<TaskDialogConfig>(),
-                hwndParent = this.currentOwnerHwnd.Value,
-                pszWindowTitle = this.Title,
-                pszMainInstruction = this.MainInstruction,
-                pszContent = this.Content,
-                pszFooter = this.Footer,
-                dwCommonButtons = this.CommonButtons,
-                hMainIcon = this.MainIconHandle != IntPtr.Zero ? this.MainIconHandle : (IntPtr)this.MainIcon,
-                dwFlags = flags,
-                hFooterIcon = this.FooterIconHandle != IntPtr.Zero ? this.FooterIconHandle : (IntPtr)this.FooterIcon,
-                pszVerificationText = this.VerificationText,
-                pszExpandedInformation = this.ExpandedInformation,
-                pszExpandedControlText = this.ExpandedControlText,
-                pszCollapsedControlText = this.CollapsedControlText,
-                nDefaultButton = (this.DefaultCustomButton as TaskDialogCustomButton)?.ButtonID ??
-                        (int)this.DefaultCommonButton,
-                nDefaultRadioButton = (this.DefaultRadioButton as TaskDialogRadioButton)?.ButtonID ?? 0,
-                pfCallback = callbackProcDelegatePtr,
-                lpCallbackData = this.instanceHandlePtr,
-                cxWidth = this.Width
-            };
+                // First, calculate the necessary memory size we need to allocate for all
+                // structs and strings.
+                // Note: Each Align() call when calculating the size must correspond with a
+                // Align() call when incrementing the pointer.
+                // Use a byte pointer so we can use byte-wise pointer arithmetics.
+                var sizeToAllocate = (byte*)0;
+                sizeToAllocate += sizeof(TaskDialogConfig);
+                Align(ref sizeToAllocate);
 
-            currentMainIconIsFromHandle = this.MainIconHandle != IntPtr.Zero;
-            currentFooterIconIsFromHandle = this.FooterIconHandle != IntPtr.Zero;
+                // Strings in TasDialogConfig
+                sizeToAllocate += SizeOfString(this.Title);
+                sizeToAllocate += SizeOfString(this.MainInstruction);
+                sizeToAllocate += SizeOfString(this.Content);
+                sizeToAllocate += SizeOfString(this.Footer);
+                sizeToAllocate += SizeOfString(this.VerificationText);
+                sizeToAllocate += SizeOfString(this.ExpandedInformation);
+                sizeToAllocate += SizeOfString(this.ExpandedControlText);
+                sizeToAllocate += SizeOfString(this.CollapsedControlText);
+                Align(ref sizeToAllocate);
 
-            if (this.currentCustomButtons?.Length > 0)
-            {
-                var structs = this.currentCustomButtons.Select(e =>
-                        new TaskDialogButtonStruct()
-                        {
-                            ButtonID = e.ButtonID.Value,
-                            ButtonText = e.Text
-                        }).ToArray();
-                config.pButtons = AllocateAndMarshalButtons(structs);
-                config.cButtons = structs.Length;
-            }
+                // Buttons array
+                if (this.currentCustomButtons?.Length > 0) {
+                    sizeToAllocate += sizeof(TaskDialogButtonStruct) * this.currentCustomButtons.Length;
+                    Align(ref sizeToAllocate);
+                    // Strings in buttons array
+                    for (int i = 0; i < this.currentCustomButtons.Length; i++)
+                        sizeToAllocate += SizeOfString(this.currentCustomButtons[i].Text);
+                    Align(ref sizeToAllocate);
+                }
 
-            if (this.currentRadioButtons?.Length > 0)
-            {
-                var structs = this.currentRadioButtons.Select(e =>
-                        new TaskDialogButtonStruct()
-                        {
-                            ButtonID = e.ButtonID.Value,
-                            ButtonText = e.Text
-                        }).ToArray();
-                config.pRadioButtons = AllocateAndMarshalButtons(structs);
-                config.cRadioButtons = structs.Length;
+                // Radio buttons array
+                if (this.currentRadioButtons?.Length > 0) {
+                    sizeToAllocate += sizeof(TaskDialogButtonStruct) * this.currentRadioButtons.Length;
+                    Align(ref sizeToAllocate);
+                    // Strings in radio buttons array
+                    for (int i = 0; i < this.currentRadioButtons.Length; i++)
+                        sizeToAllocate += SizeOfString(this.currentRadioButtons[i].Text);
+                    Align(ref sizeToAllocate);
+                }
+
+                // Allocate the memory block.
+                var initialPtr = Marshal.AllocHGlobal((IntPtr)sizeToAllocate);
+                try {
+                    var currentPtr = (byte*)initialPtr;
+
+                    ref var taskDialogConfig = ref *(TaskDialogConfig*)currentPtr;
+                    currentPtr += sizeof(TaskDialogConfig);
+                    Align(ref currentPtr);
+
+                    // Assign the structure with the constructor syntax, which will
+                    // automatically initialize its other members with their default
+                    // value.
+                    taskDialogConfig = new TaskDialogConfig() {
+                        cbSize = sizeof(TaskDialogConfig),
+                        hwndParent = this.currentOwnerHwnd.Value,
+                        pszWindowTitle = CopyString(this.Title, ref currentPtr),
+                        pszMainInstruction = CopyString(this.MainInstruction, ref currentPtr),
+                        pszContent = CopyString(this.Content, ref currentPtr),
+                        pszFooter = CopyString(this.Footer, ref currentPtr),
+                        dwCommonButtons = this.CommonButtons,
+                        hMainIcon = this.MainIconHandle != IntPtr.Zero ? this.MainIconHandle : (IntPtr)this.MainIcon,
+                        dwFlags = flags,
+                        hFooterIcon = this.FooterIconHandle != IntPtr.Zero ? this.FooterIconHandle : (IntPtr)this.FooterIcon,
+                        pszVerificationText = CopyString(this.VerificationText, ref currentPtr),
+                        pszExpandedInformation = CopyString(this.ExpandedInformation, ref currentPtr),
+                        pszExpandedControlText = CopyString(this.ExpandedControlText, ref currentPtr),
+                        pszCollapsedControlText = CopyString(this.CollapsedControlText, ref currentPtr),
+                        nDefaultButton = (this.DefaultCustomButton as TaskDialogCustomButton)?.ButtonID ??
+                                (int)this.DefaultCommonButton,
+                        nDefaultRadioButton = (this.DefaultRadioButton as TaskDialogRadioButton)?.ButtonID ?? 0,
+                        pfCallback = callbackProcDelegatePtr,
+                        lpCallbackData = this.instanceHandlePtr,
+                        cxWidth = this.Width
+                    };
+                    Align(ref currentPtr);
+
+                    currentMainIconIsFromHandle = this.MainIconHandle != IntPtr.Zero;
+                    currentFooterIconIsFromHandle = this.FooterIconHandle != IntPtr.Zero;
+
+                    // Buttons array
+                    if (this.currentCustomButtons?.Length > 0) {
+                        var customButtonStructs = (TaskDialogButtonStruct*)currentPtr;
+                        taskDialogConfig.pButtons = (IntPtr)customButtonStructs;
+                        taskDialogConfig.cButtons = this.currentCustomButtons.Length;
+                        currentPtr += sizeof(TaskDialogButtonStruct) * this.currentCustomButtons.Length;
+                        Align(ref currentPtr);
+
+                        for (int i = 0; i < this.currentCustomButtons.Length; i++) {
+                            var currentCustomButton = this.currentCustomButtons[i];
+                            customButtonStructs[i] = new TaskDialogButtonStruct() {
+                                nButtonID = currentCustomButton.ButtonID.Value,
+                                pszButtonText = CopyString(currentCustomButton.Text, ref currentPtr)
+                            };
+                        }
+                        Align(ref currentPtr);
+                    }
+
+                    // Radio buttons array
+                    if (this.currentRadioButtons?.Length > 0) {
+                        var customRadioButtonStructs = (TaskDialogButtonStruct*)currentPtr;
+                        taskDialogConfig.pRadioButtons = (IntPtr)customRadioButtonStructs;
+                        taskDialogConfig.cRadioButtons = this.currentRadioButtons.Length;
+                        currentPtr += sizeof(TaskDialogButtonStruct) * this.currentRadioButtons.Length;
+                        Align(ref currentPtr);
+
+                        for (int i = 0; i < this.currentRadioButtons.Length; i++) {
+                            var currentCustomButton = this.currentRadioButtons[i];
+                            customRadioButtonStructs[i] = new TaskDialogButtonStruct() {
+                                nButtonID = currentCustomButton.ButtonID.Value,
+                                pszButtonText = CopyString(currentCustomButton.Text, ref currentPtr)
+                            };
+                        }
+                        Align(ref currentPtr);
+                    }
+
+                    Debug.Assert(currentPtr == (long)initialPtr + sizeToAllocate);
+                    return initialPtr;
+                }
+                catch {
+                    Marshal.FreeHGlobal(initialPtr);
+                    throw;
+                }
+
+
+                void Align(ref byte* currentPtr)
+                {
+                    // Align the pointer to the next register size.
+                    if (IntPtr.Size == 8)
+                        currentPtr = (byte*)(((ulong)currentPtr + 7) & ~(ulong)7);
+                    else
+                        currentPtr = (byte*)(((uint)currentPtr + 3) & ~(uint)3);
+                }
+
+                long SizeOfString(string str)
+                {
+                    return str == null ? 0 : ((long)str.Length + 1) * sizeof(char);
+                }
+
+                IntPtr CopyString(string str, ref byte* currentPtr)
+                {
+                    if (str == null)
+                        return IntPtr.Zero;
+
+                    fixed (char* strPtr = str) {
+                        // Copy the string and a NULL character.
+                        long bytesToCopy = SizeOfString(str);
+                        Buffer.MemoryCopy(strPtr, (void*)currentPtr, bytesToCopy, bytesToCopy - sizeof(char));
+                        ((char*)currentPtr)[str.Length] = '\0';
+
+                        var ptrToReturn = currentPtr;
+                        currentPtr += bytesToCopy;
+                        return (IntPtr)ptrToReturn;
+                    }
+                }
             }
         }
 
