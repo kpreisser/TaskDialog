@@ -6,7 +6,7 @@ see [About Task Dialogs](https://docs.microsoft.com/en-us/windows/desktop/Contro
 This project aims to provide a complete .NET implementation (C#) of the Task Dialog with all the features that
 are also available in the native APIs, with all the marshalling and memory management done under the hood.
 
-The project targets .NET Framework 4.5.1 and .NET Standard 2.0.<br>
+The project targets .NET Framework 4.6 and .NET Standard 2.0.<br>
 (For .NET Standard, there are not yet overloads of `Show()` that
 use a `Form` (WinForms) or `Window` (WPF) instance as that will have to wait until .NET Core 3.0.)
 

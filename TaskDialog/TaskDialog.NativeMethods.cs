@@ -13,7 +13,7 @@ namespace KPreisser.UI
                     ExactSpelling = true,
                     SetLastError = true)]
             public static extern int TaskDialogIndirect(
-                    [In] ref TaskDialogConfig pTaskConfig,
+                    IntPtr pTaskConfig,
                     [Out] out int pnButton,
                     [Out] out int pnRadioButton,
                     [MarshalAs(UnmanagedType.Bool), Out] out bool pfVerificationFlagChecked);
