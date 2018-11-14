@@ -67,7 +67,8 @@ Show a simple dialog:
 
 Show a dialog with command links and a marquee progress bar:
 ```c#
-    TaskDialog dialog = new TaskDialog() {
+    TaskDialog dialog = new TaskDialog()
+    {
         MainInstruction = "Hi there!",
         Content = "This is a new dialog!",
         MainIcon = TaskDialogIcon.Information,
@@ -87,6 +88,38 @@ Show a dialog with command links and a marquee progress bar:
     var resultButton = dialog.ResultCustomButton;
 ```
 
+Update the dialog's content when clicking one of its buttons:
+
+```c#
+    int number = 0;
+    
+    TaskDialog dialog = new TaskDialog()
+    {
+        MainInstruction = "Update number?",
+        Content = $"Current number: {number}",
+        MainIcon = TaskDialogIcon.QuestionNoSound,
+        CommonButtons = TaskDialogButtons.Yes | TaskDialogButtons.Close
+    };
+
+    // Handle the event when a common button was clicked.
+    dialog.CommonButtonClicked += (s, e) =>
+    {
+        if (e.Button == TaskDialogResult.Yes)
+        {
+            // When clicking the "Yes" button, don't close the dialog, but
+            // instead increment the number and update the dialog content.
+            e.CancelClose = true;
+
+            number++;
+            dialog.Content = $"Current number: {number}";
+
+            // Now update the content.
+            dialog.UpdateElements(TaskDialogUpdateElements.Content);
+        }
+    };
+
+    dialog.Show();
+```
 
 For a more detailed example of a TaskDialog that uses progress bars, a timer,
 hyperlinks, navigation and various event handlers (as shown by the screenshots), please
