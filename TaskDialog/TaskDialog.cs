@@ -713,9 +713,9 @@ namespace KPreisser.UI
             }
         }
 
-        private static void FreeConfig(IntPtr configPtr)
+        private static void FreeConfig(IntPtr ptrToFree)
         {
-            Marshal.FreeHGlobal(configPtr);
+            Marshal.FreeHGlobal(ptrToFree);
         }
 
 #if !NET_STANDARD
@@ -1081,13 +1081,15 @@ namespace KPreisser.UI
                 this.currentOwnerHwnd = hwndOwner;
 
                 PrepareButtonConfig(out this.currentCustomButtons, out this.currentRadioButtons);
-                var configPtr = AllocateConfig(
-                        out this.currentMainIconIsFromHandle,
-                        out this.currentFooterIconIsFromHandle);
+                AllocateConfig(
+                       out var ptrToFree,
+                       out var ptrTaskDialogConfig,
+                       out this.currentMainIconIsFromHandle,
+                       out this.currentFooterIconIsFromHandle);
                 try
                 {
                     int ret = NativeMethods.TaskDialogIndirect(
-                                configPtr,
+                                ptrTaskDialogConfig,
                                 out int resultButtonID,
                                 out int resultRadioButtonID,
                                 out this.resultVerificationFlagChecked);
@@ -1137,7 +1139,7 @@ namespace KPreisser.UI
                 {
                     // Clear the handles and free the memory.
                     this.currentOwnerHwnd = null;
-                    FreeConfig(configPtr);
+                    FreeConfig(ptrToFree);
 
                     ClearButtonConfig(this.currentCustomButtons, this.currentRadioButtons);
                     this.currentCustomButtons = null;
@@ -1226,8 +1228,10 @@ namespace KPreisser.UI
 
             try
             {
-                // Create a new config and marshal it.
-                var configPtr = AllocateConfig(
+                // Create the new config.
+                AllocateConfig(
+                        out var ptrToFree,
+                        out var ptrTaskDialogConfig,
                         out this.currentMainIconIsFromHandle,
                         out this.currentFooterIconIsFromHandle);
                 try
@@ -1235,13 +1239,13 @@ namespace KPreisser.UI
                     // Note: If the task dialog cannot be recreated with the new contents,
                     // the dialog will close and TaskDialogIndirect() returns with an error
                     // code.
-                    SendTaskDialogMessage(TaskDialogMessages.NavigatePage, 0, configPtr);
+                    SendTaskDialogMessage(TaskDialogMessages.NavigatePage, 0, ptrTaskDialogConfig);
                 }
                 finally
                 {
                     // We can now free the memory because SendMessage does not return
                     // until the message has been processed.
-                    FreeConfig(configPtr);
+                    FreeConfig(ptrToFree);
                 }
             }
             catch
@@ -1587,7 +1591,9 @@ namespace KPreisser.UI
             }
         }
 
-        private unsafe IntPtr AllocateConfig(
+        private unsafe void AllocateConfig(
+                out IntPtr ptrToFree,
+                out IntPtr ptrTaskDialogConfig,
                 out bool currentMainIconIsFromHandle,
                 out bool currentFooterIconIsFromHandle)
         {
@@ -1638,13 +1644,17 @@ namespace KPreisser.UI
                     Align(ref sizeToAllocate);
                 }
 
-                // Add additional 4 or 8 bytes to handle the case when the returned memory
-                // pointer from allocation would not be aligned (although that shouldn't
-                // occur) and the next Align() call would then align differently than the
-                // one for calculating the size.
-                var initialPtr = Marshal.AllocHGlobal((IntPtr)(sizeToAllocate + IntPtr.Size));
+                // Allocate the memory block. We add additional bytes to ensure we can
+                // align the pointer to IntPtr.Size.
+                ptrToFree = Marshal.AllocHGlobal((IntPtr)(sizeToAllocate + IntPtr.Size - 1));
                 try {
-                    var currentPtr = (byte*)initialPtr;
+                    var currentPtr = (byte*)ptrToFree;
+
+                    // Align the pointer before using it. This is important since we also
+                    // started with an aligned "address" value (0) when calculating the
+                    // required allocation size.
+                    Align(ref currentPtr);
+                    ptrTaskDialogConfig = (IntPtr)currentPtr;
 
                     ref var taskDialogConfig = ref *(TaskDialogConfig*)currentPtr;
                     currentPtr += sizeof(TaskDialogConfig);
@@ -1716,11 +1726,10 @@ namespace KPreisser.UI
                         Align(ref currentPtr);
                     }
 
-                    Debug.Assert(currentPtr == (long)initialPtr + sizeToAllocate);
-                    return initialPtr;
+                    Debug.Assert(currentPtr == (long)ptrTaskDialogConfig + sizeToAllocate);
                 }
                 catch {
-                    Marshal.FreeHGlobal(initialPtr);
+                    Marshal.FreeHGlobal(ptrToFree);
                     throw;
                 }
 
