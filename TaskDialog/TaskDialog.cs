@@ -1638,8 +1638,11 @@ namespace KPreisser.UI
                     Align(ref sizeToAllocate);
                 }
 
-                // Allocate the memory block.
-                var initialPtr = Marshal.AllocHGlobal((IntPtr)sizeToAllocate);
+                // Add additional 4 or 8 bytes to handle the case when the returned memory
+                // pointer from allocation would not be aligned (although that shouldn't
+                // occur) and the next Align() call would then align differently than the
+                // one for calculating the size.
+                var initialPtr = Marshal.AllocHGlobal((IntPtr)(sizeToAllocate + IntPtr.Size));
                 try {
                     var currentPtr = (byte*)initialPtr;
 
