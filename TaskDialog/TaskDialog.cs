@@ -1734,13 +1734,19 @@ namespace KPreisser.UI
                 }
 
 
-                void Align(ref byte* currentPtr)
+                void Align(ref byte* currentPtr, int? alignment = null)
                 {
-                    // Align the pointer to the next register size.
+                    if (alignment <= 0)
+                        throw new ArgumentOutOfRangeException(nameof(alignment));
+
+                    // Align the pointer to the next align size. If not specified, we will
+                    // use the pointer (register) size.
+                    uint add = (uint)(alignment ?? IntPtr.Size) - 1;
                     if (IntPtr.Size == 8)
-                        currentPtr = (byte*)(((ulong)currentPtr + 7) & ~(ulong)7);
+                        // Note: The latter cast is not redundant, even if VS says so!
+                        currentPtr = (byte*)(((ulong)currentPtr + add) & ~(ulong)add);
                     else
-                        currentPtr = (byte*)(((uint)currentPtr + 3) & ~(uint)3);
+                        currentPtr = (byte*)(((uint)currentPtr + add) & ~add);
                 }
 
                 long SizeOfString(string str)
