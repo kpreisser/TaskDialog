@@ -1666,18 +1666,18 @@ namespace KPreisser.UI
                     taskDialogConfig = new TaskDialogConfig() {
                         cbSize = sizeof(TaskDialogConfig),
                         hwndParent = this.currentOwnerHwnd.Value,
-                        pszWindowTitle = CopyString(this.Title, ref currentPtr),
-                        pszMainInstruction = CopyString(this.MainInstruction, ref currentPtr),
-                        pszContent = CopyString(this.Content, ref currentPtr),
-                        pszFooter = CopyString(this.Footer, ref currentPtr),
+                        pszWindowTitle = MarshalString(this.Title, ref currentPtr),
+                        pszMainInstruction = MarshalString(this.MainInstruction, ref currentPtr),
+                        pszContent = MarshalString(this.Content, ref currentPtr),
+                        pszFooter = MarshalString(this.Footer, ref currentPtr),
                         dwCommonButtons = this.CommonButtons,
                         hMainIcon = this.MainIconHandle != IntPtr.Zero ? this.MainIconHandle : (IntPtr)this.MainIcon,
                         dwFlags = flags,
                         hFooterIcon = this.FooterIconHandle != IntPtr.Zero ? this.FooterIconHandle : (IntPtr)this.FooterIcon,
-                        pszVerificationText = CopyString(this.VerificationText, ref currentPtr),
-                        pszExpandedInformation = CopyString(this.ExpandedInformation, ref currentPtr),
-                        pszExpandedControlText = CopyString(this.ExpandedControlText, ref currentPtr),
-                        pszCollapsedControlText = CopyString(this.CollapsedControlText, ref currentPtr),
+                        pszVerificationText = MarshalString(this.VerificationText, ref currentPtr),
+                        pszExpandedInformation = MarshalString(this.ExpandedInformation, ref currentPtr),
+                        pszExpandedControlText = MarshalString(this.ExpandedControlText, ref currentPtr),
+                        pszCollapsedControlText = MarshalString(this.CollapsedControlText, ref currentPtr),
                         nDefaultButton = (this.DefaultCustomButton as TaskDialogCustomButton)?.ButtonID ??
                                 (int)this.DefaultCommonButton,
                         nDefaultRadioButton = (this.DefaultRadioButton as TaskDialogRadioButton)?.ButtonID ?? 0,
@@ -1702,7 +1702,7 @@ namespace KPreisser.UI
                             var currentCustomButton = this.currentCustomButtons[i];
                             customButtonStructs[i] = new TaskDialogButtonStruct() {
                                 nButtonID = currentCustomButton.ButtonID.Value,
-                                pszButtonText = CopyString(currentCustomButton.Text, ref currentPtr)
+                                pszButtonText = MarshalString(currentCustomButton.Text, ref currentPtr)
                             };
                         }
                         Align(ref currentPtr);
@@ -1720,7 +1720,7 @@ namespace KPreisser.UI
                             var currentCustomButton = this.currentRadioButtons[i];
                             customRadioButtonStructs[i] = new TaskDialogButtonStruct() {
                                 nButtonID = currentCustomButton.ButtonID.Value,
-                                pszButtonText = CopyString(currentCustomButton.Text, ref currentPtr)
+                                pszButtonText = MarshalString(currentCustomButton.Text, ref currentPtr)
                             };
                         }
                         Align(ref currentPtr);
@@ -1748,7 +1748,7 @@ namespace KPreisser.UI
                     return str == null ? 0 : ((long)str.Length + 1) * sizeof(char);
                 }
 
-                IntPtr CopyString(string str, ref byte* currentPtr)
+                IntPtr MarshalString(string str, ref byte* currentPtr)
                 {
                     if (str == null)
                         return IntPtr.Zero;
@@ -1756,7 +1756,7 @@ namespace KPreisser.UI
                     fixed (char* strPtr = str) {
                         // Copy the string and a NULL character.
                         long bytesToCopy = SizeOfString(str);
-                        Buffer.MemoryCopy(strPtr, (void*)currentPtr, bytesToCopy, bytesToCopy - sizeof(char));
+                        Buffer.MemoryCopy(strPtr, currentPtr, bytesToCopy, bytesToCopy - sizeof(char));
                         ((char*)currentPtr)[str.Length] = '\0';
 
                         var ptrToReturn = currentPtr;
