@@ -1080,6 +1080,12 @@ namespace KPreisser.UI
                 this.instanceHandlePtr = GCHandle.ToIntPtr(instanceHandle);
                 this.currentOwnerHwnd = hwndOwner;
 
+                // Clear the previous result properties.
+                this.resultVerificationFlagChecked = default;
+                this.resultCommonButton = default;
+                this.resultCustomButton = null;
+                this.resultRadioButton = null;
+
                 PrepareButtonConfig(out this.currentCustomButtons, out this.currentRadioButtons);
                 AllocateConfig(
                        out var ptrToFree,
