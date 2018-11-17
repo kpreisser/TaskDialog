@@ -36,6 +36,35 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
-        Close = 1 << 5
+        Close = 1 << 5,
+
+        /// <summary>
+        /// 
+        /// </summary>
+        Abort = 1 << 16,
+
+        /// <summary>
+        /// 
+        /// </summary>
+        Ignore = 1 << 17,
+
+        /// <summary>
+        /// 
+        /// </summary>
+        TryAgain = 1 << 18,
+
+        /// <summary>
+        /// 
+        /// </summary>
+        Continue = 1 << 19,
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <remarks>
+        /// Note: Clicking this button will not close the dialog, but will raise the
+        /// <see cref="TaskDialog.Help"/> event.
+        /// </remarks>
+        Help = 1 << 20
     }
 }

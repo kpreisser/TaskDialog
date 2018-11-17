@@ -7,13 +7,13 @@ using System.Runtime.InteropServices;
 namespace KPreisser.UI
 {
     /// <summary>
-    /// A TaskDialog is the successor of the MessageBox and provides a lot more features.
+    /// A task dialog is the successor of the message box and provides a lot more features.
     /// </summary>
     /// <remarks>
     /// For more information, see:
     /// https://docs.microsoft.com/en-us/windows/desktop/Controls/task-dialogs-overview
     /// 
-    /// Note: To use a TaskDialog, the application needs to be compiled with a manifest
+    /// Note: To use a task dialog, the application needs to be compiled with a manifest
     /// that contains a dependency to Microsoft.Windows.Common-Controls (6.0.0.0),
     /// and the thread needs to use the single-threaded apartment (STA) model.
     /// </remarks>
@@ -35,12 +35,25 @@ namespace KPreisser.UI
         /// </summary>
         private const int RadioButtonStartID = 1;
 
-        // Offset for user message types
+        // Offset for user message types.
         private const int UserMessageOffset = 0x400;
 
         private const int HResultOk = 0x0; // S_OK
 
         private const int HResultFalse = 0x1; // S_FALSE
+
+        private const TaskDialogButtons AllCommonButtons =
+                TaskDialogButtons.OK |
+                TaskDialogButtons.Yes |
+                TaskDialogButtons.No |
+                TaskDialogButtons.Cancel |
+                TaskDialogButtons.Retry |
+                TaskDialogButtons.Close |
+                TaskDialogButtons.Abort |
+                TaskDialogButtons.Ignore |
+                TaskDialogButtons.TryAgain |
+                TaskDialogButtons.Continue |
+                TaskDialogButtons.Help;
 
 
         /// <summary>
@@ -91,31 +104,32 @@ namespace KPreisser.UI
         private bool resultVerificationFlagChecked;
 
         /// <summary>
-        /// Flags for this TaskDialog instance. By default,
+        /// Flags for this task dialog instance. By default,
         /// <see cref="TaskDialogFlags.PositionRelativeToWindow"/> is set.
         /// </summary>
-        private TaskDialogFlags Flags;
+        private TaskDialogFlags flags;
 
         private bool suppressCommonButtonClickedEvent;
 
 
         /// <summary>
-        /// Occurs after the TaskDialog has been created but before it is displayed.
+        /// Occurs after the task dialog has been created but before it is displayed.
         /// </summary>
         public event EventHandler Opened;
 
         /// <summary>
-        /// Occurs when the TaskDialog is about to be destroyed.
+        /// Occurs when the task dialog is about to be destroyed.
         /// </summary>
         public event EventHandler Closing;
 
         /// <summary>
-        /// Occurs after the TaskDialog has navigated.
+        /// Occurs after the task dialog has navigated.
         /// </summary>
         public event EventHandler Navigated;
 
         /// <summary>
-        /// 
+        /// Occurs when the user presses F1 while the dialog has focus, or when the
+        /// user clicks the <see cref="TaskDialogButtons.Help"/> button.
         /// </summary>
         public event EventHandler Help;
 
@@ -280,7 +294,7 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// If specified, after the TaskDialog is opened or navigated, its main icon will
+        /// If specified, after the task dialog is opened or navigated, its main icon will
         /// be updated to the specified one.
         /// Note: This will not always work, e.g. when running on Windows Server Core.
         /// Note: This member will be ignored if <see cref="MainIconHandle"/> is not
@@ -357,7 +371,9 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// 
+        /// Gets or sets a value that indicates whether to display custom buttons
+        /// created with <see cref="AddCustomButton(string, bool)"/> as command links
+        /// instead of buttons.
         /// </summary>
         public bool UseCommandLinks
         {
@@ -945,7 +961,8 @@ namespace KPreisser.UI
         /// (except <see cref="Opened"/>, <see cref="Closing"/>).</param>
         public void Reset(bool clearEventHandlers = false)
         {
-            this.Flags = TaskDialogFlags.PositionRelativeToWindow;
+            this.flags = TaskDialogFlags.PositionRelativeToWindow;
+
             this.Title =
                     this.MainInstruction =
                     this.Content =
@@ -1569,8 +1586,8 @@ namespace KPreisser.UI
                 throw new InvalidOperationException(
                         "Too many custom buttons or radio buttons have been added.");
 
-            if (this.CommonButtons < 0 || this.CommonButtons >= (TaskDialogButtons)(1 << 6))
-                throw new InvalidOperationException("Invalid common buttons.");            
+            if ((this.CommonButtons & ~AllCommonButtons) != 0)
+                throw new InvalidOperationException("Invalid common buttons.");
         }
 
         private void PrepareButtonConfig(
@@ -1604,7 +1621,7 @@ namespace KPreisser.UI
                 out bool currentFooterIconIsFromHandle)
         {
             checked {
-                var flags = this.Flags;
+                var flags = this.flags;
                 if (this.MainIconHandle != IntPtr.Zero)
                     flags |= TaskDialogFlags.UseMainIconHandle;
                 if (this.FooterIconHandle != IntPtr.Zero)
@@ -1817,15 +1834,15 @@ namespace KPreisser.UI
 
         private bool GetFlag(TaskDialogFlags flag)
         {
-            return (this.Flags & flag) == flag;
+            return (this.flags & flag) == flag;
         }
 
         private void SetFlag(TaskDialogFlags flag, bool value)
         {
             if (value)
-                this.Flags |= flag;
+                this.flags |= flag;
             else
-                this.Flags &= ~flag;
+                this.flags &= ~flag;
         }
 
         private void SendTaskDialogMessage(TaskDialogMessages message, int wparam, IntPtr lparam)

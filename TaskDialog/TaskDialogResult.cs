@@ -8,7 +8,12 @@
         /// <summary>
         /// 
         /// </summary>
-        Ok = 1,
+        None = 0,
+
+        /// <summary>
+        /// 
+        /// </summary>
+        OK = 1,
 
         /// <summary>
         /// 
@@ -18,7 +23,17 @@
         /// <summary>
         /// 
         /// </summary>
+        Abort = 3,
+
+        /// <summary>
+        /// 
+        /// </summary>
         Retry = 4,
+
+        /// <summary>
+        /// 
+        /// </summary>
+        Ignore = 5,
 
         /// <summary>
         /// 
@@ -33,6 +48,21 @@
         /// <summary>
         /// 
         /// </summary>
-        Close = 8
+        Close = 8,
+
+        /// <summary>
+        /// 
+        /// </summary>
+        Help = 9,
+
+        /// <summary>
+        /// 
+        /// </summary>
+        TryAgain = 10,
+
+        /// <summary>
+        /// 
+        /// </summary>
+        Continue = 11
     }
 }

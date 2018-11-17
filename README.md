@@ -24,7 +24,9 @@ use a `Form` (WinForms) or `Window` (WPF) instance as that will have to wait unt
 ## Prerequisites
 
 To use the Task Dialog, your application needs to be compiled with a manifest that contains a dependency to
-`Microsoft.Windows.Common-Controls` (6.0.0.0):
+`Microsoft.Windows.Common-Controls` 6.0.0.0 (otherwise, an
+[`EntryPointNotFoundException`](https://docs.microsoft.com/dotnet/api/system.entrypointnotfoundexception)
+will occur when trying to show the dialog):
 ```xml
 <assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1">
   <!-- ..... -->
