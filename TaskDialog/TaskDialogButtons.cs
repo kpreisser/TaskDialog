@@ -11,6 +11,11 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
+        None = 0,
+
+        /// <summary>
+        /// 
+        /// </summary>
         OK = 1 << 0,
 
         /// <summary>
