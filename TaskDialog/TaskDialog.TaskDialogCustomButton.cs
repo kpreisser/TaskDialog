@@ -39,7 +39,7 @@ namespace KPreisser.UI
             public override void Click()
             {
                 VerifyState();
-                this.taskDialog.ClickButton(this.ButtonID.Value);
+                this.taskDialog.ClickButtonCore(this.ButtonID.Value);
             }
 
 

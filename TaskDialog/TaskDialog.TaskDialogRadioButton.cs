@@ -18,7 +18,7 @@ namespace KPreisser.UI
             public override void Click()
             {
                 VerifyState();
-                this.taskDialog.ClickRadioButton(this.ButtonID.Value);
+                this.taskDialog.ClickRadioButtonCore(this.ButtonID.Value);
             }
 
             internal protected void OnRadioButtonClicked(EventArgs e)
@@ -30,7 +30,7 @@ namespace KPreisser.UI
             protected override void SetEnabledCore(bool enabled)
             {
                 if (TryVerifyState())
-                    this.taskDialog.SetRadioButtonEnabled(this.ButtonID.Value, enabled);
+                    this.taskDialog.SetRadioButtonEnabledCore(this.ButtonID.Value, enabled);
             }
         }
     }
