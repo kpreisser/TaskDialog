@@ -2,7 +2,7 @@
 {
     public partial class TaskDialog
     {
-        private enum TaskDialogMessages : int
+        private enum TaskDialogMessage : int
         {
             NavigatePage = UserMessageOffset + 101,
 

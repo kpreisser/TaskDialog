@@ -746,7 +746,7 @@ namespace KPreisser.UI
 
         private static int HandleTaskDialogCallback(
                 IntPtr hWnd,
-                TaskDialogNotifications notification,
+                TaskDialogNotification notification,
                 IntPtr wParam,
                 IntPtr lParam,
                 IntPtr referenceData)
@@ -757,12 +757,12 @@ namespace KPreisser.UI
 
             switch (notification)
             {
-                case TaskDialogNotifications.Created:
+                case TaskDialogNotification.Created:
                     instance.ApplyButtonInitialization();
                     instance.OnOpened(EventArgs.Empty);
                     break;
 
-                case TaskDialogNotifications.Destroyed:
+                case TaskDialogNotification.Destroyed:
                     instance.OnClosing(EventArgs.Empty);
 
                     // Clear the dialog handle, because according to the docs, we must not 
@@ -776,17 +776,17 @@ namespace KPreisser.UI
                     instance.hwndDialog = IntPtr.Zero;
                     break;
 
-                case TaskDialogNotifications.Navigated:
+                case TaskDialogNotification.Navigated:
                     instance.ApplyButtonInitialization();
                     instance.OnNavigated(EventArgs.Empty);
                     break;
 
-                case TaskDialogNotifications.HyperlinkClicked:
+                case TaskDialogNotification.HyperlinkClicked:
                     string link = Marshal.PtrToStringUni(lParam);
                     instance.OnHyperlinkClicked(new TaskDialogHyperlinkClickedEventArgs(link));
                     break;
 
-                case TaskDialogNotifications.ButtonClicked:
+                case TaskDialogNotification.ButtonClicked:
                     if (instance.suppressCommonButtonClickedEvent)
                         return HResultOk;
 
@@ -811,7 +811,7 @@ namespace KPreisser.UI
 
                     return cancelClose ? HResultFalse : HResultOk;
 
-                case TaskDialogNotifications.RadioButtonClicked:
+                case TaskDialogNotification.RadioButtonClicked:
                     int radioButtonID = wParam.ToInt32();
 
                     var radioButton = instance.currentRadioButtons
@@ -819,21 +819,21 @@ namespace KPreisser.UI
                     radioButton.OnRadioButtonClicked(EventArgs.Empty);
                     break;
 
-                case TaskDialogNotifications.ExpandoButtonClicked:
+                case TaskDialogNotification.ExpandoButtonClicked:
                     instance.OnExpandoButtonClicked(new TaskDialogBooleanStatusEventArgs(
                             wParam != IntPtr.Zero));
                     break;
 
-                case TaskDialogNotifications.VerificationClicked:
+                case TaskDialogNotification.VerificationClicked:
                     instance.OnVerificationClicked(new TaskDialogBooleanStatusEventArgs(
                             wParam != IntPtr.Zero));
                     break;
 
-                case TaskDialogNotifications.Help:
+                case TaskDialogNotification.Help:
                     instance.OnHelp(EventArgs.Empty);
                     break;
 
-                case TaskDialogNotifications.Timer:
+                case TaskDialogNotification.Timer:
                     // Note: The documentation specifies that wParam contains a DWORD,
                     // which might mean that on 64-bit platforms the highest bit (63)
                     // will be zero even if the DWORD has its highest bit (31) set. In
@@ -1251,7 +1251,7 @@ namespace KPreisser.UI
                     // the dialog will close and TaskDialogIndirect() returns with an error
                     // code.
                     SendTaskDialogMessage(
-                            TaskDialogMessages.NavigatePage,
+                            TaskDialogMessage.NavigatePage,
                             0,
                             ptrTaskDialogConfig);
                 }
@@ -1312,7 +1312,7 @@ namespace KPreisser.UI
         public void SwitchProgressBarMode(bool marqueeProgressBar)
         {
             SendTaskDialogMessage(
-                    TaskDialogMessages.SetMarqueeProgressBar,
+                    TaskDialogMessage.SetMarqueeProgressBar,
                     marqueeProgressBar ? 1 : 0,
                     IntPtr.Zero);
         }
@@ -1336,7 +1336,7 @@ namespace KPreisser.UI
                 throw new ArgumentOutOfRangeException(nameof(animationSpeed));
 
             SendTaskDialogMessage(
-                    TaskDialogMessages.SetProgressBarMarquee,
+                    TaskDialogMessage.SetProgressBarMarquee,
                     enableMarquee ? 1 : 0,
                     (IntPtr)animationSpeed);
         }
@@ -1359,7 +1359,7 @@ namespace KPreisser.UI
 
             int param = min | (max << 0x10);
             SendTaskDialogMessage(
-                    TaskDialogMessages.SetProgressBarRange,
+                    TaskDialogMessage.SetProgressBarRange,
                     0,
                     (IntPtr)param);
         }
@@ -1378,7 +1378,7 @@ namespace KPreisser.UI
                 throw new ArgumentOutOfRangeException(nameof(pos));
 
             SendTaskDialogMessage(
-                    TaskDialogMessages.SetProgressBarPosition,
+                    TaskDialogMessage.SetProgressBarPosition,
                     pos,
                     IntPtr.Zero);
         }
@@ -1394,7 +1394,7 @@ namespace KPreisser.UI
         public void SetProgressBarState(TaskDialogProgressBarState state)
         {
             SendTaskDialogMessage(
-                    TaskDialogMessages.SetProgressBarState,
+                    TaskDialogMessage.SetProgressBarState,
                     (int)state,
                     IntPtr.Zero);
         }
@@ -1456,7 +1456,7 @@ namespace KPreisser.UI
                         "Can only click the verification checkbox if it is shown.");
 
             SendTaskDialogMessage(
-                    TaskDialogMessages.ClickVerification,
+                    TaskDialogMessage.ClickVerification,
                     isChecked ? 1 : 0,
                     (IntPtr)(focus ? 1 : 0));
         }
@@ -1908,21 +1908,21 @@ namespace KPreisser.UI
                         "Can only update the state of a task dialog while it is active.");
         }
 
-        private void SendTaskDialogMessage(TaskDialogMessages message, int wparam, IntPtr lparam)
+        private void SendTaskDialogMessage(TaskDialogMessage message, int wParam, IntPtr lParam)
         {
             DenyIfDialogNotActive();
 
             NativeMethods.SendMessage(
                     this.hwndDialog,
                     (int)message,
-                    (IntPtr)wparam,
-                    lparam);
+                    (IntPtr)wParam,
+                    lParam);
         }
 
         private void SetButtonElevationRequiredStateCore(int buttonID, bool requiresElevation)
         {
             SendTaskDialogMessage(
-                    TaskDialogMessages.SetButtonElevationRequiredState,
+                    TaskDialogMessage.SetButtonElevationRequiredState,
                     buttonID,
                     (IntPtr)(requiresElevation ? 1 : 0));
         }
@@ -1930,7 +1930,7 @@ namespace KPreisser.UI
         private void SetButtonEnabledCore(int buttonID, bool enable)
         {
             SendTaskDialogMessage(
-                    TaskDialogMessages.EnableButton,
+                    TaskDialogMessage.EnableButton,
                     buttonID,
                     (IntPtr)(enable ? 1 : 0));
         }
@@ -1938,24 +1938,30 @@ namespace KPreisser.UI
         /// <summary>
         /// Enables or disables a radio button of an active task dialog.
         /// </summary>
-        /// <param name="buttonID"></param>
+        /// <param name="radioButtonID"></param>
         /// <param name="enable"></param>
-        private void SetRadioButtonEnabledCore(int buttonID, bool enable)
+        private void SetRadioButtonEnabledCore(int radioButtonID, bool enable)
         {
             SendTaskDialogMessage(
-                    TaskDialogMessages.EnableRadioButton,
-                    buttonID,
+                    TaskDialogMessage.EnableRadioButton,
+                    radioButtonID,
                     (IntPtr)(enable ? 1 : 0));
         }
 
         private void ClickButtonCore(int buttonID)
         {
-            SendTaskDialogMessage(TaskDialogMessages.ClickButton, buttonID, IntPtr.Zero);
+            SendTaskDialogMessage(
+                    TaskDialogMessage.ClickButton,
+                    buttonID,
+                    IntPtr.Zero);
         }
 
         private void ClickRadioButtonCore(int radioButtonID)
         {
-            SendTaskDialogMessage(TaskDialogMessages.ClickRadioButton, radioButtonID, IntPtr.Zero);
+            SendTaskDialogMessage(
+                    TaskDialogMessage.ClickRadioButton, 
+                    radioButtonID,
+                    IntPtr.Zero);
         }
 
         private void CheckUpdateText(
@@ -1971,7 +1977,7 @@ namespace KPreisser.UI
                 {
                     // Note: SetElementText will resize the dialog while UpdateElementText will
                     // not (which would lead to clipped controls), so we use the former.
-                    SendTaskDialogMessage(TaskDialogMessages.SetElementText, (int)element, strPtr);
+                    SendTaskDialogMessage(TaskDialogMessage.SetElementText, (int)element, strPtr);
                 }
                 finally
                 {
@@ -1990,7 +1996,7 @@ namespace KPreisser.UI
         {
             if ((updateFlags & flagToCheck) == flagToCheck)
             {
-                SendTaskDialogMessage(TaskDialogMessages.UpdateIcon, (int)element, icon);
+                SendTaskDialogMessage(TaskDialogMessage.UpdateIcon, (int)element, icon);
             }
         }
     }

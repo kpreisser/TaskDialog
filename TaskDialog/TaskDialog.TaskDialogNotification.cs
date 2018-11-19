@@ -2,7 +2,7 @@
 {
     public partial class TaskDialog
     {
-        private enum TaskDialogNotifications : int
+        private enum TaskDialogNotification : int
         {
             Created = 0,
 
