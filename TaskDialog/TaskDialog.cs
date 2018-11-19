@@ -989,7 +989,7 @@ namespace KPreisser.UI
                 this.ExpandoButtonClicked = null;
                 this.VerificationClicked = null;
                 this.CommonButtonClicked = null;
-                this.TimerTick = null;                
+                this.TimerTick = null;
             }
         }
 
@@ -1130,7 +1130,7 @@ namespace KPreisser.UI
                     // OK to avoid incorrect exceptions being thrown.
                     if (ret != HResultOk)
                         Marshal.ThrowExceptionForHR(ret);
-                    
+
                     // Set the result fields.
                     if (resultButtonID >= CustomButtonStartID)
                     {
@@ -1144,7 +1144,8 @@ namespace KPreisser.UI
                         this.resultCommonButton = (TaskDialogResult)resultButtonID;
                     }
 
-                    // Note that even if we have radio buttons, it could be that the user didn't select one.
+                    // Note that even if we have radio buttons, it could be that the user
+                    // didn't select one.
                     this.resultRadioButton = resultRadioButtonID >= RadioButtonStartID ?
                             this.currentRadioButtons[resultRadioButtonID - RadioButtonStartID] :
                             null;
@@ -1156,10 +1157,11 @@ namespace KPreisser.UI
                     FreeConfig(ptrToFree);
                     ReleaseCurrentConfig();
 
-                    // We need to ensure the callback delegate is not garbage-collected as long as
-                    // TaskDialogIndirect doesn't return, by calling GC.KeepAlive().
+                    // We need to ensure the callback delegate is not garbage-collected
+                    // as long as TaskDialogIndirect doesn't return, by calling GC.KeepAlive().
                     // 
-                    // This is not an exaggeration, as the comment for GC.KeepAlive() says the following:
+                    // This is not an exaggeration, as the comment for GC.KeepAlive() says
+                    // the following:
                     // The JIT is very aggressive about keeping an 
                     // object's lifetime to as small a window as possible, to the point
                     // where a 'this' pointer isn't considered live in an instance method
@@ -1244,11 +1246,14 @@ namespace KPreisser.UI
                         out var ptrToFree,
                         out var ptrTaskDialogConfig);
                 try
-                {                
+                {
                     // Note: If the task dialog cannot be recreated with the new contents,
                     // the dialog will close and TaskDialogIndirect() returns with an error
                     // code.
-                    SendTaskDialogMessage(TaskDialogMessages.NavigatePage, 0, ptrTaskDialogConfig);               
+                    SendTaskDialogMessage(
+                            TaskDialogMessages.NavigatePage,
+                            0,
+                            ptrTaskDialogConfig);
                 }
                 finally
                 {
@@ -1426,12 +1431,14 @@ namespace KPreisser.UI
                     updateFlags,
                     TaskDialogUpdateElements.MainIcon,
                     TaskDialogIconElement.Main,
-                    this.currentMainIconIsFromHandle ? this.MainIconHandle : (IntPtr)this.MainIcon);
+                    this.currentMainIconIsFromHandle ?
+                        this.MainIconHandle : (IntPtr)this.MainIcon);
             CheckUpdateIcon(
                     updateFlags,
                     TaskDialogUpdateElements.FooterIcon,
                     TaskDialogIconElement.Footer,
-                    this.currentFooterIconIsFromHandle ? this.FooterIconHandle : (IntPtr)this.FooterIcon);
+                    this.currentFooterIconIsFromHandle ?
+                        this.FooterIconHandle : (IntPtr)this.FooterIcon);
         }
 
         /// <summary>
@@ -1445,7 +1452,8 @@ namespace KPreisser.UI
             // Check if the current dialog actually shows a checkbox; otherwise this would
             // lead to an AccessViolationException.
             if (!this.currentVerificationCheckboxShown)
-                throw new InvalidOperationException("Can only click the verification checkbox if it is shown.");
+                throw new InvalidOperationException(
+                        "Can only click the verification checkbox if it is shown.");
 
             SendTaskDialogMessage(
                     TaskDialogMessages.ClickVerification,
@@ -1594,7 +1602,7 @@ namespace KPreisser.UI
         private void AcquireCurrentConfig()
         {
             //// This method assumes CheckConfig() has already been called.
-            
+
             // The verification checkbox will only be displayed if the string is not empty.
             this.currentVerificationCheckboxShown = this.VerificationText?.Length > 0 &&
                     this.VerificationText[0] != '\0';
@@ -1652,7 +1660,8 @@ namespace KPreisser.UI
                 out IntPtr ptrToFree,
                 out IntPtr ptrTaskDialogConfig)
         {
-            checked {
+            checked
+            {
                 var flags = this.flags;
                 if (this.currentMainIconIsFromHandle)
                     flags |= TaskDialogFlags.UseMainIconHandle;
@@ -1680,7 +1689,8 @@ namespace KPreisser.UI
                 Align(ref sizeToAllocate);
 
                 // Buttons array
-                if (this.currentCustomButtons?.Length > 0) {
+                if (this.currentCustomButtons?.Length > 0)
+                {
                     sizeToAllocate += sizeof(TaskDialogButtonStruct) * this.currentCustomButtons.Length;
                     Align(ref sizeToAllocate);
                     // Strings in buttons array
@@ -1690,7 +1700,8 @@ namespace KPreisser.UI
                 }
 
                 // Radio buttons array
-                if (this.currentRadioButtons?.Length > 0) {
+                if (this.currentRadioButtons?.Length > 0)
+                {
                     sizeToAllocate += sizeof(TaskDialogButtonStruct) * this.currentRadioButtons.Length;
                     Align(ref sizeToAllocate);
                     // Strings in radio buttons array
@@ -1702,7 +1713,8 @@ namespace KPreisser.UI
                 // Allocate the memory block. We add additional bytes to ensure we can
                 // align the pointer to IntPtr.Size.
                 ptrToFree = Marshal.AllocHGlobal((IntPtr)(sizeToAllocate + IntPtr.Size - 1));
-                try {
+                try
+                {
                     var currentPtr = (byte*)ptrToFree;
 
                     // Align the pointer before using it. This is important since we also
@@ -1718,13 +1730,16 @@ namespace KPreisser.UI
                     // Assign the structure with the constructor syntax, which will
                     // automatically initialize its other members with their default
                     // value.
-                    taskDialogConfig = new TaskDialogConfig() {
+                    taskDialogConfig = new TaskDialogConfig()
+                    {
                         cbSize = sizeof(TaskDialogConfig),
                         hwndParent = this.currentOwnerHwnd.Value,
                         dwFlags = flags,
                         dwCommonButtons = this.CommonButtons,
-                        hMainIcon = this.currentMainIconIsFromHandle ? this.MainIconHandle : (IntPtr)this.MainIcon,
-                        hFooterIcon = this.currentFooterIconIsFromHandle ? this.FooterIconHandle : (IntPtr)this.FooterIcon,
+                        hMainIcon = this.currentMainIconIsFromHandle ?
+                                this.MainIconHandle : (IntPtr)this.MainIcon,
+                        hFooterIcon = this.currentFooterIconIsFromHandle ?
+                                this.FooterIconHandle : (IntPtr)this.FooterIcon,
                         pszWindowTitle = MarshalString(this.Title, ref currentPtr),
                         pszMainInstruction = MarshalString(this.MainInstruction, ref currentPtr),
                         pszContent = MarshalString(this.Content, ref currentPtr),
@@ -1743,16 +1758,19 @@ namespace KPreisser.UI
                     Align(ref currentPtr);
 
                     // Buttons array
-                    if (this.currentCustomButtons?.Length > 0) {
+                    if (this.currentCustomButtons?.Length > 0)
+                    {
                         var customButtonStructs = (TaskDialogButtonStruct*)currentPtr;
                         taskDialogConfig.pButtons = (IntPtr)customButtonStructs;
                         taskDialogConfig.cButtons = this.currentCustomButtons.Length;
                         currentPtr += sizeof(TaskDialogButtonStruct) * this.currentCustomButtons.Length;
                         Align(ref currentPtr);
 
-                        for (int i = 0; i < this.currentCustomButtons.Length; i++) {
+                        for (int i = 0; i < this.currentCustomButtons.Length; i++)
+                        {
                             var currentCustomButton = this.currentCustomButtons[i];
-                            customButtonStructs[i] = new TaskDialogButtonStruct() {
+                            customButtonStructs[i] = new TaskDialogButtonStruct()
+                            {
                                 nButtonID = currentCustomButton.ButtonID.Value,
                                 pszButtonText = MarshalString(currentCustomButton.Text, ref currentPtr)
                             };
@@ -1761,16 +1779,19 @@ namespace KPreisser.UI
                     }
 
                     // Radio buttons array
-                    if (this.currentRadioButtons?.Length > 0) {
+                    if (this.currentRadioButtons?.Length > 0)
+                    {
                         var customRadioButtonStructs = (TaskDialogButtonStruct*)currentPtr;
                         taskDialogConfig.pRadioButtons = (IntPtr)customRadioButtonStructs;
                         taskDialogConfig.cRadioButtons = this.currentRadioButtons.Length;
                         currentPtr += sizeof(TaskDialogButtonStruct) * this.currentRadioButtons.Length;
                         Align(ref currentPtr);
 
-                        for (int i = 0; i < this.currentRadioButtons.Length; i++) {
+                        for (int i = 0; i < this.currentRadioButtons.Length; i++)
+                        {
                             var currentCustomButton = this.currentRadioButtons[i];
-                            customRadioButtonStructs[i] = new TaskDialogButtonStruct() {
+                            customRadioButtonStructs[i] = new TaskDialogButtonStruct()
+                            {
                                 nButtonID = currentCustomButton.ButtonID.Value,
                                 pszButtonText = MarshalString(currentCustomButton.Text, ref currentPtr)
                             };
@@ -1780,7 +1801,8 @@ namespace KPreisser.UI
 
                     Debug.Assert(currentPtr == (long)ptrTaskDialogConfig + sizeToAllocate);
                 }
-                catch {
+                catch
+                {
                     Marshal.FreeHGlobal(ptrToFree);
                     throw;
                 }
@@ -1811,10 +1833,15 @@ namespace KPreisser.UI
                     if (str == null)
                         return IntPtr.Zero;
 
-                    fixed (char* strPtr = str) {
+                    fixed (char* strPtr = str)
+                    {
                         // Copy the string and a NULL character.
                         long bytesToCopy = SizeOfString(str);
-                        Buffer.MemoryCopy(strPtr, currentPtr, bytesToCopy, bytesToCopy - sizeof(char));
+                        Buffer.MemoryCopy(
+                                strPtr,
+                                currentPtr,
+                                bytesToCopy,
+                                bytesToCopy - sizeof(char));
                         ((char*)currentPtr)[str.Length] = '\0';
 
                         var ptrToReturn = currentPtr;
