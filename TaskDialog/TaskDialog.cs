@@ -1715,11 +1715,10 @@ namespace KPreisser.UI
                 ptrToFree = Marshal.AllocHGlobal((IntPtr)(sizeToAllocate + IntPtr.Size - 1));
                 try
                 {
-                    var currentPtr = (byte*)ptrToFree;
-
                     // Align the pointer before using it. This is important since we also
                     // started with an aligned "address" value (0) when calculating the
                     // required allocation size.
+                    var currentPtr = (byte*)ptrToFree;
                     Align(ref currentPtr);
                     ptrTaskDialogConfig = (IntPtr)currentPtr;
 
@@ -1740,14 +1739,14 @@ namespace KPreisser.UI
                                 this.MainIconHandle : (IntPtr)this.MainIcon,
                         hFooterIcon = this.currentFooterIconIsFromHandle ?
                                 this.FooterIconHandle : (IntPtr)this.FooterIcon,
-                        pszWindowTitle = MarshalString(this.Title, ref currentPtr),
-                        pszMainInstruction = MarshalString(this.MainInstruction, ref currentPtr),
-                        pszContent = MarshalString(this.Content, ref currentPtr),
-                        pszFooter = MarshalString(this.Footer, ref currentPtr),
-                        pszVerificationText = MarshalString(this.VerificationText, ref currentPtr),
-                        pszExpandedInformation = MarshalString(this.ExpandedInformation, ref currentPtr),
-                        pszExpandedControlText = MarshalString(this.ExpandedControlText, ref currentPtr),
-                        pszCollapsedControlText = MarshalString(this.CollapsedControlText, ref currentPtr),
+                        pszWindowTitle = MarshalString(this.Title),
+                        pszMainInstruction = MarshalString(this.MainInstruction),
+                        pszContent = MarshalString(this.Content),
+                        pszFooter = MarshalString(this.Footer),
+                        pszVerificationText = MarshalString(this.VerificationText),
+                        pszExpandedInformation = MarshalString(this.ExpandedInformation),
+                        pszExpandedControlText = MarshalString(this.ExpandedControlText),
+                        pszCollapsedControlText = MarshalString(this.CollapsedControlText),
                         nDefaultButton = (this.DefaultCustomButton as TaskDialogCustomButton)?.ButtonID ??
                                 (int)this.DefaultCommonButton,
                         nDefaultRadioButton = (this.DefaultRadioButton as TaskDialogRadioButton)?.ButtonID ?? 0,
@@ -1772,7 +1771,7 @@ namespace KPreisser.UI
                             customButtonStructs[i] = new TaskDialogButtonStruct()
                             {
                                 nButtonID = currentCustomButton.ButtonID.Value,
-                                pszButtonText = MarshalString(currentCustomButton.Text, ref currentPtr)
+                                pszButtonText = MarshalString(currentCustomButton.Text)
                             };
                         }
                         Align(ref currentPtr);
@@ -1793,13 +1792,36 @@ namespace KPreisser.UI
                             customRadioButtonStructs[i] = new TaskDialogButtonStruct()
                             {
                                 nButtonID = currentCustomButton.ButtonID.Value,
-                                pszButtonText = MarshalString(currentCustomButton.Text, ref currentPtr)
+                                pszButtonText = MarshalString(currentCustomButton.Text)
                             };
                         }
                         Align(ref currentPtr);
                     }
 
                     Debug.Assert(currentPtr == (long)ptrTaskDialogConfig + sizeToAllocate);
+                    
+
+                    IntPtr MarshalString(string str)
+                    {
+                        if (str == null)
+                            return IntPtr.Zero;
+
+                        fixed (char* strPtr = str)
+                        {
+                            // Copy the string and a NULL character.
+                            long bytesToCopy = SizeOfString(str);
+                            Buffer.MemoryCopy(
+                                    strPtr,
+                                    currentPtr,
+                                    bytesToCopy,
+                                    bytesToCopy - sizeof(char));
+                            ((char*)currentPtr)[str.Length] = '\0';
+
+                            var ptrToReturn = currentPtr;
+                            currentPtr += bytesToCopy;
+                            return (IntPtr)ptrToReturn;
+                        }
+                    }
                 }
                 catch
                 {
@@ -1826,28 +1848,6 @@ namespace KPreisser.UI
                 long SizeOfString(string str)
                 {
                     return str == null ? 0 : ((long)str.Length + 1) * sizeof(char);
-                }
-
-                IntPtr MarshalString(string str, ref byte* currentPtr)
-                {
-                    if (str == null)
-                        return IntPtr.Zero;
-
-                    fixed (char* strPtr = str)
-                    {
-                        // Copy the string and a NULL character.
-                        long bytesToCopy = SizeOfString(str);
-                        Buffer.MemoryCopy(
-                                strPtr,
-                                currentPtr,
-                                bytesToCopy,
-                                bytesToCopy - sizeof(char));
-                        ((char*)currentPtr)[str.Length] = '\0';
-
-                        var ptrToReturn = currentPtr;
-                        currentPtr += bytesToCopy;
-                        return (IntPtr)ptrToReturn;
-                    }
                 }
             }
         }
