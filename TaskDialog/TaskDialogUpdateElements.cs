@@ -11,31 +11,36 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
-        Content = 0x1,
+        None = 0,
 
         /// <summary>
         /// 
         /// </summary>
-        ExpandedInformation = 0x2,
+        Content = 1 << 0,
 
         /// <summary>
         /// 
         /// </summary>
-        Footer = 0x4,
+        ExpandedInformation = 1 << 1,
 
         /// <summary>
         /// 
         /// </summary>
-        MainInstruction = 0x8,
+        Footer = 1 << 2,
 
         /// <summary>
         /// 
         /// </summary>
-        MainIcon = 0x10,
+        MainInstruction = 1 << 3,
 
         /// <summary>
         /// 
         /// </summary>
-        FooterIcon = 0x20
+        MainIcon = 1 << 4,
+
+        /// <summary>
+        /// 
+        /// </summary>
+        FooterIcon = 1 << 5
     }
 }
