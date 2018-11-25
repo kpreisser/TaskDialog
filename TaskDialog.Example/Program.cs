@@ -105,24 +105,45 @@ namespace TaskDialogExample
             {
                 Console.WriteLine("Button2 clicked!");
 
-                // Don't close the dialog.
+                // Don't close the main dialog.
                 e.CancelClose = true;
 
-                // Show a new Taskdialog
-                var innerDialog = new TaskDialog() {
+                // Show a new Taskdialog that shows an incrementing number.
+                var innerDialog = new TaskDialog()
+                {
                     Content = "This is a new non-modal dialog!",
-                    MainInstruction = "Hi there!  Number: 0",
-                    CommonButtons = TaskDialogButtons.Close,
+                    CommonButtons = TaskDialogButtons.Close | TaskDialogButtons.Continue,
                     MainIcon = TaskDialogIcon.Information,
                     UseTimer = true,
                 };
 
                 int number = 0;
-                innerDialog.TimerTick += (s2, e2) => {
-                    number++;
+                void UpdateNumberText(bool callUpdate = true)
+                {
                     // Update the instruction with the new number.
                     innerDialog.MainInstruction = "Hi there!  Number: " + number.ToString();
-                    innerDialog.UpdateElements(TaskDialogUpdateElements.MainInstruction);
+
+                    if (callUpdate)
+                        innerDialog.UpdateElements(TaskDialogUpdateElements.MainInstruction);
+                }
+                UpdateNumberText(false);
+
+                innerDialog.TimerTick += (s2, e2) =>
+                {
+                    number++;
+                    UpdateNumberText();
+                };
+
+                innerDialog.CommonButtonClicked += (s2, e2) =>
+                {
+                    Console.WriteLine("New dialog - Common Button clicked: " + e2.Button);
+
+                    if (e2.Button == TaskDialogResult.Continue)
+                    {
+                        e2.CancelClose = true;
+                        number += 1000;
+                        UpdateNumberText();
+                    }
                 };
 
                 innerDialog.Show();
@@ -159,7 +180,7 @@ namespace TaskDialogExample
                 var radioButton2 = dialog.AddRadioButton("My Radio Button 2");
 
                 radioButton1.RadioButtonClicked += (s2, e2) => Console.WriteLine("Radio Button 1 clicked!");
-                radioButton2.RadioButtonClicked += (s2, e2) => Console.WriteLine("Radio Button 2 clicked!");                
+                radioButton2.RadioButtonClicked += (s2, e2) => Console.WriteLine("Radio Button 2 clicked!");
 
                 dialog.VerificationClicked += (s2, e2) =>
                 {
@@ -177,7 +198,8 @@ namespace TaskDialogExample
                 // Instead of adding a event handler to the Navigated event, we supply a handler
                 // in the Navigate() method which will only be called once (so if we do
                 // another navigation, we can supply a different handler there).
-                dialog.Navigate((s2, e2) => {
+                dialog.Navigate((s2, e2) =>
+                {
                     Console.WriteLine("Dialog navigated!");
 
                     // Occurs after the dialog navigated (just like "Opened"
