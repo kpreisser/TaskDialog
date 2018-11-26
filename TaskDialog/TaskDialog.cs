@@ -1590,8 +1590,8 @@ namespace KPreisser.UI
                         $"least one custom button needs to be added " +
                         $"with {nameof(AddCustomButton)}().");
 
-            if (this.customButtons?.Count > int.MaxValue - CustomButtonStartID ||
-                    this.radioButtons?.Count > int.MaxValue - RadioButtonStartID)
+            if (this.customButtons?.Count > int.MaxValue - CustomButtonStartID + 1 ||
+                    this.radioButtons?.Count > int.MaxValue - RadioButtonStartID + 1)
                 throw new InvalidOperationException(
                         "Too many custom buttons or radio buttons have been added.");
 
