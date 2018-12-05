@@ -296,19 +296,6 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// If specified, after the task dialog is opened or navigated, its main icon will
-        /// be updated to the specified one.
-        /// Note: This will not always work, e.g. when running on Windows Server Core.
-        /// Note: This member will be ignored if <see cref="MainIconHandle"/> is not
-        /// <see cref="IntPtr.Zero"/>.
-        /// </summary>
-        public TaskDialogIcon MainUpdateIcon
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
         /// Gets or sets the footer icon, if <see cref="FooterIconHandle"/> is
         /// <see cref="IntPtr.Zero"/>.
         /// </summary>
@@ -968,7 +955,6 @@ namespace KPreisser.UI
                     this.ExpandedControlText =
                     this.CollapsedControlText = null;
             this.MainIcon =
-                    this.MainUpdateIcon =
                     this.FooterIcon = default;
             this.MainIconHandle =
                     this.FooterIconHandle = default;
@@ -1205,19 +1191,13 @@ namespace KPreisser.UI
         /// While the dialog is active, recreates the dialog from the current properties.
         /// After the dialog is recreated, the <see cref="Navigated"/> event occurs which allows
         /// you to further customize the dialog (just like with the <see cref="Opened"/> event
-        /// after calling <see cref="Show(IntPtr)"/>). However, instead of handling the
-        /// <see cref="Navigated"/> you can also supply a handler to the
-        /// <paramref name="navigatedHandler"/> parameter that will only be called for this
-        /// specific navigation (instead of for all navigations).
+        /// after calling <see cref="Show(IntPtr)"/>).
         /// </summary>
         /// <remarks>
         /// Note that you should not call this method in the <see cref="Opened"/> event
         /// because the task dialog is not yet displayed in that state.
         /// </remarks>
-        /// <param name="navigatedHandler">
-        /// A handler that will be called after the dialog is navigated/recreated.
-        /// </param>
-        public void Navigate(EventHandler navigatedHandler = null)
+        public void Navigate()
         {
             // Before checking the config and acquiring it, ensure the dialog is actually
             // active.
@@ -1226,48 +1206,27 @@ namespace KPreisser.UI
             // Validate the config.
             CheckConfig();
 
-            // Check if we need to add the navigated event handler.
-            var internalNavigatedHandler = null as EventHandler;
-            if (navigatedHandler != null)
-            {
-                internalNavigatedHandler = (sender, e) =>
-                {
-                    this.Navigated -= internalNavigatedHandler;
-                    navigatedHandler(sender, e);
-                };
-                this.Navigated += internalNavigatedHandler;
-            }
+            // We can now release the current config and apply the new one.
+            ReleaseCurrentConfig();
+            AcquireCurrentConfig();
+            AllocateConfig(
+                    out var ptrToFree,
+                    out var ptrTaskDialogConfig);
             try
             {
-                // We can now release the current config and apply the new one.
-                ReleaseCurrentConfig();
-                AcquireCurrentConfig();
-                AllocateConfig(
-                        out var ptrToFree,
-                        out var ptrTaskDialogConfig);
-                try
-                {
-                    // Note: If the task dialog cannot be recreated with the new contents,
-                    // the dialog will close and TaskDialogIndirect() returns with an error
-                    // code.
-                    SendTaskDialogMessage(
-                            TaskDialogMessage.NavigatePage,
-                            0,
-                            ptrTaskDialogConfig);
-                }
-                finally
-                {
-                    // We can now free the memory because SendMessage does not return
-                    // until the message has been processed.
-                    FreeConfig(ptrToFree);
-                }
+                // Note: If the task dialog cannot be recreated with the new contents,
+                // the dialog will close and TaskDialogIndirect() returns with an error
+                // code.
+                SendTaskDialogMessage(
+                        TaskDialogMessage.NavigatePage,
+                        0,
+                        ptrTaskDialogConfig);
             }
-            catch
+            finally
             {
-                if (internalNavigatedHandler != null)
-                    this.Navigated -= internalNavigatedHandler;
-
-                throw;
+                // We can now free the memory because SendMessage does not return
+                // until the message has been processed.
+                FreeConfig(ptrToFree);
             }
         }
 
@@ -1873,18 +1832,6 @@ namespace KPreisser.UI
                     if (!btn.Enabled)
                         btn.Enabled = false;
                 }
-            }
-
-            // Check if we need to update the icon.
-            if (!this.currentMainIconIsFromHandle &&
-                    this.MainUpdateIcon != default &&
-                    this.MainIcon != this.MainUpdateIcon)
-            {
-                CheckUpdateIcon(
-                        TaskDialogUpdateElements.MainIcon,
-                        TaskDialogUpdateElements.MainIcon,
-                        TaskDialogIconElement.Main,
-                        (IntPtr)this.MainUpdateIcon);
             }
         }
 

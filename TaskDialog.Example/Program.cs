@@ -165,9 +165,6 @@ namespace TaskDialogExample
                 dialog.Content = "Welcome to the second page!";
                 dialog.VerificationText = "I think I agree…";
                 dialog.MainIcon = TaskDialogIcon.SecurityShieldBlueBar;
-                // Set a new icon after creating the dialog. This allows us to show the
-                // yellow bar from the "SecurityWarningBar" icon with a different icon.
-                dialog.MainUpdateIcon = TaskDialogIcon.Warning;
                 dialog.ShowMarqueeProgressBar = true;
                 dialog.SizeToContent = true;
                 dialog.CommonButtons = TaskDialogButtons.Cancel;
@@ -194,13 +191,15 @@ namespace TaskDialogExample
                     Console.WriteLine("Common Button clicked (navigated dialog)!");
                 };
 
-                // Now navigate the dialog.
-                // Instead of adding a event handler to the Navigated event, we supply a handler
-                // in the Navigate() method which will only be called once (so if we do
-                // another navigation, we can supply a different handler there).
-                dialog.Navigate((s2, e2) =>
+                // Add a handler that will be called after the dialog is navigated.
+                dialog.Navigated += (s2, e2) =>
                 {
                     Console.WriteLine("Dialog navigated!");
+
+                    // Set a new icon after navigating the dialog. This allows us to show the
+                    // yellow bar from the "SecurityWarningBar" icon with a different icon.
+                    dialog.MainIcon = TaskDialogIcon.Warning;
+                    dialog.UpdateElements(TaskDialogUpdateElements.MainIcon);
 
                     // Occurs after the dialog navigated (just like "Opened"
                     // occurs after the dialog opened).
@@ -209,7 +208,10 @@ namespace TaskDialogExample
 
                     // Enable the marquee progress bar.
                     dialog.SetProgressBarMarquee(true);
-                });
+                };
+
+                // Now navigate the dialog.
+                dialog.Navigate();
             };
 
             dialog.CommonButtonClicked += (s, e) =>

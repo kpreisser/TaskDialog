@@ -51,6 +51,9 @@
         /// </summary>
         SecuritySuccessGreenBar = ushort.MaxValue - 7,
 
+        // TODO: Check if these "NoSound" icons should be included - 
+        // note that the Question icon only seems to be available without
+        // a sound.
 
         /// <summary>
         /// 
@@ -91,38 +94,6 @@
         /// <summary>
         /// 
         /// </summary>
-        SecuritySuccess = 106,
-
-
-        /// <summary>
-        /// 
-        /// </summary>
-        Lock = 59,
-
-        /// <summary>
-        /// 
-        /// </summary>
-        Key = 82,
-
-        /// <summary>
-        /// 
-        /// </summary>
-        Defrag = 111,
-
-        /// <summary>
-        /// 
-        /// </summary>
-        Restore = 1022,
-
-
-        /// <summary>
-        /// 
-        /// </summary>
-        RecycleBin = 55,
-
-        /// <summary>
-        /// 
-        /// </summary>
-        FullRecycleBin = 54
+        SecuritySuccess = 106
     }
 }
