@@ -88,9 +88,8 @@ Show a dialog with command links and a marquee progress bar:
     TaskDialogCustomButton customButton = contents.CustomButtons.Add("My Command Link");
     TaskDialogCommonButton buttonCancel = contents.CommonButtons.Add(TaskDialogResult.Cancel);
 
-    TaskDialog dialog = new TaskDialog(contents);
-
     // Show the dialog and check which button the user has clicked.
+    TaskDialog dialog = new TaskDialog(contents);
     TaskDialogButton result = dialog.Show();
 ```
 
@@ -105,8 +104,7 @@ Update the dialog's content when clicking one of its buttons:
         Content = $"Current number: {number}",
         MainIcon = TaskDialogIcon.QuestionNoSound
     };
-    TaskDialog dialog = new TaskDialog(contents);
-
+    
     var buttonYes = contents.CommonButtons.Add(TaskDialogResult.Yes);
     var buttonClose = contents.CommonButtons.Add(TaskDialogResult.Close);
 
@@ -122,6 +120,7 @@ Update the dialog's content when clicking one of its buttons:
         contents.Content = $"Current number: {number}";
     };
 
+    TaskDialog dialog = new TaskDialog(contents);
     dialog.Show();
 ```
 
