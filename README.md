@@ -69,55 +69,57 @@ Show a simple dialog:
 
 Show a dialog with command links and a marquee progress bar:
 ```c#
-    TaskDialog dialog = new TaskDialog()
+    TaskDialogContents contents = new TaskDialogContents()
     {
         MainInstruction = "Hi there!",
         Content = "This is a new dialog!",
         MainIcon = TaskDialogIcon.Information,
         UseCommandLinks = true, // Show command links instead of custom buttons
-        ShowMarqueeProgressBar = true
+                
+        ProgressBar = new TaskDialogProgressBar()
+        {
+            State = TaskDialogProgressBarState.Marquee
+        }
     };
 
-    // Create a command link.
-    var customButton1 = dialog.AddCustomButton("My Command Link");
+    // Create a command link and a "Cancel" common button.
+    // Note: Adding a "Cancel" button will automatically show a "X" button in
+    // the dialog's title bar, and the user can press ESC to cancel the dialog.
+    TaskDialogCustomButton customButton = contents.CustomButtons.Add("My Command Link");
+    TaskDialogCommonButton buttonYes = contents.CommonButtons.Add(TaskDialogResult.Cancel);
 
-    // Start the progress bar once the dialog is opened.
-    dialog.Opened += (s, e) => dialog.SetProgressBarMarquee(true);
+    TaskDialog dialog = new TaskDialog(contents);
 
-    dialog.Show();
-
-    // Check which command link the user clicked.
-    var resultButton = dialog.ResultCustomButton;
+    // Show the dialog and check which button the user has clicked.
+    TaskDialogButton result = dialog.Show();
 ```
 
 Update the dialog's content when clicking one of its buttons:
 
 ```c#
     int number = 0;
-    
-    TaskDialog dialog = new TaskDialog()
+
+    TaskDialogContents contents = new TaskDialogContents()
     {
         MainInstruction = "Update number?",
         Content = $"Current number: {number}",
-        MainIcon = TaskDialogIcon.QuestionNoSound,
-        CommonButtons = TaskDialogButtons.Yes | TaskDialogButtons.Close
+        MainIcon = TaskDialogIcon.QuestionNoSound
     };
+    TaskDialog dialog = new TaskDialog(contents);
 
-    // Handle the event when a common button was clicked.
-    dialog.CommonButtonClicked += (s, e) =>
+    var buttonYes = contents.CommonButtons.Add(TaskDialogResult.Yes);
+    var buttonClose = contents.CommonButtons.Add(TaskDialogResult.Close);
+
+    // Handle the event when the "Yes" button was clicked.
+    buttonYes.ButtonClicked += (s, e) =>
     {
-        if (e.Button == TaskDialogResult.Yes)
-        {
-            // When clicking the "Yes" button, don't close the dialog, but
-            // instead increment the number and update the dialog content.
-            e.CancelClose = true;
+        // When clicking the "Yes" button, don't close the dialog, but
+        // instead increment the number and update the dialog content.
+        e.CancelClose = true;
 
-            number++;
-            dialog.Content = $"Current number: {number}";
-
-            // Now update the content.
-            dialog.UpdateElements(TaskDialogUpdateElements.Content);
-        }
+        // Update the content.
+        number++;                
+        contents.Content = $"Current number: {number}";
     };
 
     dialog.Show();

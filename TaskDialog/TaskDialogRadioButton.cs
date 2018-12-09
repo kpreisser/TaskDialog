@@ -77,7 +77,7 @@ namespace KPreisser.UI
                 // Unchecking a radio button is not possible in the task dialog.
                 if (this.boundTaskDialogContents != null && !value)
                     throw new InvalidOperationException(
-                        "Cannot uncheck a radio button while it is bound to a task dialog.");
+                            "Cannot uncheck a radio button while it is bound to a task dialog.");
 
                 if (this.boundTaskDialogContents == null)
                 {

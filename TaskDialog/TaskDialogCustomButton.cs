@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace KPreisser.UI
+﻿namespace KPreisser.UI
 {
     /// <summary>
     /// 
