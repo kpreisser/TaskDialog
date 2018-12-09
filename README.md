@@ -86,7 +86,7 @@ Show a dialog with command links and a marquee progress bar:
     // Note: Adding a "Cancel" button will automatically show a "X" button in
     // the dialog's title bar, and the user can press ESC to cancel the dialog.
     TaskDialogCustomButton customButton = contents.CustomButtons.Add("My Command Link");
-    TaskDialogCommonButton buttonYes = contents.CommonButtons.Add(TaskDialogResult.Cancel);
+    TaskDialogCommonButton buttonCancel = contents.CommonButtons.Add(TaskDialogResult.Cancel);
 
     TaskDialog dialog = new TaskDialog(contents);
 
