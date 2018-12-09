@@ -53,6 +53,10 @@
         /// <summary>
         /// 
         /// </summary>
+        /// <remarks>
+        /// Note: Clicking this button will not close the dialog, but will raise the
+        /// <see cref="TaskDialogContents.Help"/> event.
+        /// </remarks>
         Help = 9,
 
         /// <summary>

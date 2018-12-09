@@ -1,12 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net46;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>net472;netstandard2.0</TargetFrameworks>
     <AssemblyName>TaskDialog</AssemblyName>
     <DefaultLanguage>en-US</DefaultLanguage>
     <PackageId>TaskDialog</PackageId>
     <RootNamespace>KPreisser.UI</RootNamespace>
-    <LangVersion>7.1</LangVersion>
+    <LangVersion>7.2</LangVersion>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
 
@@ -33,7 +33,7 @@
     <TreatSpecificWarningsAsErrors />
   </PropertyGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)'=='net46'">
+  <ItemGroup Condition="'$(TargetFramework)'=='net472'">
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="System.Windows.Forms" />

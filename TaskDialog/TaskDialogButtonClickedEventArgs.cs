@@ -5,12 +5,12 @@ namespace KPreisser.UI
     /// <summary>
     /// 
     /// </summary>
-    public class TaskDialogCustomButtonClickedEventArgs : EventArgs
+    public class TaskDialogButtonClickedEventArgs : EventArgs
     {
         /// <summary>
         /// 
         /// </summary>
-        internal TaskDialogCustomButtonClickedEventArgs()
+        internal TaskDialogButtonClickedEventArgs()
             : base()
         {
         }

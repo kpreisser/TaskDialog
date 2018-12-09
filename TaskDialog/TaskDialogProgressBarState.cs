@@ -8,16 +8,26 @@
         /// <summary>
         /// 
         /// </summary>
-        Normal = 0x1,
+        Normal = 0,
 
         /// <summary>
         /// 
         /// </summary>
-        Error = 0x2,
+        Paused = 1,
 
         /// <summary>
         /// 
         /// </summary>
-        Paused = 0x3
+        Error = 2,
+
+        /// <summary>
+        /// 
+        /// </summary>
+        Marquee = 3,
+
+        /// <summary>
+        /// 
+        /// </summary>
+        MarqueeDisabled = 4
     }
 }

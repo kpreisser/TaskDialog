@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -22,38 +21,12 @@ namespace KPreisser.UI
         : System.Windows.Forms.IWin32Window, System.Windows.Interop.IWin32Window
 #endif
     {
-        /// <summary>
-        /// The start ID for custom buttons. We need to ensure we don't use a ID that
-        /// is already used for a common button (TaskDialogResult), so we start with
-        /// 100 to be safe.
-        /// </summary>
-        private const int CustomButtonStartID = 100;
-
-        /// <summary>
-        /// The start ID for radio buttons. This must be at least 1 because 0 already
-        /// stands for "no button".
-        /// </summary>
-        private const int RadioButtonStartID = 1;
-
         // Offset for user message types.
         private const int UserMessageOffset = 0x400;
 
         private const int HResultOk = 0x0; // S_OK
 
         private const int HResultFalse = 0x1; // S_FALSE
-
-        private const TaskDialogButtons AllCommonButtons =
-                TaskDialogButtons.OK |
-                TaskDialogButtons.Yes |
-                TaskDialogButtons.No |
-                TaskDialogButtons.Cancel |
-                TaskDialogButtons.Retry |
-                TaskDialogButtons.Close |
-                TaskDialogButtons.Abort |
-                TaskDialogButtons.Ignore |
-                TaskDialogButtons.TryAgain |
-                TaskDialogButtons.Continue |
-                TaskDialogButtons.Help;
 
 
         /// <summary>
@@ -70,10 +43,6 @@ namespace KPreisser.UI
         private static readonly IntPtr callbackProcDelegatePtr;
 
 
-        private List<TaskDialogCustomButton> customButtons;
-
-        private List<TaskDialogRadioButton> radioButtons;
-
         /// <summary>
         /// Window handle of the task dialog.
         /// </summary>
@@ -87,31 +56,19 @@ namespace KPreisser.UI
 
         private IntPtr? currentOwnerHwnd;
 
-        private bool currentMainIconIsFromHandle;
+        private TaskDialogContents currentContents;
 
-        private bool currentFooterIconIsFromHandle;
+        private TaskDialogContents boundContents;
 
-        private TaskDialogCustomButton[] currentCustomButtons;
-
-        private TaskDialogRadioButton[] currentRadioButtons;
-
-        private bool currentVerificationCheckboxShown;
-
-        private TaskDialogResult resultCommonButton;
+        private TaskDialogCommonButton resultCommonButton;
 
         private TaskDialogCustomButton resultCustomButton;
 
         private TaskDialogRadioButton resultRadioButton;
 
-        private bool resultVerificationFlagChecked;
+        private bool resultVerificationCheckboxChecked;
 
-        /// <summary>
-        /// Flags for this task dialog instance. By default,
-        /// <see cref="TaskDialogFlags.PositionRelativeToWindow"/> is set.
-        /// </summary>
-        private TaskDialogFlags flags;
-
-        private bool suppressCommonButtonClickedEvent;
+        private bool suppressButtonClickedEvent;
 
 
         /// <summary>
@@ -127,7 +84,16 @@ namespace KPreisser.UI
         /// <summary>
         /// Occurs after the task dialog has navigated.
         /// </summary>
+        /// <remarks>
+        /// Instead of handling this event (which will be called for all navigations
+        /// of this dialog), you can also handle the
+        /// <see cref="TaskDialogContents.Created"/> event that will only occur after the
+        /// dialog navigated to that specific <see cref="TaskDialogContents"/> instance.
+        /// </remarks>
         public event EventHandler Navigated;
+
+        //// TODO: Maybe remove these events since they are also available in the TaskDialogContents,
+        //// and are specific to the contents (not to the dialog).
 
         /// <summary>
         /// Occurs when the user presses F1 while the dialog has focus, or when the
@@ -139,22 +105,6 @@ namespace KPreisser.UI
         /// 
         /// </summary>
         public event EventHandler<TaskDialogHyperlinkClickedEventArgs> HyperlinkClicked;
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public event EventHandler<TaskDialogBooleanStatusEventArgs> ExpandoButtonClicked;
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public event EventHandler<TaskDialogBooleanStatusEventArgs> VerificationClicked;
-
-        /// <summary>
-        /// Occurs when one of the dialog's <see cref="CommonButtons"/> has been
-        /// clicked.
-        /// </summary>
-        public event EventHandler<TaskDialogCommonButtonClickedEventArgs> CommonButtonClicked;
 
         /// <summary>
         /// 
@@ -177,6 +127,14 @@ namespace KPreisser.UI
         /// 
         /// </summary>
         public TaskDialog()
+            : this(new TaskDialogContents())
+        {
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public TaskDialog(TaskDialogContents contents)
         {
             // TaskDialog is only supported on Windows.
 #if NET46
@@ -186,8 +144,8 @@ namespace KPreisser.UI
 #endif
                 throw new PlatformNotSupportedException();
 
-            // Set default values.
-            Reset();
+            this.currentContents = contents ??
+                    throw new ArgumentNullException(nameof(contents));
         }
 
 
@@ -203,334 +161,51 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// Gets or sets the title of the task dialog window.
+        /// Gets or sets the <see cref="TaskDialogContents"/> instance that represents
+        /// the contents which this task dialog will display.
         /// </summary>
-        public string Title
+        /// <remarks>
+        /// By setting this property while the task dialog is displayed, it will completely
+        /// recreate its contents from the specified <see cref="TaskDialogContents"/>
+        /// ("navigation"). After the dialog is navigated, the <see cref="Navigated"/>
+        /// and the <see cref="TaskDialogContents.Created"/> events will occur.
+        /// </remarks>
+        public TaskDialogContents CurrentContents
         {
-            get;
-            set;
+            get => this.currentContents;
+
+            set
+            {
+                if (value == null)
+                    throw new ArgumentNullException(nameof(value));
+
+                if (this.DialogIsActive)
+                {
+                    // Try to navigate the dialog. This will validate the new contents
+                    // and assign them only if they are OK.
+                    Navigate(value);
+                }
+                else
+                {
+                    this.currentContents = value;
+                }
+            }
         }
 
-        /// <summary>
-        /// Gets or sets the main instruction text.
-        /// </summary>
-        public string MainInstruction
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets the dialog's primary content.
-        /// </summary>
-        public string Content
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets the text to be used in the dialog's footer area.
-        /// </summary>
-        public string Footer
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets the text that is displayed for the verification checkbox.
-        /// </summary>
-        public string VerificationText
-        {
-            get;
-            set;
-        }
 
         /// <summary>
         /// 
         /// </summary>
-        public string ExpandedInformation
+        public bool DialogIsActive
         {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public string ExpandedControlText
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public string CollapsedControlText
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets the main icon, if <see cref="MainIconHandle"/> is
-        /// <see cref="IntPtr.Zero"/>.
-        /// </summary>
-        public TaskDialogIcon MainIcon
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets the handle to the main icon. When this member is not
-        /// <see cref="IntPtr.Zero"/>, the <see cref="MainIcon"/> property will
-        /// be ignored.
-        /// </summary>
-        public IntPtr MainIconHandle
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets the footer icon, if <see cref="FooterIconHandle"/> is
-        /// <see cref="IntPtr.Zero"/>.
-        /// </summary>
-        public TaskDialogIcon FooterIcon
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets the handle to the footer icon. When this member is not
-        /// <see cref="IntPtr.Zero"/>, the <see cref="FooterIcon"/> property will
-        /// be ignored.
-        /// </summary>
-        public IntPtr FooterIconHandle
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets the common buttons that are to be displayed in the dialog.
-        /// If no common button and no custom button is specified, the dialog will
-        /// contain the <see cref="TaskDialogButtons.OK"/> button by default.
-        /// </summary>
-        public TaskDialogButtons CommonButtons
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets the width in dialog units that the dialog's client area will get
-        /// when the dialog is is created or navigated.
-        /// If <c>0</c>, the width will be automatically calculated by the system.
-        /// </summary>
-        public int Width
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public bool EnableHyperlinks
-        {
-            get => GetFlag(TaskDialogFlags.EnableHyperlinks);
-            set => SetFlag(TaskDialogFlags.EnableHyperlinks, value);
-        }
-
-        /// <summary>
-        /// Gets or sets a value that indicates whether the task dialog can be canceled
-        /// by pressing ESC, Alt+F4 or clicking the title bar's close button even if no
-        /// <see cref="TaskDialogButtons.Cancel"/> button is specified in
-        /// <see cref="CommonButtons"/>.
-        /// </summary>
-        public bool AllowCancel
-        {
-            get => GetFlag(TaskDialogFlags.AllowCancel);
-            set => SetFlag(TaskDialogFlags.AllowCancel, value);
-        }
-
-        /// <summary>
-        /// Gets or sets a value that indicates whether to display custom buttons
-        /// created with <see cref="AddCustomButton(string, bool)"/> as command links
-        /// instead of buttons.
-        /// </summary>
-        public bool UseCommandLinks
-        {
-            get => GetFlag(TaskDialogFlags.UseCommandLinks);
-            set => SetFlag(TaskDialogFlags.UseCommandLinks, value);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public bool UseCommandLinksWithoutIcon
-        {
-            get => GetFlag(TaskDialogFlags.UseNoIconCommandLinks);
-            set => SetFlag(TaskDialogFlags.UseNoIconCommandLinks, value);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public bool ExpandFooterArea
-        {
-            get => GetFlag(TaskDialogFlags.ExpandFooterArea);
-            set => SetFlag(TaskDialogFlags.ExpandFooterArea, value);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public bool ExpandedByDefault
-        {
-            get => GetFlag(TaskDialogFlags.ExpandedByDefault);
-            set => SetFlag(TaskDialogFlags.ExpandedByDefault, value);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public bool VerificationFlagCheckedByDefault
-        {
-            get => GetFlag(TaskDialogFlags.CheckVerificationFlag);
-            set => SetFlag(TaskDialogFlags.CheckVerificationFlag, value);
-        }
-
-        /// <summary>
-        /// Gets or sets a value that indicates whether a progress bar will be shown in the
-        /// task dialog. After the dialog is created/navigated, you can modify the progress bar
-        /// properties by calling <see cref="SetProgressBarState(TaskDialogProgressBarState)"/>,
-        /// <see cref="SetProgressBarRange(int, int)"/> and <see cref="SetProgressBarPos(int)"/>,
-        /// or you can switch it to a marquee progress bar with
-        /// <see cref="SwitchProgressBarMode(bool)"/>.
-        /// </summary>
-        public bool ShowProgressBar
-        {
-            get => GetFlag(TaskDialogFlags.ShowProgressBar);
-            set => SetFlag(TaskDialogFlags.ShowProgressBar, value);
-        }
-
-        /// <summary>
-        /// Gets or sets a value that indicates whether a marquee progress bar will be
-        /// shown in the task dialog. After the dialog is created/navigated, you can enable
-        /// marquee by calling <see cref="SetProgressBarMarquee(bool, int)"/>, or you can
-        /// switch to a regular progress bar with <see cref="SwitchProgressBarMode(bool)"/>.
-        /// </summary>
-        public bool ShowMarqueeProgressBar
-        {
-            get => GetFlag(TaskDialogFlags.ShowMarqueeProgressBar);
-            set => SetFlag(TaskDialogFlags.ShowMarqueeProgressBar, value);
-        }
-
-        /// <summary>
-        /// Gets or sets a value that indicates whether the <see cref="TimerTick"/> 
-        /// event should be raised approximately every 200 milliseconds while the dialog
-        /// is active.
-        /// </summary>
-        public bool UseTimer
-        {
-            get => GetFlag(TaskDialogFlags.UseTimer);
-            set => SetFlag(TaskDialogFlags.UseTimer, value);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public bool PositionRelativeToWindow
-        {
-            get => GetFlag(TaskDialogFlags.PositionRelativeToWindow);
-            set => SetFlag(TaskDialogFlags.PositionRelativeToWindow, value);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public bool RightToLeftLayout
-        {
-            get => GetFlag(TaskDialogFlags.RightToLeftLayout);
-            set => SetFlag(TaskDialogFlags.RightToLeftLayout, value);
-        }
-
-        /// <summary>
-        /// Gets or sets a value that indicates whether no radio button will be selected
-        /// by default.
-        /// </summary>
-        public bool NoDefaultRadioButton
-        {
-            get => GetFlag(TaskDialogFlags.NoDefaultRadioButton);
-            set => SetFlag(TaskDialogFlags.NoDefaultRadioButton, value);
-        }
-
-        /// <summary>
-        /// Gets or sets a value that indicates whether the task dialog can be minimized.
-        /// </summary>
-        public bool CanBeMinimized
-        {
-            get => GetFlag(TaskDialogFlags.CanBeMinimized);
-            set => SetFlag(TaskDialogFlags.CanBeMinimized, value);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public bool DoNotSetForeground
-        {
-            get => GetFlag(TaskDialogFlags.NoSetForeground);
-            set => SetFlag(TaskDialogFlags.NoSetForeground, value);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public bool SizeToContent
-        {
-            get => GetFlag(TaskDialogFlags.SizeToContent);
-            set => SetFlag(TaskDialogFlags.SizeToContent, value);
-        }
-
-        /// <summary>
-        /// The default custom button. If null, the <see cref="DefaultCommonButton"/>
-        /// will be used.
-        /// </summary>
-        public ITaskDialogCustomButton DefaultCustomButton
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public TaskDialogResult DefaultCommonButton
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public ITaskDialogRadioButton DefaultRadioButton
-        {
-            get;
-            set;
+            get => this.hwndDialog != IntPtr.Zero;
         }
 
         /// <summary>
         /// If <see cref="ResultCustomButton"/> is null, this field contains the
         /// <see cref="TaskDialogResult"/> of the common buttons that was pressed.
         /// </summary>
-        public TaskDialogResult ResultCommonButton
+        public TaskDialogCommonButton ResultCommonButton
         {
             get => this.resultCommonButton;
         }
@@ -539,15 +214,17 @@ namespace KPreisser.UI
         /// If not null, contains the custom button that was pressed. Otherwise, 
         /// <see cref="ResultCommonButton"/> contains the common button that was pressed.
         /// </summary>
-        public ITaskDialogCustomButton ResultCustomButton
+        public TaskDialogCustomButton ResultCustomButton
         {
             get => this.resultCustomButton;
         }
 
         /// <summary>
-        /// 
+        /// After the <see cref="Show(IntPtr)"/> method returns, will contain the
+        /// <see cref="TaskDialogRadioButton"/> that the user has selected, or <c>null</c>
+        /// if none was selected.
         /// </summary>
-        public ITaskDialogRadioButton ResultRadioButton
+        public TaskDialogRadioButton ResultRadioButton
         {
             get => this.resultRadioButton;
         }
@@ -555,9 +232,9 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
-        public bool ResultVerificationFlagChecked
+        public bool ResultVerificationCheckboxChecked
         {
-            get => this.resultVerificationFlagChecked;
+            get => this.resultVerificationCheckboxChecked;
         }
 
 
@@ -689,29 +366,27 @@ namespace KPreisser.UI
         {
             var dialog = new TaskDialog()
             {
-                Content = content,
-                MainInstruction = instruction,
-                Title = title,
-                CommonButtons = buttons,
-                MainIcon = icon
+                currentContents = new TaskDialogContents()
+                {
+                    Content = content,
+                    MainInstruction = instruction,
+                    Title = title,
+                    MainIcon = icon
+                }
             };
+
+            foreach (var result in TaskDialogCommonButton.GetResultsForButtonFlags(buttons))
+                dialog.currentContents.CommonButtons.Add(result);
+
             dialog.Show(hwndOwner);
 
-            return dialog.ResultCommonButton;
+            return dialog.ResultCommonButton.Result;
         }
 
 
         private static void FreeConfig(IntPtr ptrToFree)
         {
             Marshal.FreeHGlobal(ptrToFree);
-        }
-
-        private static bool IsValidCommonButton(
-                TaskDialogResult button,
-                bool allowNone = false)
-        {
-            return (allowNone ? (button >= 0) : (button > 0)) &&
-                    button <= TaskDialogResult.Continue;
         }
 
 #if !NET_STANDARD
@@ -745,11 +420,14 @@ namespace KPreisser.UI
             switch (notification)
             {
                 case TaskDialogNotification.Created:
-                    instance.ApplyButtonInitialization();
+                    instance.boundContents.ApplyInitialization();
+
                     instance.OnOpened(EventArgs.Empty);
+                    instance.boundContents.OnCreated(EventArgs.Empty);
                     break;
 
                 case TaskDialogNotification.Destroyed:
+                    instance.boundContents.OnDestroying(EventArgs.Empty);
                     instance.OnClosing(EventArgs.Empty);
 
                     // Clear the dialog handle, because according to the docs, we must not 
@@ -764,60 +442,64 @@ namespace KPreisser.UI
                     break;
 
                 case TaskDialogNotification.Navigated:
-                    instance.ApplyButtonInitialization();
+                    instance.boundContents.ApplyInitialization();
+
                     instance.OnNavigated(EventArgs.Empty);
+                    instance.boundContents.OnCreated(EventArgs.Empty);
                     break;
 
                 case TaskDialogNotification.HyperlinkClicked:
                     string link = Marshal.PtrToStringUni(lParam);
-                    instance.OnHyperlinkClicked(new TaskDialogHyperlinkClickedEventArgs(link));
+
+                    var eventArgs = new TaskDialogHyperlinkClickedEventArgs(link);
+                    instance.OnHyperlinkClicked(eventArgs);
+                    instance.boundContents.OnHyperlinkClicked(eventArgs);
                     break;
 
                 case TaskDialogNotification.ButtonClicked:
-                    if (instance.suppressCommonButtonClickedEvent)
+                    if (instance.suppressButtonClickedEvent)
                         return HResultOk;
 
                     int buttonID = wParam.ToInt32();
 
                     // Check if the button is part of the custom buttons.
-                    bool cancelClose;
-                    if (buttonID >= CustomButtonStartID)
+                    var button = null as TaskDialogButton;
+                    if (buttonID >= TaskDialogContents.CustomButtonStartID)
                     {
-                        var eventArgs = new TaskDialogCustomButtonClickedEventArgs();
-                        instance.currentCustomButtons[buttonID - CustomButtonStartID]
-                                .OnButtonClicked(eventArgs);
-                        cancelClose = eventArgs.CancelClose;
+                        button = instance.boundContents.CustomButtons
+                                [buttonID - TaskDialogContents.CustomButtonStartID];
                     }
                     else
                     {
-                        var eventArgs = new TaskDialogCommonButtonClickedEventArgs(
-                                (TaskDialogResult)buttonID);
-                        instance.OnCommonButtonClicked(eventArgs);
-                        cancelClose = eventArgs.CancelClose;
+                        var result = (TaskDialogResult)buttonID;
+                        if (instance.boundContents.CommonButtons.Contains(result))
+                            button = instance.boundContents.CommonButtons[result];
                     }
 
-                    return cancelClose ? HResultFalse : HResultOk;
+                    return button?.HandleButtonClicked() ?? true ? HResultOk : HResultFalse;
 
                 case TaskDialogNotification.RadioButtonClicked:
                     int radioButtonID = wParam.ToInt32();
 
-                    var radioButton = instance.currentRadioButtons
-                            [radioButtonID - RadioButtonStartID];
-                    radioButton.OnRadioButtonClicked(EventArgs.Empty);
+                    var radioButton = instance.boundContents.RadioButtons
+                            [radioButtonID - TaskDialogContents.RadioButtonStartID];
+
+                    radioButton.HandleRadioButtonClicked();
                     break;
 
                 case TaskDialogNotification.ExpandoButtonClicked:
-                    instance.OnExpandoButtonClicked(new TaskDialogBooleanStatusEventArgs(
-                            wParam != IntPtr.Zero));
+                    instance.boundContents.Expander.HandleExpandoButtonClicked(
+                            wParam != IntPtr.Zero);
                     break;
 
                 case TaskDialogNotification.VerificationClicked:
-                    instance.OnVerificationClicked(new TaskDialogBooleanStatusEventArgs(
-                            wParam != IntPtr.Zero));
+                    instance.boundContents.VerificationCheckbox.HandleCheckboxClicked(
+                            wParam != IntPtr.Zero);
                     break;
 
                 case TaskDialogNotification.Help:
                     instance.OnHelp(EventArgs.Empty);
+                    instance.boundContents.OnHelp(EventArgs.Empty);
                     break;
 
                 case TaskDialogNotification.Timer:
@@ -829,8 +511,10 @@ namespace KPreisser.UI
                     int ticks = IntPtr.Size == 8 ?
                             unchecked((int)wParam.ToInt64()) :
                             wParam.ToInt32();
+
                     var tickEventArgs = new TaskDialogTimerTickEventArgs(ticks);
                     instance.OnTimerTick(tickEventArgs);
+                    instance.boundContents.OnTimerTick(tickEventArgs);
 
                     return tickEventArgs.ResetTickCount ? HResultFalse : HResultOk;
             }
@@ -854,132 +538,6 @@ namespace KPreisser.UI
 
 
         /// <summary>
-        /// Creates and returns a new custom button with the specified text, and adds
-        /// it to this <see cref="TaskDialog"/>.
-        /// </summary>
-        /// <param name="text"></param>
-        /// <param name="elevationRequired"></param>
-        /// <returns>
-        /// The <see cref="ITaskDialogCustomButton"/> instance representing the custom button.
-        /// </returns>
-        public ITaskDialogCustomButton AddCustomButton(string text, bool elevationRequired = false)
-        {
-            if (text == null)
-                throw new ArgumentNullException(nameof(text));
-
-            var button = new TaskDialogCustomButton(this, text, elevationRequired);
-            (this.customButtons ?? (this.customButtons = new List<TaskDialogCustomButton>()))
-                    .Add(button);
-
-            return button;
-        }
-
-        /// <summary>
-        /// Creates and returns a new radio button with the specified text, and adds
-        /// it to this <see cref="TaskDialog"/>.
-        /// </summary>
-        /// <param name="text"></param>
-        /// <returns>
-        /// The <see cref="ITaskDialogRadioButton"/> instance representing the radio button.
-        /// </returns>
-        public ITaskDialogRadioButton AddRadioButton(string text)
-        {
-            if (text == null)
-                throw new ArgumentNullException(nameof(text));
-
-            var button = new TaskDialogRadioButton(this, text);
-            (this.radioButtons ?? (this.radioButtons = new List<TaskDialogRadioButton>()))
-                    .Add(button);
-
-            return button;
-        }
-
-        /// <summary>
-        /// Removes the specified custom button that was added with
-        /// <see cref="AddCustomButton(string, bool)"/>.
-        /// </summary>
-        /// <param name="button"></param>
-        /// <returns></returns>
-        public bool RemoveCustomButton(ITaskDialogCustomButton button)
-        {
-            return this.customButtons?.Remove(button as TaskDialogCustomButton) ?? false;
-        }
-
-        /// <summary>
-        /// Removes the specified radio button that was aded with
-        /// <see cref="AddRadioButton(string)"/>.
-        /// </summary>
-        /// <param name="button"></param>
-        /// <returns></returns>
-        public bool RemoveRadioButton(ITaskDialogRadioButton button)
-        {
-            return this.radioButtons?.Remove(button as TaskDialogRadioButton) ?? false;
-        }
-
-        /// <summary>
-        /// Removes all custom buttons added with
-        /// <see cref="AddCustomButton(string, bool)"/>.
-        /// </summary>
-        public void ClearCustomButtons()
-        {
-            this.customButtons?.Clear();
-        }
-
-        /// <summary>
-        /// Removes all radio buttons added with
-        /// <see cref="AddRadioButton(string)"/>.
-        /// </summary>
-        public void ClearRadioButtons()
-        {
-            this.radioButtons?.Clear();
-        }
-
-        /// <summary>
-        /// Resets all properties to their default values, e.g. for calling <see cref="Navigate"/>
-        /// with new values. You can specify to also clear the event handlers (except
-        /// <see cref="Opened"/> and <see cref="Closing"/>).
-        /// </summary>
-        /// <param name="clearEventHandlers">
-        /// <c>true</c> to also clear the event handlers
-        /// (except <see cref="Opened"/>, <see cref="Closing"/>).</param>
-        public void Reset(bool clearEventHandlers = false)
-        {
-            this.flags = TaskDialogFlags.PositionRelativeToWindow;
-
-            this.Title =
-                    this.MainInstruction =
-                    this.Content =
-                    this.Footer =
-                    this.VerificationText =
-                    this.ExpandedInformation =
-                    this.ExpandedControlText =
-                    this.CollapsedControlText = null;
-            this.MainIcon =
-                    this.FooterIcon = default;
-            this.MainIconHandle =
-                    this.FooterIconHandle = default;
-            this.CommonButtons = default;
-            this.DefaultCommonButton = default;
-            this.DefaultCustomButton = null;
-            this.DefaultRadioButton = null;
-            this.Width = default;
-
-            ClearCustomButtons();
-            ClearRadioButtons();
-
-            if (clearEventHandlers)
-            {
-                this.Navigated = null;
-                this.Help = null;
-                this.HyperlinkClicked = null;
-                this.ExpandoButtonClicked = null;
-                this.VerificationClicked = null;
-                this.CommonButtonClicked = null;
-                this.TimerTick = null;
-            }
-        }
-
-        /// <summary>
         /// Shows the dialog. After the dialog is created, the <see cref="Opened"/>
         /// event occurs which allows to customize the dialog. When the dialog is about to 
         /// close, the <see cref="Closing"/> event occurs.
@@ -987,9 +545,9 @@ namespace KPreisser.UI
         /// Starting with the <see cref="Opened"/> event, you can call methods on the active 
         /// task dialog to update its state until the <see cref="Closing"/> event occurs.
         /// </summary>
-        public void Show()
+        public TaskDialogButton Show()
         {
-            Show(IntPtr.Zero);
+            return Show(IntPtr.Zero);
         }
 
 #if !NET_STANDARD
@@ -1002,9 +560,9 @@ namespace KPreisser.UI
         /// task dialog to update its state until the <see cref="Closing"/> event occurs.
         /// </summary>
         /// <param name="owner">The owner window, or <c>null</c> to show a non-modal dialog.</param>
-        public void Show(System.Windows.Window owner)
+        public TaskDialogButton Show(System.Windows.Window owner)
         {
-            Show(GetWindowHandle(owner));
+            return Show(GetWindowHandle(owner));
         }
 
         /// <summary>
@@ -1016,9 +574,9 @@ namespace KPreisser.UI
         /// task dialog to update its state until the <see cref="Closing"/> event occurs.
         /// </summary>
         /// <param name="owner">The owner window, or <c>null</c> to show a non-modal dialog.</param>
-        public void Show(System.Windows.Interop.IWin32Window owner)
+        public TaskDialogButton Show(System.Windows.Interop.IWin32Window owner)
         {
-            Show(GetWindowHandle(owner));
+            return Show(GetWindowHandle(owner));
         }
 
         /// <summary>
@@ -1030,9 +588,9 @@ namespace KPreisser.UI
         /// task dialog to update its state until the <see cref="Closing"/> event occurs.
         /// </summary>
         /// <param name="owner">The owner window, or <c>null</c> to show a non-modal dialog.</param>
-        public void Show(System.Windows.Forms.IWin32Window owner)
+        public TaskDialogButton Show(System.Windows.Forms.IWin32Window owner)
         {
-            Show(GetWindowHandle(owner));
+            return Show(GetWindowHandle(owner));
         }
 #endif
 
@@ -1045,9 +603,9 @@ namespace KPreisser.UI
         /// task dialog to update its state until the <see cref="Closing"/> event occurs.
         /// </summary>
         /// <param name="owner">The owner window, or <c>null</c> to show a non-modal dialog.</param>
-        public void Show(TaskDialog owner)
+        public TaskDialogButton Show(TaskDialog owner)
         {
-            Show(owner.Handle);
+            return Show(owner.Handle);
         }
 
         /// <summary>
@@ -1062,7 +620,7 @@ namespace KPreisser.UI
         /// The window handle of the owner, or <see cref="IntPtr.Zero"/> to show a non-modal
         /// dialog.
         /// </param>
-        public void Show(IntPtr hwndOwner)
+        public TaskDialogButton Show(IntPtr hwndOwner)
         {
             // Recursive Show() is not possible because we would incorrectly handle notifications.
             if (this.instanceHandlePtr != IntPtr.Zero)
@@ -1070,7 +628,7 @@ namespace KPreisser.UI
                         "Cannot recursively show the same task dialog instance.");
 
             // Validate the config.
-            CheckConfig();
+            this.currentContents.Validate(this);
 
             // Allocate a GCHandle which we will use for the callback data.
             var instanceHandle = GCHandle.Alloc(this);
@@ -1080,13 +638,13 @@ namespace KPreisser.UI
                 this.currentOwnerHwnd = hwndOwner;
 
                 // Clear the previous result properties.
-                this.resultVerificationFlagChecked = default;
+                this.resultVerificationCheckboxChecked = default;
                 this.resultCommonButton = default;
                 this.resultCustomButton = null;
                 this.resultRadioButton = null;
 
-                AcquireCurrentConfig();
-                AllocateConfig(
+                // Bind the contents and allocate the memory.
+                BindAndAllocateConfig(
                        out var ptrToFree,
                        out var ptrTaskDialogConfig);
                 try
@@ -1095,7 +653,7 @@ namespace KPreisser.UI
                                 ptrTaskDialogConfig,
                                 out int resultButtonID,
                                 out int resultRadioButtonID,
-                                out this.resultVerificationFlagChecked);
+                                out this.resultVerificationCheckboxChecked);
 
                     //// Note: If a exception occurs here when hwndDialog is not 0, it means the TaskDialogIndirect
                     //// run the event loop and called a WndProc e.g. from a window, whose event handler threw an
@@ -1118,22 +676,32 @@ namespace KPreisser.UI
                         Marshal.ThrowExceptionForHR(ret);
 
                     // Set the result fields.
-                    if (resultButtonID >= CustomButtonStartID)
+                    if (resultButtonID >= TaskDialogContents.CustomButtonStartID)
                     {
-                        this.resultCustomButton = this.currentCustomButtons
-                                [resultButtonID - CustomButtonStartID];
-                        this.resultCommonButton = 0;
+                        this.resultCustomButton = this.boundContents.CustomButtons
+                                [resultButtonID - TaskDialogContents.CustomButtonStartID];
+                        this.resultCommonButton = null;
                     }
                     else
                     {
+                        var result = (TaskDialogResult)resultButtonID;
+
+                        // Check we have a button with the result that was returned. This might
+                        // not always be the case, e.g. when specifying AllowCancel but not
+                        // adding a "Cancel" button. If we don't have such button, we
+                        // simply create a new one.
+                        if (this.boundContents.CommonButtons.Contains(result))
+                            this.resultCommonButton = this.boundContents.CommonButtons[result];
+                        else
+                            this.resultCommonButton = new TaskDialogCommonButton(result);
                         this.resultCustomButton = null;
-                        this.resultCommonButton = (TaskDialogResult)resultButtonID;
                     }
 
                     // Note that even if we have radio buttons, it could be that the user
                     // didn't select one.
-                    this.resultRadioButton = resultRadioButtonID >= RadioButtonStartID ?
-                            this.currentRadioButtons[resultRadioButtonID - RadioButtonStartID] :
+                    this.resultRadioButton = resultRadioButtonID >= TaskDialogContents.RadioButtonStartID ?
+                            this.boundContents.RadioButtons
+                                [resultRadioButtonID - TaskDialogContents.RadioButtonStartID] :
                             null;
                 }
                 finally
@@ -1141,7 +709,10 @@ namespace KPreisser.UI
                     // Clear the handles and free the memory.
                     this.currentOwnerHwnd = null;
                     FreeConfig(ptrToFree);
-                    ReleaseCurrentConfig();
+
+                    // Unbind the contents.
+                    this.boundContents.Unbind();
+                    this.boundContents = null;
 
                     // We need to ensure the callback delegate is not garbage-collected
                     // as long as TaskDialogIndirect doesn't return, by calling GC.KeepAlive().
@@ -1163,6 +734,9 @@ namespace KPreisser.UI
                 this.instanceHandlePtr = IntPtr.Zero;
                 instanceHandle.Free();
             }
+
+            // Return the button that was clicked.
+            return this.resultCommonButton as TaskDialogButton ?? this.resultCustomButton;
         }
 
         //// Messages that can be sent to the dialog while it is active.
@@ -1171,104 +745,32 @@ namespace KPreisser.UI
         /// While the dialog is active, closes the dialog with a 
         /// <see cref="TaskDialogResult.Cancel"/> result.
         /// </summary>
+        /// <param name="suppressCommonButtonClickedEvent"></param>
         public void Close(bool suppressCommonButtonClickedEvent = true)
         {
             if (suppressCommonButtonClickedEvent)
-                this.suppressCommonButtonClickedEvent = true;
+                this.suppressButtonClickedEvent = true;
             try
             {
                 // Send a click button message with the cancel result.
-                ClickCommonButton(TaskDialogResult.Cancel);
+                ClickButton((int)TaskDialogResult.Cancel);
             }
             finally
             {
                 if (suppressCommonButtonClickedEvent)
-                    this.suppressCommonButtonClickedEvent = false;
+                    this.suppressButtonClickedEvent = false;
             }
         }
 
-        /// <summary>
-        /// While the dialog is active, recreates the dialog from the current properties.
-        /// After the dialog is recreated, the <see cref="Navigated"/> event occurs which allows
-        /// you to further customize the dialog (just like with the <see cref="Opened"/> event
-        /// after calling <see cref="Show(IntPtr)"/>).
-        /// </summary>
-        /// <remarks>
-        /// Note that you should not call this method in the <see cref="Opened"/> event
-        /// because the task dialog is not yet displayed in that state.
-        /// </remarks>
-        public void Navigate()
-        {
-            // Before checking the config and acquiring it, ensure the dialog is actually
-            // active.
-            DenyIfDialogNotActive();
-
-            // Validate the config.
-            CheckConfig();
-
-            // We can now release the current config and apply the new one.
-            ReleaseCurrentConfig();
-            AcquireCurrentConfig();
-            AllocateConfig(
-                    out var ptrToFree,
-                    out var ptrTaskDialogConfig);
-            try
-            {
-                // Note: If the task dialog cannot be recreated with the new contents,
-                // the dialog will close and TaskDialogIndirect() returns with an error
-                // code.
-                SendTaskDialogMessage(
-                        TaskDialogMessage.NavigatePage,
-                        0,
-                        ptrTaskDialogConfig);
-            }
-            finally
-            {
-                // We can now free the memory because SendMessage does not return
-                // until the message has been processed.
-                FreeConfig(ptrToFree);
-            }
-        }
-
-        /// <summary>
-        /// While the dialog is active, enables or disables the specified common button.
-        /// </summary>
-        /// <param name="button"></param>
-        /// <param name="enable"></param>
-        public void SetCommonButtonEnabled(TaskDialogResult button, bool enable)
-        {
-            if (!IsValidCommonButton(button))
-                throw new ArgumentException("An invalid common button was specified.");
-
-            SetButtonEnabledCore((int)button, enable);
-        }
-
-        /// <summary>
-        /// While the dialog is active, enables or disables the UAC shield symbol for the
-        /// specified common button.
-        /// </summary>
-        /// <param name="button"></param>
-        /// <param name="requiresElevation"></param>
-        public void SetCommonButtonElevationRequired(
-                TaskDialogResult button,
-                bool requiresElevation)
-        {
-            if (!IsValidCommonButton(button))
-                throw new ArgumentException("An invalid common button was specified.");
-
-            SetButtonElevationRequiredStateCore((int)button, requiresElevation);
-        }
 
         /// <summary>
         /// While the dialog is active, switches the progress bar mode to either a
-        /// marquee progress bar or to a regular progress bar. The dialog must have
-        /// been created with either <see cref="ShowProgressBar"/> or
-        /// <see cref="ShowMarqueeProgressBar"/> set to <c>true</c>.
+        /// marquee progress bar or to a regular progress bar.
         /// For a marquee progress bar, you can enable or disable the marquee using
         /// <see cref="SetProgressBarMarquee(bool, int)"/>.
         /// </summary>
         /// <param name="marqueeProgressBar"></param>
-        public void SwitchProgressBarMode(bool marqueeProgressBar)
+        internal void SwitchProgressBarMode(bool marqueeProgressBar)
         {
             SendTaskDialogMessage(
                     TaskDialogMessage.SetMarqueeProgressBar,
@@ -1279,17 +781,13 @@ namespace KPreisser.UI
         /// <summary>
         /// While the dialog is active, enables or disables progress bar marquee when
         /// an marquee progress bar is displayed.
-        /// The dialog must have been created with <see cref="ShowMarqueeProgressBar"/>
-        /// set to <c>true</c> or you must call <see cref="SwitchProgressBarMode(bool)"/>
-        /// with value <c>true</c> to switch the regular progress bar to a marquee
-        /// progress bar.
         /// </summary>
         /// <param name="enableMarquee"></param>
         /// <param name="animationSpeed">
         /// The time in milliseconds between marquee animation updates. If <c>0</c>, the animation
         /// will be updated every 30 milliseconds.
         /// </param>
-        public void SetProgressBarMarquee(bool enableMarquee, int animationSpeed = 0)
+        internal void SetProgressBarMarquee(bool enableMarquee, int animationSpeed = 0)
         {
             if (animationSpeed < 0)
                 throw new ArgumentOutOfRangeException(nameof(animationSpeed));
@@ -1302,14 +800,10 @@ namespace KPreisser.UI
 
         /// <summary>
         /// While the dialog is active, sets the progress bar range. The default range is 0 to 100.
-        /// The dialog must have been created with <see cref="ShowProgressBar"/>
-        /// set to <c>true</c> or you must call <see cref="SwitchProgressBarMode(bool)"/>
-        /// with value <c>false</c> to switch the marquee progress bar to a 
-        /// regular progress bar.
         /// </summary>
         /// <param name="min"></param>
         /// <param name="max"></param>
-        public void SetProgressBarRange(int min, int max)
+        internal void SetProgressBarRange(int min, int max)
         {
             if (min < 0 || min > ushort.MaxValue)
                 throw new ArgumentOutOfRangeException(nameof(min));
@@ -1325,13 +819,9 @@ namespace KPreisser.UI
 
         /// <summary>
         /// While the dialog is active, sets the progress bar position.
-        /// The dialog must have been created with <see cref="ShowProgressBar"/>
-        /// set to <c>true</c> or you must call <see cref="SwitchProgressBarMode(bool)"/>
-        /// with value <c>false</c> to switch the marquee progress bar to a 
-        /// regular progress bar.
         /// </summary>
         /// <param name="pos"></param>
-        public void SetProgressBarPos(int pos)
+        internal void SetProgressBarPos(int pos)
         {
             if (pos < 0 || pos > ushort.MaxValue)
                 throw new ArgumentOutOfRangeException(nameof(pos));
@@ -1344,13 +834,9 @@ namespace KPreisser.UI
 
         /// <summary>
         /// While the dialog is active, sets the progress bar state.
-        /// The dialog must have been created with <see cref="ShowProgressBar"/>
-        /// set to <c>true</c> or you must call <see cref="SwitchProgressBarMode(bool)"/>
-        /// with value <c>false</c> to switch the marquee progress bar to a 
-        /// regular progress bar.
         /// </summary>
         /// <param name="state"></param>
-        public void SetProgressBarState(TaskDialogProgressBarState state)
+        internal void SetProgressBarState(TaskDialogProgressBarNativeState state)
         {
             SendTaskDialogMessage(
                     TaskDialogMessage.SetProgressBarState,
@@ -1359,77 +845,57 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// While the dialog is active, updates the specified dialog elements with the
-        /// values from the current properties.
-        /// Note that when updating the main icon, the bar color will not change.
-        /// </summary>
-        /// <param name="updateFlags"></param>
-        public void UpdateElements(TaskDialogUpdateElements updateFlags)
-        {
-            CheckUpdateText(
-                    updateFlags,
-                    TaskDialogUpdateElements.Content,
-                    TaskDialogElements.Content,
-                    this.Content);
-            CheckUpdateText(
-                    updateFlags,
-                    TaskDialogUpdateElements.ExpandedInformation,
-                    TaskDialogElements.ExpandedInformation,
-                    this.ExpandedInformation);
-            CheckUpdateText(
-                    updateFlags,
-                    TaskDialogUpdateElements.Footer,
-                    TaskDialogElements.Footer,
-                    this.Footer);
-            CheckUpdateText(
-                    updateFlags,
-                    TaskDialogUpdateElements.MainInstruction,
-                    TaskDialogElements.MainInstruction,
-                    this.MainInstruction);
-            CheckUpdateIcon(
-                    updateFlags,
-                    TaskDialogUpdateElements.MainIcon,
-                    TaskDialogIconElement.Main,
-                    this.currentMainIconIsFromHandle ?
-                        this.MainIconHandle : (IntPtr)this.MainIcon);
-            CheckUpdateIcon(
-                    updateFlags,
-                    TaskDialogUpdateElements.FooterIcon,
-                    TaskDialogIconElement.Footer,
-                    this.currentFooterIconIsFromHandle ?
-                        this.FooterIconHandle : (IntPtr)this.FooterIcon);
-        }
-
-        /// <summary>
         /// While the dialog is active, sets the verification checkbox to the specified
         /// state.
         /// </summary>
         /// <param name="isChecked"></param>
         /// <param name="focus"></param>
-        public void ClickVerification(bool isChecked, bool focus = false)
+        internal void ClickVerification(bool isChecked, bool focus = false)
         {
-            // Check if the current dialog actually shows a checkbox; otherwise this would
-            // lead to an AccessViolationException.
-            if (!this.currentVerificationCheckboxShown)
-                throw new InvalidOperationException(
-                        "Can only click the verification checkbox if it is shown.");
-
             SendTaskDialogMessage(
                     TaskDialogMessage.ClickVerification,
                     isChecked ? 1 : 0,
                     (IntPtr)(focus ? 1 : 0));
         }
 
-        /// <summary>
-        /// While the dialog is active, clicks the specified common button.
-        /// </summary>
-        /// <param name="button"></param>
-        public void ClickCommonButton(TaskDialogResult button)
+        internal void SetButtonElevationRequiredState(int buttonID, bool requiresElevation)
         {
-            if (!IsValidCommonButton(button))
-                throw new ArgumentException("An invalid common button was specified.");
+            SendTaskDialogMessage(
+                    TaskDialogMessage.SetButtonElevationRequiredState,
+                    buttonID,
+                    (IntPtr)(requiresElevation ? 1 : 0));
+        }
 
-            ClickButtonCore((int)button);
+        internal void SetButtonEnabled(int buttonID, bool enable)
+        {
+            SendTaskDialogMessage(
+                    TaskDialogMessage.EnableButton,
+                    buttonID,
+                    (IntPtr)(enable ? 1 : 0));
+        }
+
+        internal void SetRadioButtonEnabled(int radioButtonID, bool enable)
+        {
+            SendTaskDialogMessage(
+                    TaskDialogMessage.EnableRadioButton,
+                    radioButtonID,
+                    (IntPtr)(enable ? 1 : 0));
+        }
+
+        internal void ClickButton(int buttonID)
+        {
+            SendTaskDialogMessage(
+                    TaskDialogMessage.ClickButton,
+                    buttonID,
+                    IntPtr.Zero);
+        }
+
+        internal void ClickRadioButton(int radioButtonID)
+        {
+            SendTaskDialogMessage(
+                    TaskDialogMessage.ClickRadioButton,
+                    radioButtonID,
+                    IntPtr.Zero);
         }
 
 
@@ -1473,37 +939,9 @@ namespace KPreisser.UI
         /// 
         /// </summary>
         /// <param name="e"></param>
-        /// <returns></returns>
-        protected void OnCommonButtonClicked(TaskDialogCommonButtonClickedEventArgs e)
-        {
-            this.CommonButtonClicked?.Invoke(this, e);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="e"></param>
         protected void OnHyperlinkClicked(TaskDialogHyperlinkClickedEventArgs e)
         {
             this.HyperlinkClicked?.Invoke(this, e);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="e"></param>
-        protected void OnExpandoButtonClicked(TaskDialogBooleanStatusEventArgs e)
-        {
-            this.ExpandoButtonClicked?.Invoke(this, e);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="e"></param>
-        protected void OnVerificationClicked(TaskDialogBooleanStatusEventArgs e)
-        {
-            this.VerificationClicked?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1516,117 +954,65 @@ namespace KPreisser.UI
         }
 
 
-        private void CheckConfig()
+        /// <summary>
+        /// While the dialog is active, recreates the dialog from the current properties.
+        /// </summary>
+        /// <remarks>
+        /// Note that you should not call this method in the <see cref="Opened"/> event
+        /// because the task dialog is not yet displayed in that state.
+        /// </remarks>
+        private void Navigate(TaskDialogContents contents)
         {
-            //// Before assigning button IDs etc., check if the button configs are OK.
-            //// This needs to be done before clearing the old button IDs and assigning
-            //// the new ones, because it is possible to use the same button
-            //// instances after a dialog has been created for Navigate(), where need to
-            //// do the check, then release the old buttons, then assign the new
-            //// buttons.
+            Debug.Assert(this.DialogIsActive);
 
-            if (!IsValidCommonButton(this.DefaultCommonButton, true))
-                throw new InvalidOperationException(
-                        "An invalid default common button was set.");
+            // Validate the config.
+            contents.Validate(this);
 
-            if (this.DefaultCustomButton != null &&
-                    !(this.customButtons?.Contains(this.DefaultCustomButton) == true))
-                throw new InvalidOperationException(
-                        $"The default custom button must have been added with " +
-                        $"{nameof(AddCustomButton)}().");
+            // After validation passed, we can now unbind the current contents and
+            // bind the new one.
+            // Need to raise the "Destroying" event for the current contents. The
+            // "Created" event for the new contents will occur from the callback.
+            this.boundContents.OnDestroying(EventArgs.Empty);
+            this.boundContents.Unbind();
+            this.boundContents = null;
 
-            if (this.DefaultRadioButton != null &&
-                    !(this.radioButtons?.Contains(this.DefaultRadioButton) == true))
-                throw new InvalidOperationException(
-                        $"The default radio button must have been added with " +
-                        $"{nameof(AddRadioButton)}().");
-
-            if ((this.UseCommandLinks || this.UseCommandLinksWithoutIcon) &&
-                    !(this.customButtons?.Count > 0))
-                throw new InvalidOperationException(
-                        $"When enabling {nameof(this.UseCommandLinks)} or " +
-                        $"{nameof(this.UseCommandLinksWithoutIcon)}, at " +
-                        $"least one custom button needs to be added " +
-                        $"with {nameof(AddCustomButton)}().");
-
-            if (this.customButtons?.Count > int.MaxValue - CustomButtonStartID + 1 ||
-                    this.radioButtons?.Count > int.MaxValue - RadioButtonStartID + 1)
-                throw new InvalidOperationException(
-                        "Too many custom buttons or radio buttons have been added.");
-
-            if ((this.CommonButtons & ~AllCommonButtons) != 0)
-                throw new InvalidOperationException("Invalid common buttons.");
-        }
-
-        private void AcquireCurrentConfig()
-        {
-            //// This method assumes CheckConfig() has already been called.
-
-            // The verification checkbox will only be displayed if the string is not empty.
-            this.currentVerificationCheckboxShown = this.VerificationText?.Length > 0 &&
-                    this.VerificationText[0] != '\0';
-            this.currentMainIconIsFromHandle = this.MainIconHandle != IntPtr.Zero;
-            this.currentFooterIconIsFromHandle = this.FooterIconHandle != IntPtr.Zero;
-
-            // Assign IDs to the buttons based on their index.
-            if (this.customButtons?.Count > 0)
+            this.currentContents = contents;
+            BindAndAllocateConfig(
+                    out var ptrToFree,
+                    out var ptrTaskDialogConfig);
+            try
             {
-                var buttons = this.currentCustomButtons = this.customButtons.ToArray();
-                for (int i = 0; i < buttons.Length; i++)
-                    buttons[i].ButtonID = CustomButtonStartID + i;
+                // Note: If the task dialog cannot be recreated with the new contents,
+                // the dialog will close and TaskDialogIndirect() returns with an error
+                // code.
+                SendTaskDialogMessage(
+                        TaskDialogMessage.NavigatePage,
+                        0,
+                        ptrTaskDialogConfig);
             }
-            else
+            finally
             {
-                this.currentCustomButtons = null;
-            }
-
-            if (this.radioButtons?.Count > 0)
-            {
-                var radioButtons = this.currentRadioButtons = this.radioButtons.ToArray();
-                for (int i = 0; i < radioButtons.Length; i++)
-                    radioButtons[i].ButtonID = RadioButtonStartID + i;
-            }
-            else
-            {
-                this.currentRadioButtons = null;
+                // We can now free the memory because SendMessage does not return
+                // until the message has been processed.
+                FreeConfig(ptrToFree);
             }
         }
 
-        private void ReleaseCurrentConfig()
-        {
-            this.currentVerificationCheckboxShown = false;
-
-            if (this.currentCustomButtons != null)
-            {
-                var buttons = this.currentCustomButtons;
-                for (int i = 0; i < buttons.Length; i++)
-                    buttons[i].ButtonID = null;
-
-                this.currentCustomButtons = null;
-            }
-
-            if (this.currentRadioButtons != null)
-            {
-                var radioButtons = this.currentRadioButtons;
-                for (int i = 0; i < radioButtons.Length; i++)
-                    radioButtons[i].ButtonID = null;
-
-                this.currentRadioButtons = null;
-            }
-        }
-
-        private unsafe void AllocateConfig(
+        private unsafe void BindAndAllocateConfig(
                 out IntPtr ptrToFree,
                 out IntPtr ptrTaskDialogConfig)
         {
+            var contents = this.currentContents;
+            contents.Bind(
+                    this,
+                    out var flags,
+                    out var commonButtonFlags,
+                    out int defaultButtonID,
+                    out int defaultRadioButtonID);
+            this.boundContents = contents;
+
             checked
             {
-                var flags = this.flags;
-                if (this.currentMainIconIsFromHandle)
-                    flags |= TaskDialogFlags.UseMainIconHandle;
-                if (this.currentFooterIconIsFromHandle)
-                    flags |= TaskDialogFlags.UseFooterIconHandle;
-
                 // First, calculate the necessary memory size we need to allocate for all
                 // structs and strings.
                 // Note: Each Align() call when calculating the size must correspond with a
@@ -1637,35 +1023,35 @@ namespace KPreisser.UI
                 Align(ref sizeToAllocate);
 
                 // Strings in TasDialogConfig
-                sizeToAllocate += SizeOfString(this.Title);
-                sizeToAllocate += SizeOfString(this.MainInstruction);
-                sizeToAllocate += SizeOfString(this.Content);
-                sizeToAllocate += SizeOfString(this.Footer);
-                sizeToAllocate += SizeOfString(this.VerificationText);
-                sizeToAllocate += SizeOfString(this.ExpandedInformation);
-                sizeToAllocate += SizeOfString(this.ExpandedControlText);
-                sizeToAllocate += SizeOfString(this.CollapsedControlText);
+                sizeToAllocate += SizeOfString(contents.Title);
+                sizeToAllocate += SizeOfString(contents.MainInstruction);
+                sizeToAllocate += SizeOfString(contents.Content);
+                sizeToAllocate += SizeOfString(contents.Footer);
+                sizeToAllocate += SizeOfString(contents.Expander?.Text);
+                sizeToAllocate += SizeOfString(contents.Expander?.ExpandedButtonText);
+                sizeToAllocate += SizeOfString(contents.Expander?.CollapsedButtonText);
+                sizeToAllocate += SizeOfString(contents.VerificationCheckbox?.Text);
                 Align(ref sizeToAllocate);
 
                 // Buttons array
-                if (this.currentCustomButtons?.Length > 0)
+                if (contents.CustomButtons.Count > 0)
                 {
-                    sizeToAllocate += sizeof(TaskDialogButtonStruct) * this.currentCustomButtons.Length;
+                    sizeToAllocate += sizeof(TaskDialogButtonStruct) * contents.CustomButtons.Count;
                     Align(ref sizeToAllocate);
                     // Strings in buttons array
-                    for (int i = 0; i < this.currentCustomButtons.Length; i++)
-                        sizeToAllocate += SizeOfString(this.currentCustomButtons[i].Text);
+                    for (int i = 0; i < contents.CustomButtons.Count; i++)
+                        sizeToAllocate += SizeOfString(contents.CustomButtons[i].GetResultingText());
                     Align(ref sizeToAllocate);
                 }
 
                 // Radio buttons array
-                if (this.currentRadioButtons?.Length > 0)
+                if (contents.RadioButtons.Count > 0)
                 {
-                    sizeToAllocate += sizeof(TaskDialogButtonStruct) * this.currentRadioButtons.Length;
+                    sizeToAllocate += sizeof(TaskDialogButtonStruct) * contents.RadioButtons.Count;
                     Align(ref sizeToAllocate);
                     // Strings in radio buttons array
-                    for (int i = 0; i < this.currentRadioButtons.Length; i++)
-                        sizeToAllocate += SizeOfString(this.currentRadioButtons[i].Text);
+                    for (int i = 0; i < contents.RadioButtons.Count; i++)
+                        sizeToAllocate += SizeOfString(contents.RadioButtons[i].Text);
                     Align(ref sizeToAllocate);
                 }
 
@@ -1693,64 +1079,63 @@ namespace KPreisser.UI
                         cbSize = sizeof(TaskDialogConfig),
                         hwndParent = this.currentOwnerHwnd.Value,
                         dwFlags = flags,
-                        dwCommonButtons = this.CommonButtons,
-                        hMainIcon = this.currentMainIconIsFromHandle ?
-                                this.MainIconHandle : (IntPtr)this.MainIcon,
-                        hFooterIcon = this.currentFooterIconIsFromHandle ?
-                                this.FooterIconHandle : (IntPtr)this.FooterIcon,
-                        pszWindowTitle = MarshalString(this.Title),
-                        pszMainInstruction = MarshalString(this.MainInstruction),
-                        pszContent = MarshalString(this.Content),
-                        pszFooter = MarshalString(this.Footer),
-                        pszVerificationText = MarshalString(this.VerificationText),
-                        pszExpandedInformation = MarshalString(this.ExpandedInformation),
-                        pszExpandedControlText = MarshalString(this.ExpandedControlText),
-                        pszCollapsedControlText = MarshalString(this.CollapsedControlText),
-                        nDefaultButton = (this.DefaultCustomButton as TaskDialogCustomButton)?.ButtonID ??
-                                (int)this.DefaultCommonButton,
-                        nDefaultRadioButton = (this.DefaultRadioButton as TaskDialogRadioButton)?.ButtonID ?? 0,
+                        dwCommonButtons = commonButtonFlags,
+                        hMainIcon = contents.BoundMainIconIsFromHandle ?
+                                contents.MainIconHandle : (IntPtr)contents.MainIcon,
+                        hFooterIcon = contents.BoundFooterIconIsFromHandle ?
+                                contents.FooterIconHandle : (IntPtr)contents.FooterIcon,
+                        pszWindowTitle = MarshalString(contents.Title),
+                        pszMainInstruction = MarshalString(contents.MainInstruction),
+                        pszContent = MarshalString(contents.Content),
+                        pszFooter = MarshalString(contents.Footer),
+                        pszExpandedInformation = MarshalString(contents.Expander?.Text),
+                        pszExpandedControlText = MarshalString(contents.Expander?.ExpandedButtonText),
+                        pszCollapsedControlText = MarshalString(contents.Expander?.CollapsedButtonText),
+                        pszVerificationText = MarshalString(contents.VerificationCheckbox?.Text),
+                        nDefaultButton = defaultButtonID,
+                        nDefaultRadioButton = defaultRadioButtonID,
                         pfCallback = callbackProcDelegatePtr,
                         lpCallbackData = this.instanceHandlePtr,
-                        cxWidth = this.Width
+                        cxWidth = contents.Width
                     };
                     Align(ref currentPtr);
 
                     // Buttons array
-                    if (this.currentCustomButtons?.Length > 0)
+                    if (contents.CustomButtons.Count > 0)
                     {
                         var customButtonStructs = (TaskDialogButtonStruct*)currentPtr;
                         taskDialogConfig.pButtons = (IntPtr)customButtonStructs;
-                        taskDialogConfig.cButtons = this.currentCustomButtons.Length;
-                        currentPtr += sizeof(TaskDialogButtonStruct) * this.currentCustomButtons.Length;
+                        taskDialogConfig.cButtons = contents.CustomButtons.Count;
+                        currentPtr += sizeof(TaskDialogButtonStruct) * contents.CustomButtons.Count;
                         Align(ref currentPtr);
 
-                        for (int i = 0; i < this.currentCustomButtons.Length; i++)
+                        for (int i = 0; i < contents.CustomButtons.Count; i++)
                         {
-                            var currentCustomButton = this.currentCustomButtons[i];
+                            var currentCustomButton = contents.CustomButtons[i];
                             customButtonStructs[i] = new TaskDialogButtonStruct()
                             {
-                                nButtonID = currentCustomButton.ButtonID.Value,
-                                pszButtonText = MarshalString(currentCustomButton.Text)
+                                nButtonID = currentCustomButton.ButtonID,
+                                pszButtonText = MarshalString(currentCustomButton.GetResultingText())
                             };
                         }
                         Align(ref currentPtr);
                     }
 
                     // Radio buttons array
-                    if (this.currentRadioButtons?.Length > 0)
+                    if (contents.RadioButtons.Count > 0)
                     {
                         var customRadioButtonStructs = (TaskDialogButtonStruct*)currentPtr;
                         taskDialogConfig.pRadioButtons = (IntPtr)customRadioButtonStructs;
-                        taskDialogConfig.cRadioButtons = this.currentRadioButtons.Length;
-                        currentPtr += sizeof(TaskDialogButtonStruct) * this.currentRadioButtons.Length;
+                        taskDialogConfig.cRadioButtons = contents.RadioButtons.Count;
+                        currentPtr += sizeof(TaskDialogButtonStruct) * contents.RadioButtons.Count;
                         Align(ref currentPtr);
 
-                        for (int i = 0; i < this.currentRadioButtons.Length; i++)
+                        for (int i = 0; i < contents.RadioButtons.Count; i++)
                         {
-                            var currentCustomButton = this.currentRadioButtons[i];
+                            var currentCustomButton = contents.RadioButtons[i];
                             customRadioButtonStructs[i] = new TaskDialogButtonStruct()
                             {
-                                nButtonID = currentCustomButton.ButtonID.Value,
+                                nButtonID = currentCustomButton.RadioButtonID,
                                 pszButtonText = MarshalString(currentCustomButton.Text)
                             };
                         }
@@ -1758,7 +1143,7 @@ namespace KPreisser.UI
                     }
 
                     Debug.Assert(currentPtr == (long)ptrTaskDialogConfig + sizeToAllocate);
-                    
+
 
                     IntPtr MarshalString(string str)
                     {
@@ -1811,46 +1196,9 @@ namespace KPreisser.UI
             }
         }
 
-        private void ApplyButtonInitialization()
-        {
-            // Apply current properties of buttons after the dialog has been created.
-            if (this.currentCustomButtons != null)
-            {
-                foreach (var btn in this.currentCustomButtons)
-                {
-                    if (!btn.Enabled)
-                        btn.Enabled = false;
-                    if (btn.ElevationRequired)
-                        btn.ElevationRequired = true;
-                }
-            }
-
-            if (this.currentRadioButtons != null)
-            {
-                foreach (var btn in this.currentRadioButtons)
-                {
-                    if (!btn.Enabled)
-                        btn.Enabled = false;
-                }
-            }
-        }
-
-        private bool GetFlag(TaskDialogFlags flag)
-        {
-            return (this.flags & flag) == flag;
-        }
-
-        private void SetFlag(TaskDialogFlags flag, bool value)
-        {
-            if (value)
-                this.flags |= flag;
-            else
-                this.flags &= ~flag;
-        }
-
         private void DenyIfDialogNotActive()
         {
-            if (this.hwndDialog == IntPtr.Zero)
+            if (!this.DialogIsActive)
                 throw new InvalidOperationException(
                         "Can only update the state of a task dialog while it is active.");
         }
@@ -1866,85 +1214,30 @@ namespace KPreisser.UI
                     lParam);
         }
 
-        private void SetButtonElevationRequiredStateCore(int buttonID, bool requiresElevation)
-        {
-            SendTaskDialogMessage(
-                    TaskDialogMessage.SetButtonElevationRequiredState,
-                    buttonID,
-                    (IntPtr)(requiresElevation ? 1 : 0));
-        }
-
-        private void SetButtonEnabledCore(int buttonID, bool enable)
-        {
-            SendTaskDialogMessage(
-                    TaskDialogMessage.EnableButton,
-                    buttonID,
-                    (IntPtr)(enable ? 1 : 0));
-        }
-
-        /// <summary>
-        /// Enables or disables a radio button of an active task dialog.
-        /// </summary>
-        /// <param name="radioButtonID"></param>
-        /// <param name="enable"></param>
-        private void SetRadioButtonEnabledCore(int radioButtonID, bool enable)
-        {
-            SendTaskDialogMessage(
-                    TaskDialogMessage.EnableRadioButton,
-                    radioButtonID,
-                    (IntPtr)(enable ? 1 : 0));
-        }
-
-        private void ClickButtonCore(int buttonID)
-        {
-            SendTaskDialogMessage(
-                    TaskDialogMessage.ClickButton,
-                    buttonID,
-                    IntPtr.Zero);
-        }
-
-        private void ClickRadioButtonCore(int radioButtonID)
-        {
-            SendTaskDialogMessage(
-                    TaskDialogMessage.ClickRadioButton, 
-                    radioButtonID,
-                    IntPtr.Zero);
-        }
-
-        private void CheckUpdateText(
-                TaskDialogUpdateElements updateFlags,
-                TaskDialogUpdateElements flagToCheck,
-                TaskDialogElements element,
+        internal void UpdateTextElement(
+                TaskDialogTextElement element,
                 string text)
         {
-            if ((updateFlags & flagToCheck) == flagToCheck)
+            var strPtr = Marshal.StringToHGlobalUni(text);
+            try
             {
-                var strPtr = Marshal.StringToHGlobalUni(text);
-                try
-                {
-                    // Note: SetElementText will resize the dialog while UpdateElementText will
-                    // not (which would lead to clipped controls), so we use the former.
-                    SendTaskDialogMessage(TaskDialogMessage.SetElementText, (int)element, strPtr);
-                }
-                finally
-                {
-                    // We can now free the memory because SendMessage does not return until the
-                    // message has been processed.
-                    Marshal.FreeHGlobal(strPtr);
-                }
+                // Note: SetElementText will resize the dialog while UpdateElementText will
+                // not (which would lead to clipped controls), so we use the former.
+                SendTaskDialogMessage(TaskDialogMessage.SetElementText, (int)element, strPtr);
+            }
+            finally
+            {
+                // We can now free the memory because SendMessage does not return until the
+                // message has been processed.
+                Marshal.FreeHGlobal(strPtr);
             }
         }
 
-        private void CheckUpdateIcon(
-                TaskDialogUpdateElements updateFlags,
-                TaskDialogUpdateElements flagToCheck,
+        internal void UpdateIconElement(
                 TaskDialogIconElement element,
                 IntPtr icon)
         {
-            if ((updateFlags & flagToCheck) == flagToCheck)
-            {
-                SendTaskDialogMessage(TaskDialogMessage.UpdateIcon, (int)element, icon);
-            }
+            SendTaskDialogMessage(TaskDialogMessage.UpdateIcon, (int)element, icon);
         }
     }
 }

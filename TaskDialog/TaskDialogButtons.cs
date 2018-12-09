@@ -68,7 +68,7 @@ namespace KPreisser.UI
         /// </summary>
         /// <remarks>
         /// Note: Clicking this button will not close the dialog, but will raise the
-        /// <see cref="TaskDialog.Help"/> event.
+        /// <see cref="TaskDialogContents.Help"/> event.
         /// </remarks>
         Help = 1 << 20
     }

@@ -1,5 +1,4 @@
 ﻿using System;
-
 using KPreisser.UI;
 
 namespace TaskDialogExample
@@ -16,20 +15,24 @@ namespace TaskDialogExample
 
         private static void ShowTaskDialogExample()
         {
-            var dialog = new TaskDialog()
+            var dialogContents = new TaskDialogContents()
             {
                 Title = "Example 1",
                 MainInstruction = "Hello Task Dialog!   👍",
                 Content = "Hi, this is <A HREF=\"link1\">the Content</A>.\nBlah blah blah…",
-                ExpandedInformation = "Expanded Information!",
                 Footer = "This is the <A HREF=\"link2\">footer</A>.",
 
                 MainIcon = TaskDialogIcon.SecuritySuccessGreenBar,
                 FooterIcon = TaskDialogIcon.QuestionNoSound,
 
-                CommonButtons = TaskDialogButtons.Yes | TaskDialogButtons.No,
-                ExpandFooterArea = true,
-                ShowProgressBar = true,
+                Expander = new TaskDialogExpander()
+                {
+                    Text = "Expanded Information!",
+                    ExpandFooterArea = true
+                },
+
+                ProgressBar = new TaskDialogProgressBar(),
+
                 UseCommandLinks = true,
                 EnableHyperlinks = true,
                 AllowCancel = true,
@@ -37,47 +40,68 @@ namespace TaskDialogExample
                 SizeToContent = true,
                 UseTimer = true
             };
+            dialogContents.Created += (s, e) =>
+            {
+                Console.WriteLine("Main Contents created!");
+            };
+            dialogContents.Destroying += (s, e) =>
+            {
+                Console.WriteLine("Main Contents destroying!");
+            };
 
+            var dialog = new TaskDialog(dialogContents);
             dialog.Opened += (s, e) =>
             {
                 Console.WriteLine("Dialog opened!");
+            };
+            dialog.Closing += (s, e) =>
+            {
+                Console.WriteLine("Dialog closing!");
+            };
 
-                // After the dialog is opened, we can update its state.
-                // Disable the "Yes" button.
-                dialog.SetCommonButtonEnabled(TaskDialogResult.Yes, false);
+            dialogContents.ProgressBar.Position = 1;
 
-                // Set the progress bar range and state. We will update its state
-                // in the timer event.
-                dialog.SetProgressBarPos(1);
+            var buttonYes = dialogContents.CommonButtons.Add(TaskDialogResult.Yes);
+            buttonYes.Enabled = false;
+            var buttonNo = dialogContents.CommonButtons.Add(TaskDialogResult.No);
+
+            // Add a hidden "Cancel" button so that we can get notified when the user 
+            // closes the dialog through the window's X button or with ESC (and could
+            // cancel the close operation).
+            var buttonCancelHidden = dialogContents.CommonButtons.Add(TaskDialogResult.Cancel);
+            buttonCancelHidden.Visible = false;
+            buttonCancelHidden.ButtonClicked += (s, e) =>
+            {
+                Console.WriteLine("Cancel clicked!");
             };
 
             long timerCount = 2;
-            dialog.TimerTick += (s, e) =>
+            dialogContents.TimerTick += (s, e) =>
             {
                 // Update the progress bar if value <= 35.
                 if (timerCount <= 35)
                 {
-                    dialog.SetProgressBarPos((int)timerCount);
+                    dialogContents.ProgressBar.Position = (int)timerCount;
                 }
                 else if (timerCount == 36)
                 {
-                    dialog.SetProgressBarState(TaskDialogProgressBarState.Paused);
+                    dialogContents.ProgressBar.State = TaskDialogProgressBarState.Paused;
                 }
 
                 timerCount++;
             };
 
-            dialog.HyperlinkClicked += (s, e) =>
+            dialogContents.HyperlinkClicked += (s, e) =>
             {
                 Console.WriteLine("Hyperlink clicked!");
                 TaskDialog.Show(dialog, "Clicked Hyperlink: " + e.Hyperlink, icon: TaskDialogIcon.InformationNoSound);
             };
 
             // Create custom buttons that are shown as command links.
-            var button1 = dialog.AddCustomButton("Change Icon + Enable Buttons  ✔");
-            var button2 = dialog.AddCustomButton("Disabled Button 🎵🎶\nAfter enabling, can show a new dialog.");
-            var button3 = dialog.AddCustomButton("Some Admin Action…\nNavigates to a new dialog page.",
-                    elevationRequired: true);
+            var button1 = dialogContents.CustomButtons.Add("Change Icon + Enable Buttons  ✔");
+            var button2 = dialogContents.CustomButtons.Add("Disabled Button 🎵🎶", "After enabling, can show a new dialog.");
+            var button3 = dialogContents.CustomButtons.Add("Some Admin Action…", "Navigates to a new dialog page.");
+            button3.ElevationRequired = true;
 
             TaskDialogIcon nextIcon = 0;
             button1.ButtonClicked += (s, e) =>
@@ -90,14 +114,12 @@ namespace TaskDialogExample
                 nextIcon++;
 
                 // Set the icon and the content.
-                dialog.MainIcon = nextIcon;
-                dialog.MainInstruction = "Icon: " + nextIcon;
-                // Update these two items.
-                dialog.UpdateElements(TaskDialogUpdateElements.MainIcon | TaskDialogUpdateElements.MainInstruction);
+                dialogContents.MainIcon = nextIcon;
+                dialogContents.MainInstruction = "Icon: " + nextIcon;
 
                 // Enable the "Yes" button and the 3rd button when the checkbox is set.
-                dialog.SetCommonButtonEnabled(TaskDialogResult.Yes, true);
-                button2.Enabled = true;
+                buttonYes.Enabled = true;
+                button2.Enabled = true;                
             };
 
             button2.Enabled = false;
@@ -109,45 +131,42 @@ namespace TaskDialogExample
                 e.CancelClose = true;
 
                 // Show a new Taskdialog that shows an incrementing number.
-                var innerDialog = new TaskDialog()
+                var contents = new TaskDialogContents()
                 {
                     Content = "This is a new non-modal dialog!",
-                    CommonButtons = TaskDialogButtons.Close | TaskDialogButtons.Continue,
                     MainIcon = TaskDialogIcon.Information,
                     UseTimer = true,
                 };
+
+                var buttonClose = contents.CommonButtons.Add(TaskDialogResult.Close);
+                var buttonContinue = contents.CommonButtons.Add(TaskDialogResult.Continue);
 
                 int number = 0;
                 void UpdateNumberText(bool callUpdate = true)
                 {
                     // Update the instruction with the new number.
-                    innerDialog.MainInstruction = "Hi there!  Number: " + number.ToString();
-
-                    if (callUpdate)
-                        innerDialog.UpdateElements(TaskDialogUpdateElements.MainInstruction);
+                    contents.MainInstruction = "Hi there!  Number: " + number.ToString();
                 }
                 UpdateNumberText(false);
 
-                innerDialog.TimerTick += (s2, e2) =>
+                contents.TimerTick += (s2, e2) =>
                 {
                     number++;
                     UpdateNumberText();
                 };
 
-                innerDialog.CommonButtonClicked += (s2, e2) =>
+                buttonContinue.ButtonClicked += (s2, e2) =>
                 {
-                    Console.WriteLine("New dialog - Common Button clicked: " + e2.Button);
+                    Console.WriteLine("New dialog - Continue Button clicked");
 
-                    if (e2.Button == TaskDialogResult.Continue)
-                    {
-                        e2.CancelClose = true;
-                        number += 1000;
-                        UpdateNumberText();
-                    }
+                    e2.CancelClose = true;
+                    number += 1000;
+                    UpdateNumberText();
                 };
 
-                innerDialog.Show();
-                Console.WriteLine("Result of new dialog: " + innerDialog.ResultCommonButton);
+                var innerDialog = new TaskDialog(contents);
+                var result = innerDialog.Show();
+                Console.WriteLine("Result of new dialog: " + result);
             };
 
             button3.ButtonClicked += (s, e) =>
@@ -157,66 +176,60 @@ namespace TaskDialogExample
                 // Don't close the dialog from the button click.
                 e.CancelClose = true;
 
-                // Navigate to a new page.
-                // Reset the dialog properties and event handlers.
-                dialog.Reset(true);
+                // Create a new contents instance to which we will navigate the dialog.
+                var newContents = new TaskDialogContents()
+                {
+                    MainInstruction = "Page 2",
+                    Content = "Welcome to the second page!",
+                    MainIcon = TaskDialogIcon.SecurityShieldBlueBar,
+                    SizeToContent = true,
 
-                dialog.MainInstruction = "Page 2";
-                dialog.Content = "Welcome to the second page!";
-                dialog.VerificationText = "I think I agree…";
-                dialog.MainIcon = TaskDialogIcon.SecurityShieldBlueBar;
-                dialog.ShowMarqueeProgressBar = true;
-                dialog.SizeToContent = true;
-                dialog.CommonButtons = TaskDialogButtons.Cancel;
+                    VerificationCheckbox = new TaskDialogVerificationCheckbox()
+                    {
+                        Text = "I think I agree…"
+                    },
+                    ProgressBar = new TaskDialogProgressBar()
+                    {
+                        State = TaskDialogProgressBarState.Marquee
+                    }
+                };
+                newContents.Created += (s2, e2) =>
+                {
+                    Console.WriteLine("New Contents created!");
+
+                    // Set a new icon after navigating the dialog. This allows us to show the
+                    // yellow bar from the "SecurityWarningBar" icon with a different icon.
+                    newContents.MainIcon = TaskDialogIcon.Warning;
+                };
+                newContents.Destroying += (s2, e2) =>
+                {
+                    Console.WriteLine("New Contents destroying!");
+                };
+
+                var buttonCancel = newContents.CommonButtons.Add(TaskDialogResult.Cancel);
+                buttonCancel.Enabled = false;
+                buttonCancel.ElevationRequired = true;
 
                 // Create a custom button that will be shown as regular button.
-                var customButton = dialog.AddCustomButton("My Button :)");
+                var customButton = newContents.CustomButtons.Add("My Button :)");
 
                 // Add radio buttons.
-                var radioButton1 = dialog.AddRadioButton("My Radio Button 1");
-                var radioButton2 = dialog.AddRadioButton("My Radio Button 2");
+                var radioButton1 = newContents.RadioButtons.Add("My Radio Button 1");
+                var radioButton2 = newContents.RadioButtons.Add("My Radio Button 2");
+                radioButton2.Checked = true;
 
                 radioButton1.RadioButtonClicked += (s2, e2) => Console.WriteLine("Radio Button 1 clicked!");
                 radioButton2.RadioButtonClicked += (s2, e2) => Console.WriteLine("Radio Button 2 clicked!");
 
-                dialog.VerificationClicked += (s2, e2) =>
+                newContents.VerificationCheckbox.CheckboxClicked += (s2, e2) =>
                 {
                     Console.WriteLine("Verification clicked!");
 
-                    dialog.SetCommonButtonEnabled(TaskDialogResult.Cancel, e2.Status);
-                };
-
-                dialog.CommonButtonClicked += (s2, e2) =>
-                {
-                    Console.WriteLine("Common Button clicked (navigated dialog)!");
-                };
-
-                // Add a handler that will be called after the dialog is navigated.
-                dialog.Navigated += (s2, e2) =>
-                {
-                    Console.WriteLine("Dialog navigated!");
-
-                    // Set a new icon after navigating the dialog. This allows us to show the
-                    // yellow bar from the "SecurityWarningBar" icon with a different icon.
-                    dialog.MainIcon = TaskDialogIcon.Warning;
-                    dialog.UpdateElements(TaskDialogUpdateElements.MainIcon);
-
-                    // Occurs after the dialog navigated (just like "Opened"
-                    // occurs after the dialog opened).
-                    dialog.SetCommonButtonEnabled(TaskDialogResult.Cancel, false);
-                    dialog.SetCommonButtonElevationRequired(TaskDialogResult.Cancel, true);
-
-                    // Enable the marquee progress bar.
-                    dialog.SetProgressBarMarquee(true);
+                    buttonCancel.Enabled = e2.Status;
                 };
 
                 // Now navigate the dialog.
-                dialog.Navigate();
-            };
-
-            dialog.CommonButtonClicked += (s, e) =>
-            {
-                Console.WriteLine("Common Button clicked (main dialog)!");
+                dialog.CurrentContents = newContents;
             };
 
             dialog.Show();

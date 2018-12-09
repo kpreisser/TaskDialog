@@ -51,6 +51,7 @@
         /// </summary>
         SecuritySuccessGreenBar = ushort.MaxValue - 7,
 
+
         // TODO: Check if these "NoSound" icons should be included - 
         // note that the Question icon only seems to be available without
         // a sound.
@@ -84,16 +85,16 @@
         /// <summary>
         /// 
         /// </summary>
-        SecurityWarning = 107,
-
-        /// <summary>
-        /// 
-        /// </summary>
         SecurityError = 105,
 
         /// <summary>
         /// 
         /// </summary>
-        SecuritySuccess = 106
+        SecuritySuccess = 106,
+
+        /// <summary>
+        /// 
+        /// </summary>
+        SecurityWarning = 107
     }
 }

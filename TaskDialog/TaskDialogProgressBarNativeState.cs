@@ -3,29 +3,21 @@
     /// <summary>
     /// 
     /// </summary>
-    public interface ITaskDialogButton
+    internal enum TaskDialogProgressBarNativeState : int
     {
         /// <summary>
         /// 
         /// </summary>
-        string Text
-        {
-            get;
-        }
+        Normal = 0x1,
 
         /// <summary>
         /// 
         /// </summary>
-        bool Enabled
-        {
-            get;
-            set;
-        }
-
+        Error = 0x2,
 
         /// <summary>
         /// 
         /// </summary>
-        void Click();
+        Paused = 0x3
     }
 }
