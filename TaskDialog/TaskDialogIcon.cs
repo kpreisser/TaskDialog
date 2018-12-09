@@ -8,6 +8,11 @@
         /// <summary>
         /// 
         /// </summary>
+        None = 0,
+
+        /// <summary>
+        /// 
+        /// </summary>
         Information = ushort.MaxValue - 2,
 
         /// <summary>
@@ -19,7 +24,6 @@
         /// 
         /// </summary>
         Stop = ushort.MaxValue - 1,
-
 
         /// <summary>
         /// 
@@ -51,7 +55,6 @@
         /// </summary>
         SecuritySuccessGreenBar = ushort.MaxValue - 7,
 
-
         // TODO: Check if these "NoSound" icons should be included - 
         // note that the Question icon only seems to be available without
         // a sound.
@@ -75,7 +78,6 @@
         /// 
         /// </summary>
         QuestionNoSound = 99,
-
 
         /// <summary>
         /// 
