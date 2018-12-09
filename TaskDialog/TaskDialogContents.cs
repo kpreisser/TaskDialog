@@ -433,6 +433,12 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
+        /// <remarks>
+        /// Note that once a task dialog has been opened with or has navigated to a
+        /// <see cref="TaskDialogContents"/> where this flag is set, it will keep on
+        /// subsequent navigations to a new <see cref="TaskDialogContents"/> even when
+        /// it doesn't have this flag set.
+        /// </remarks>
         public bool RightToLeftLayout
         {
             get => GetFlag(TaskDialogFlags.RtlLayout);
