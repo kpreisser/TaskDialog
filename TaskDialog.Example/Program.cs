@@ -165,8 +165,8 @@ namespace TaskDialogExample
                 };
 
                 var innerDialog = new TaskDialog(contents);
-                var result = innerDialog.Show();
-                Console.WriteLine("Result of new dialog: " + result);
+                var innerResult = innerDialog.Show();
+                Console.WriteLine("Result of new dialog: " + innerResult);
             };
 
             button3.ButtonClicked += (s, e) =>
@@ -232,10 +232,9 @@ namespace TaskDialogExample
                 dialog.CurrentContents = newContents;
             };
 
-            dialog.Show();
+            var result = dialog.Show();
 
-            Console.WriteLine("Result of main dialog: " +
-                    (dialog.ResultCustomButton?.Text ?? dialog.ResultCommonButton.ToString()));
+            Console.WriteLine("Result of main dialog: " + result);
         }
     }
 }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace KPreisser.UI
@@ -60,11 +59,14 @@ namespace KPreisser.UI
 
         private TaskDialogContents boundContents;
 
-        private TaskDialogCommonButton resultCommonButton;
-
-        private TaskDialogCustomButton resultCustomButton;
-
-        private TaskDialogRadioButton resultRadioButton;
+        /// <summary>
+        /// Stores the last button with its ID for which the callback returned <c>true</c>
+        /// when handling the <see cref="TaskDialogNotification.ButtonClicked"/>
+        /// notification, so that when
+        /// <see cref="NativeMethods.TaskDialogIndirect(IntPtr, out int, out int, out bool)"/>
+        /// returns, the resulting button ID should be the one we stored here.
+        /// </summary>
+        private (TaskDialogButton button, int originalButtonID) lastHandledResultButton;
 
         private bool resultVerificationCheckboxChecked;
 
@@ -201,33 +203,33 @@ namespace KPreisser.UI
             get => this.hwndDialog != IntPtr.Zero;
         }
 
-        /// <summary>
-        /// If <see cref="ResultCustomButton"/> is null, this field contains the
-        /// <see cref="TaskDialogResult"/> of the common buttons that was pressed.
-        /// </summary>
-        public TaskDialogCommonButton ResultCommonButton
-        {
-            get => this.resultCommonButton;
-        }
+        ///// <summary>
+        ///// If <see cref="ResultCustomButton"/> is null, this field contains the
+        ///// <see cref="TaskDialogResult"/> of the common buttons that was pressed.
+        ///// </summary>
+        //public TaskDialogCommonButton ResultCommonButton
+        //{
+        //    get => this.resultCommonButton;
+        //}
 
-        /// <summary>
-        /// If not null, contains the custom button that was pressed. Otherwise, 
-        /// <see cref="ResultCommonButton"/> contains the common button that was pressed.
-        /// </summary>
-        public TaskDialogCustomButton ResultCustomButton
-        {
-            get => this.resultCustomButton;
-        }
+        ///// <summary>
+        ///// If not null, contains the custom button that was pressed. Otherwise, 
+        ///// <see cref="ResultCommonButton"/> contains the common button that was pressed.
+        ///// </summary>
+        //public TaskDialogCustomButton ResultCustomButton
+        //{
+        //    get => this.resultCustomButton;
+        //}
 
-        /// <summary>
-        /// After the <see cref="Show(IntPtr)"/> method returns, will contain the
-        /// <see cref="TaskDialogRadioButton"/> that the user has selected, or <c>null</c>
-        /// if none was selected.
-        /// </summary>
-        public TaskDialogRadioButton ResultRadioButton
-        {
-            get => this.resultRadioButton;
-        }
+        ///// <summary>
+        ///// After the <see cref="Show(IntPtr)"/> method returns, will contain the
+        ///// <see cref="TaskDialogRadioButton"/> that the user has selected, or <c>null</c>
+        ///// if none was selected.
+        ///// </summary>
+        //public TaskDialogRadioButton ResultRadioButton
+        //{
+        //    get => this.resultRadioButton;
+        //}
 
         /// <summary>
         /// 
@@ -378,9 +380,7 @@ namespace KPreisser.UI
             foreach (var result in TaskDialogCommonButton.GetResultsForButtonFlags(buttons))
                 dialog.currentContents.CommonButtons.Add(result);
 
-            dialog.Show(hwndOwner);
-
-            return dialog.ResultCommonButton.Result;
+            return ((TaskDialogCommonButton)dialog.Show(hwndOwner)).Result;
         }
 
 
@@ -476,7 +476,38 @@ namespace KPreisser.UI
                             button = instance.boundContents.CommonButtons[result];
                     }
 
-                    return button?.HandleButtonClicked() ?? true ? HResultOk : HResultFalse;
+                    bool handlerResult = button?.HandleButtonClicked() ?? true;
+                    if (handlerResult)
+                    {
+                        // Because we will return true (which means the dialog's result
+                        // is going to be set to this button ID - except if this is the
+                        // "Help" button, but this isn't a problem), we need to cache the
+                        // last handled button instance and its original button ID,
+                        // because if this was the last ButtonClicked notification, this
+                        // will be the ID returned by TaskDialogIndirect.
+                        // However, this can be a button that is no longer part of the
+                        // TaskDialog when it already navigated, so we cannot simply
+                        // search for the returned ID in the button collections.
+                        // For example, when you navigate the dialog in a ButtonClicked
+                        // event handler (so the dialog now displays new buttons) but
+                        // then the click handler (that was called for the previous button)
+                        // returns true, the dialog will close and the result will be the
+                        // previous button, which however is no longer part of the
+                        // collections as we already navigated. Therefore, we set this
+                        // field so that when Show() returns, it can check if the
+                        // button ID equals the last handled button, and use that
+                        // instance in that case.
+                        // Note: If the dialog had radio buttons at the time this handler
+                        // was initially called, the dialog would also provide the last
+                        // selected one even if it now has different/no radio buttons.
+                        // However, because this would be complex to do correctly,
+                        // we simply don't retrieve the resulting radio button ID,
+                        // because the user can check which radio button button was
+                        // selected by checking the "Checked" property.
+                        instance.lastHandledResultButton = (button, buttonID);
+                    }
+
+                    return handlerResult ? HResultOk : HResultFalse;
 
                 case TaskDialogNotification.RadioButtonClicked:
                     int radioButtonID = wParam.ToInt32();
@@ -639,9 +670,9 @@ namespace KPreisser.UI
 
                 // Clear the previous result properties.
                 this.resultVerificationCheckboxChecked = default;
-                this.resultCommonButton = default;
-                this.resultCustomButton = null;
-                this.resultRadioButton = null;
+                //this.resultCommonButton = default;
+                //this.resultCustomButton = null;
+                //this.resultRadioButton = null;
 
                 // Bind the contents and allocate the memory.
                 BindAndAllocateConfig(
@@ -675,12 +706,21 @@ namespace KPreisser.UI
                     if (ret != HResultOk)
                         Marshal.ThrowExceptionForHR(ret);
 
-                    // Set the result fields.
-                    if (resultButtonID >= TaskDialogContents.CustomButtonStartID)
+                    // Check if the resulting button ID is the same as the last handled button.
+                    // This should always be the case, except when the button ID refers to a
+                    // TaskDialogResult for which the user didn't create a button.
+                    TaskDialogButton resultingButton;
+                    if (this.lastHandledResultButton.button != null &&
+                            this.lastHandledResultButton.originalButtonID == resultButtonID)
                     {
-                        this.resultCustomButton = this.boundContents.CustomButtons
+                        resultingButton = this.lastHandledResultButton.button;
+                    }
+                    else if (resultButtonID >= TaskDialogContents.CustomButtonStartID)
+                    {
+                        // This should normally not happen as we already cached the last
+                        // handled button.
+                        resultingButton = this.boundContents.CustomButtons
                                 [resultButtonID - TaskDialogContents.CustomButtonStartID];
-                        this.resultCommonButton = null;
                     }
                     else
                     {
@@ -691,18 +731,13 @@ namespace KPreisser.UI
                         // adding a "Cancel" button. If we don't have such button, we
                         // simply create a new one.
                         if (this.boundContents.CommonButtons.Contains(result))
-                            this.resultCommonButton = this.boundContents.CommonButtons[result];
+                            resultingButton = this.boundContents.CommonButtons[result];
                         else
-                            this.resultCommonButton = new TaskDialogCommonButton(result);
-                        this.resultCustomButton = null;
+                            resultingButton = new TaskDialogCommonButton(result);
                     }
 
-                    // Note that even if we have radio buttons, it could be that the user
-                    // didn't select one.
-                    this.resultRadioButton = resultRadioButtonID >= TaskDialogContents.RadioButtonStartID ?
-                            this.boundContents.RadioButtons
-                                [resultRadioButtonID - TaskDialogContents.RadioButtonStartID] :
-                            null;
+                    // Return the button that was clicked.
+                    return resultingButton;
                 }
                 finally
                 {
@@ -713,6 +748,7 @@ namespace KPreisser.UI
                     // Unbind the contents.
                     this.boundContents.Unbind();
                     this.boundContents = null;
+                    this.lastHandledResultButton.button = null;
 
                     // We need to ensure the callback delegate is not garbage-collected
                     // as long as TaskDialogIndirect doesn't return, by calling GC.KeepAlive().
@@ -734,9 +770,6 @@ namespace KPreisser.UI
                 this.instanceHandlePtr = IntPtr.Zero;
                 instanceHandle.Free();
             }
-
-            // Return the button that was clicked.
-            return this.resultCommonButton as TaskDialogButton ?? this.resultCustomButton;
         }
 
         //// Messages that can be sent to the dialog while it is active.

@@ -125,6 +125,7 @@ namespace KPreisser.UI
                 this.ElevationRequired = this.elevationRequired;
         }
 
+
         private protected void OnButtonClicked(TaskDialogButtonClickedEventArgs e)
         {
             this.ButtonClicked?.Invoke(this, e);
