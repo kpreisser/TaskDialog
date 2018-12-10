@@ -6,9 +6,9 @@ namespace KPreisser.UI
     /// <summary>
     /// 
     /// </summary>
-    public abstract class TaskDialogButtonCollection<TKey, TValue>
-        : TaskDialogControlCollection<TKey, TValue>
-        where TValue : TaskDialogButton
+    public abstract class TaskDialogButtonCollection<TKey, TItem>
+        : TaskDialogControlCollection<TKey, TItem>
+        where TItem : TaskDialogButton
     {
         private protected TaskDialogButtonCollection()
             : base()
@@ -21,7 +21,7 @@ namespace KPreisser.UI
         /// </summary>
         /// <param name="index"></param>
         /// <param name="item"></param>
-        protected override void SetItem(int index, TValue item)
+        protected override void SetItem(int index, TItem item)
         {
             DenyIfHasOtherCollection(item);
 
@@ -39,7 +39,7 @@ namespace KPreisser.UI
         /// </summary>
         /// <param name="index"></param>
         /// <param name="item"></param>
-        protected override void InsertItem(int index, TValue item)
+        protected override void InsertItem(int index, TItem item)
         {
             DenyIfHasOtherCollection(item);
 
@@ -71,7 +71,7 @@ namespace KPreisser.UI
         }
 
 
-        private void DenyIfHasOtherCollection(TValue item)
+        private void DenyIfHasOtherCollection(TItem item)
         {
             if (item.Collection != null && item.Collection != this)
                 throw new InvalidOperationException(
