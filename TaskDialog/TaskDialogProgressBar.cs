@@ -27,12 +27,6 @@ namespace KPreisser.UI
         /// <summary>
         /// Gets or sets the state of the progress bar.
         /// </summary>
-        /// <remarks>
-        /// Note that switching between <see cref="TaskDialogProgressBarState.Marquee"/>
-        /// and one of <see cref="TaskDialogProgressBarState.Paused"/> or
-        /// <see cref="TaskDialogProgressBarState.Error"/> will not always work - the
-        /// progress bar might get blank in that case.
-        /// </remarks>
         public TaskDialogProgressBarState State
         {
             get => this.state;
@@ -52,6 +46,11 @@ namespace KPreisser.UI
                     bool switchMode = ProgressBarStateIsMarquee(previousState) != newStateIsMarquee;
                     if (switchMode)
                     {
+                        // When switching from non-marquee to marquee mode, we first need to
+                        // set the state to "Normal"; otherwise the marquee will not show.
+                        if (newStateIsMarquee && previousState != TaskDialogProgressBarState.Normal)
+                            taskDialog.SetProgressBarState(TaskDialogProgressBarNativeState.Normal);
+
                         taskDialog.SwitchProgressBarMode(newStateIsMarquee);
                     }
 
@@ -68,9 +67,20 @@ namespace KPreisser.UI
 
                         if (switchMode)
                         {
-                            // Also need to set the other properties.
+                            // Also need to set the other properties after switching
+                            // the mode.
                             this.Range = this.range;
                             this.Position = this.position;
+
+                            // We need to set the position a secondtime to work reliably if the
+                            // state is not "Normal".
+                            // See this comment in the TaskDialog implementation of the
+                            // Windows API Code Pack 1.1:
+                            // "Due to a bug that wasn't fixed in time for RTM of Vista,
+                            // second SendMessage is required if the state is non-Normal."
+                            // Apparently, this bug is still present in Win10 V1803.
+                            if (this.state != TaskDialogProgressBarState.Normal)
+                                this.Position = this.position;
                         }
                     }
                 }
@@ -200,8 +210,12 @@ namespace KPreisser.UI
             {
                 this.State = this.state;
                 this.Range = this.range;
-                if (this.position > 0)
-                    this.Position = this.position;                
+                this.Position = this.position;
+                    
+                // See comment in property "State" for why we need to set
+                // the position it twice.
+                if (this.state != TaskDialogProgressBarState.Normal)
+                    this.Position = this.position;
             }
         }
     }
