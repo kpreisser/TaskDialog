@@ -97,21 +97,21 @@ namespace KPreisser.UI
         //// TODO: Maybe remove these events since they are also available in the TaskDialogContents,
         //// and are specific to the contents (not to the dialog).
 
-        /// <summary>
-        /// Occurs when the user presses F1 while the dialog has focus, or when the
-        /// user clicks the <see cref="TaskDialogButtons.Help"/> button.
-        /// </summary>
-        public event EventHandler Help;
+        ///// <summary>
+        ///// Occurs when the user presses F1 while the dialog has focus, or when the
+        ///// user clicks the <see cref="TaskDialogButtons.Help"/> button.
+        ///// </summary>
+        //public event EventHandler Help;
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public event EventHandler<TaskDialogHyperlinkClickedEventArgs> HyperlinkClicked;
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        //public event EventHandler<TaskDialogHyperlinkClickedEventArgs> HyperlinkClicked;
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public event EventHandler<TaskDialogTimerTickEventArgs> TimerTick;
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        //public event EventHandler<TaskDialogTimerTickEventArgs> TimerTick;
 
 
         static TaskDialog()
@@ -452,7 +452,7 @@ namespace KPreisser.UI
                     string link = Marshal.PtrToStringUni(lParam);
 
                     var eventArgs = new TaskDialogHyperlinkClickedEventArgs(link);
-                    instance.OnHyperlinkClicked(eventArgs);
+                    //instance.OnHyperlinkClicked(eventArgs);
                     instance.boundContents.OnHyperlinkClicked(eventArgs);
                     break;
 
@@ -529,7 +529,7 @@ namespace KPreisser.UI
                     break;
 
                 case TaskDialogNotification.Help:
-                    instance.OnHelp(EventArgs.Empty);
+                    //instance.OnHelp(EventArgs.Empty);
                     instance.boundContents.OnHelp(EventArgs.Empty);
                     break;
 
@@ -544,7 +544,7 @@ namespace KPreisser.UI
                             wParam.ToInt32();
 
                     var tickEventArgs = new TaskDialogTimerTickEventArgs(ticks);
-                    instance.OnTimerTick(tickEventArgs);
+                    //instance.OnTimerTick(tickEventArgs);
                     instance.boundContents.OnTimerTick(tickEventArgs);
 
                     return tickEventArgs.ResetTickCount ? HResultFalse : HResultOk;
@@ -745,7 +745,8 @@ namespace KPreisser.UI
                     this.currentOwnerHwnd = null;
                     FreeConfig(ptrToFree);
 
-                    // Unbind the contents.
+                    // Unbind the contents. The 'Destroying' event of the TaskDialogContent
+                    // will already have been called from the callback.
                     this.boundContents.Unbind();
                     this.boundContents = null;
                     this.lastHandledResultButton.button = null;
@@ -959,32 +960,32 @@ namespace KPreisser.UI
             this.Navigated?.Invoke(this, e);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="e"></param>
-        protected void OnHelp(EventArgs e)
-        {
-            this.Help?.Invoke(this, e);
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="e"></param>
+        //protected void OnHelp(EventArgs e)
+        //{
+        //    this.Help?.Invoke(this, e);
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="e"></param>
-        protected void OnHyperlinkClicked(TaskDialogHyperlinkClickedEventArgs e)
-        {
-            this.HyperlinkClicked?.Invoke(this, e);
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="e"></param>
+        //protected void OnHyperlinkClicked(TaskDialogHyperlinkClickedEventArgs e)
+        //{
+        //    this.HyperlinkClicked?.Invoke(this, e);
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="e"></param>
-        protected void OnTimerTick(TaskDialogTimerTickEventArgs e)
-        {
-            this.TimerTick?.Invoke(this, e);
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="e"></param>
+        //protected void OnTimerTick(TaskDialogTimerTickEventArgs e)
+        //{
+        //    this.TimerTick?.Invoke(this, e);
+        //}
 
 
         /// <summary>

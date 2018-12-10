@@ -38,7 +38,6 @@ namespace TaskDialogExample
                 AllowCancel = true,
                 CanBeMinimized = true,
                 SizeToContent = true,
-                UseTimer = true
             };
             dialogContents.Created += (s, e) =>
             {
@@ -135,7 +134,6 @@ namespace TaskDialogExample
                 {
                     Content = "This is a new non-modal dialog!",
                     MainIcon = TaskDialogIcon.Information,
-                    UseTimer = true,
                 };
 
                 var buttonClose = contents.CommonButtons.Add(TaskDialogResult.Close);

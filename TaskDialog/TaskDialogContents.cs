@@ -58,8 +58,9 @@ namespace KPreisser.UI
 
 
         /// <summary>
-        /// Occurs after the task dialog has created the GUI elements represented
-        /// by this <see cref="TaskDialogContents"/> instance.
+        /// Occurs after this instance is bound to a task dialog and the task dialog
+        /// has created the GUI elements represented by this
+        /// <see cref="TaskDialogContents"/> instance.
         /// </summary>
         /// <remarks>
         /// This will happen after showing or navigating the dialog.
@@ -68,7 +69,8 @@ namespace KPreisser.UI
 
         /// <summary>
         /// Occurs when the task dialog is about to destroy the GUI elements represented
-        /// by this <see cref="TaskDialogContents"/> instance.
+        /// by this <see cref="TaskDialogContents"/> instance and it is about to be
+        /// unbound from the task dialog.
         /// </summary>
         /// <remarks>
         /// This will happen before closing or navigating the dialog.
@@ -87,7 +89,8 @@ namespace KPreisser.UI
         public event EventHandler<TaskDialogHyperlinkClickedEventArgs> HyperlinkClicked;
 
         /// <summary>
-        /// 
+        /// Occurs approximately every 200 milliseconds while this
+        /// <see cref="TaskDialogContents"/> is bound.
         /// </summary>
         public event EventHandler<TaskDialogTimerTickEventArgs> TimerTick;
 
@@ -411,17 +414,6 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// Gets or sets a value that indicates whether the <see cref="TimerTick"/>
-        /// event should be raised approximately every 200 milliseconds while this
-        /// <see cref="TaskDialogContents"/> is active/bound.
-        /// </summary>
-        public bool UseTimer
-        {
-            get => GetFlag(TaskDialogFlags.CallbackTimer);
-            set => SetFlag(TaskDialogFlags.CallbackTimer, value);
-        }
-
-        /// <summary>
         /// 
         /// </summary>
         public bool PositionRelativeToWindow
@@ -574,6 +566,11 @@ namespace KPreisser.UI
                 flags |= TaskDialogFlags.UseHIconMain;
             if (this.boundFooterIconIsFromHandle)
                 flags |= TaskDialogFlags.UseHIconFooter;
+
+            // Specify the timer flag if an event handler has been added to the timer
+            // tick event.
+            if (this.TimerTick != null)
+                flags |= TaskDialogFlags.CallbackTimer;
 
             // Assign IDs to the buttons based on their index.
             // Note: The collections will be locked while this contents are bound, so we
