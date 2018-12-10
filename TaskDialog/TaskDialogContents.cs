@@ -37,10 +37,6 @@ namespace KPreisser.UI
 
         private TaskDialog boundTaskDialog;
 
-        /// <summary>
-        /// Flags for this task dialog instance. By default,
-        /// <see cref="TaskDialogFlags.PositionRelativeToWindow"/> is set.
-        /// </summary>
         private TaskDialogFlags flags;
         private string title;
         private string mainInstruction;
@@ -51,6 +47,8 @@ namespace KPreisser.UI
         private TaskDialogIcon footerIcon;
         private IntPtr footerIconHandle;
         private int width;
+        private TaskDialogCommandLinkMode commandLinkMode;
+        private TaskDialogStartupLocation startupLocation;
 
         private bool boundMainIconIsFromHandle;
 
@@ -105,7 +103,7 @@ namespace KPreisser.UI
             this.radioButtons = new TaskDialogRadioButtonCollection();
 
             // Set default flags/properties.
-            this.PositionRelativeToWindow = true;
+            this.startupLocation = TaskDialogStartupLocation.CenterParent;
         }
 
 
@@ -374,6 +372,39 @@ namespace KPreisser.UI
         }
 
         /// <summary>
+        /// Gets or sets the <see cref="TaskDialogCommandLinkMode"/> that specifies how to
+        /// display custom buttons.
+        /// </summary>
+        public TaskDialogCommandLinkMode CommandLinkMode
+        {
+            get => this.commandLinkMode;
+
+            set
+            {
+                this.DenyIfBound();
+
+                this.commandLinkMode = value;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public TaskDialogStartupLocation StartupLocation
+        {
+            get => this.startupLocation;
+
+            set
+            {
+                this.DenyIfBound();
+
+                this.startupLocation = value;
+            }
+        }
+
+
+
+        /// <summary>
         /// 
         /// </summary>
         public bool EnableHyperlinks
@@ -392,34 +423,6 @@ namespace KPreisser.UI
         {
             get => GetFlag(TaskDialogFlags.AllowDialogCancellation);
             set => SetFlag(TaskDialogFlags.AllowDialogCancellation, value);
-        }
-
-        /// <summary>
-        /// Gets or sets a value that indicates whether to display custom buttons
-        /// as command links instead of buttons.
-        /// </summary>
-        public bool UseCommandLinks
-        {
-            get => GetFlag(TaskDialogFlags.UseCommandLinks);
-            set => SetFlag(TaskDialogFlags.UseCommandLinks, value);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public bool UseCommandLinksWithoutIcon
-        {
-            get => GetFlag(TaskDialogFlags.UseCommandLinksNoIcon);
-            set => SetFlag(TaskDialogFlags.UseCommandLinksNoIcon, value);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public bool PositionRelativeToWindow
-        {
-            get => GetFlag(TaskDialogFlags.PositionRelativeToWindow);
-            set => SetFlag(TaskDialogFlags.PositionRelativeToWindow, value);
         }
 
         /// <summary>
@@ -519,13 +522,6 @@ namespace KPreisser.UI
                 if (control.BoundTaskDialogContents != null && control.BoundTaskDialogContents != this)
                     throw new InvalidOperationException();
 
-            if ((this.UseCommandLinks || this.UseCommandLinksWithoutIcon) &&
-                    !(this.customButtons?.Count > 0))
-                throw new InvalidOperationException(
-                        $"When enabling {nameof(this.UseCommandLinks)} or " +
-                        $"{nameof(this.UseCommandLinksWithoutIcon)}, at " +
-                        $"least one custom button needs to be added.");
-
             if (this.customButtons?.Count > int.MaxValue - CustomButtonStartID + 1 ||
                     this.radioButtons?.Count > int.MaxValue - RadioButtonStartID + 1)
                 throw new InvalidOperationException(
@@ -567,10 +563,23 @@ namespace KPreisser.UI
             if (this.boundFooterIconIsFromHandle)
                 flags |= TaskDialogFlags.UseHIconFooter;
 
+            if (this.startupLocation == TaskDialogStartupLocation.CenterParent)
+                flags |= TaskDialogFlags.PositionRelativeToWindow;
+
             // Specify the timer flag if an event handler has been added to the timer
             // tick event.
             if (this.TimerTick != null)
                 flags |= TaskDialogFlags.CallbackTimer;
+
+            // Only specify the command link flags if there actually are custom buttons;
+            // otherwise the dialog will not work.
+            if (this.customButtons.Count > 0)
+            {
+                if (this.commandLinkMode == TaskDialogCommandLinkMode.CommandLinks)
+                    flags |= TaskDialogFlags.UseCommandLinks;
+                else if (this.commandLinkMode == TaskDialogCommandLinkMode.CommandLinksNoIcon)
+                    flags |= TaskDialogFlags.UseCommandLinksNoIcon;
+            }
 
             // Assign IDs to the buttons based on their index.
             // Note: The collections will be locked while this contents are bound, so we

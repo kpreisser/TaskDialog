@@ -40,8 +40,9 @@
         /// <summary>
         /// Gets or sets an additional description text that will be displayed in
         /// a separate line of the command link when
-        /// <see cref="TaskDialogContents.UseCommandLinks"/> or
-        /// <see cref="TaskDialogContents.UseCommandLinksWithoutIcon"/> was specified.
+        /// <see cref="TaskDialogContents.CommandLinkMode"/> is set to
+        /// <see cref="TaskDialogCommandLinkMode.CommandLinks"/> or
+        /// <see cref="TaskDialogCommandLinkMode.CommandLinksNoIcon"/>.
         /// </summary>
         public string DescriptionText
         {
@@ -79,7 +80,8 @@
             var contents = this.boundTaskDialogContents;
 
             var text = this.text;
-            if ((contents?.UseCommandLinks == true || contents?.UseCommandLinksWithoutIcon == true) && 
+            if ((contents?.CommandLinkMode == TaskDialogCommandLinkMode.CommandLinks ||
+                    contents?.CommandLinkMode == TaskDialogCommandLinkMode.CommandLinksNoIcon) && 
                     text != null && this.descriptionText != null)
                 text += '\n' + this.descriptionText;
 
