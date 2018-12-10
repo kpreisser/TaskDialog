@@ -779,11 +779,10 @@ namespace KPreisser.UI
         /// While the dialog is active, closes the dialog with a 
         /// <see cref="TaskDialogResult.Cancel"/> result.
         /// </summary>
-        /// <param name="suppressCommonButtonClickedEvent"></param>
-        public void Close(bool suppressCommonButtonClickedEvent = true)
+        public void Close()
         {
-            if (suppressCommonButtonClickedEvent)
-                this.suppressButtonClickedEvent = true;
+            //if (suppressCommonButtonClickedEvent)
+            //    this.suppressButtonClickedEvent = true;
             try
             {
                 // Send a click button message with the cancel result.
@@ -791,8 +790,8 @@ namespace KPreisser.UI
             }
             finally
             {
-                if (suppressCommonButtonClickedEvent)
-                    this.suppressButtonClickedEvent = false;
+                //if (suppressCommonButtonClickedEvent)
+                //    this.suppressButtonClickedEvent = false;
             }
         }
 
