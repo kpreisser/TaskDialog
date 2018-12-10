@@ -254,7 +254,7 @@ namespace KPreisser.UI
                 string instruction = null,
                 string title = null,
                 TaskDialogButtons buttons = TaskDialogButtons.OK,
-                TaskDialogIcon icon = 0)
+                TaskDialogIcon icon = TaskDialogIcon.None)
         {
             return Show(IntPtr.Zero, content, instruction, title, buttons, icon);
         }
@@ -276,7 +276,7 @@ namespace KPreisser.UI
                 string instruction = null,
                 string title = null,
                 TaskDialogButtons buttons = TaskDialogButtons.OK,
-                TaskDialogIcon icon = 0)
+                TaskDialogIcon icon = TaskDialogIcon.None)
         {
             return Show(GetWindowHandle(owner), content, instruction, title, buttons, icon);
         }
@@ -297,7 +297,7 @@ namespace KPreisser.UI
                 string instruction = null,
                 string title = null,
                 TaskDialogButtons buttons = TaskDialogButtons.OK,
-                TaskDialogIcon icon = 0)
+                TaskDialogIcon icon = TaskDialogIcon.None)
         {
             return Show(GetWindowHandle(owner), content, instruction, title, buttons, icon);
         }
@@ -318,7 +318,7 @@ namespace KPreisser.UI
                 string instruction = null,
                 string title = null,
                 TaskDialogButtons buttons = TaskDialogButtons.OK,
-                TaskDialogIcon icon = 0)
+                TaskDialogIcon icon = TaskDialogIcon.None)
         {
             return Show(GetWindowHandle(owner), content, instruction, title, buttons, icon);
         }
@@ -339,7 +339,7 @@ namespace KPreisser.UI
                 string instruction = null,
                 string title = null,
                 TaskDialogButtons buttons = TaskDialogButtons.OK,
-                TaskDialogIcon icon = 0)
+                TaskDialogIcon icon = TaskDialogIcon.None)
         {
             return Show(owner.Handle, content, instruction, title, buttons, icon);
         }
@@ -364,7 +364,7 @@ namespace KPreisser.UI
                 instruction = null,
                 string title = null,
                 TaskDialogButtons buttons = TaskDialogButtons.OK,
-                TaskDialogIcon icon = 0)
+                TaskDialogIcon icon = TaskDialogIcon.None)
         {
             var dialog = new TaskDialog()
             {
