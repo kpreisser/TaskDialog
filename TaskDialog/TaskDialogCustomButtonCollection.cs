@@ -8,8 +8,12 @@ namespace KPreisser.UI
     /// 
     /// </summary>
     public class TaskDialogCustomButtonCollection 
-        : KeyedCollection<TaskDialogCustomButton, TaskDialogCustomButton>
+        : Collection<TaskDialogCustomButton>
     {
+        // HashSet to detect duplicate items.
+        private readonly HashSet<TaskDialogCustomButton> itemSet =
+                new HashSet<TaskDialogCustomButton>();
+
         private TaskDialogContents boundTaskDialogContents;
 
 
@@ -48,17 +52,6 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="item"></param>
-        /// <returns></returns>
-        protected override TaskDialogCustomButton GetKeyForItem(
-                TaskDialogCustomButton item)
-        {
-            return item;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
         /// <param name="index"></param>
         /// <param name="item"></param>
         protected override void SetItem(int index, TaskDialogCustomButton item)
@@ -69,10 +62,19 @@ namespace KPreisser.UI
             DenyIfHasOtherCollection(item);
 
             var oldItem = this[index];
-            base.SetItem(index, item);
+            if (oldItem != item)
+            {
+                // First, add the new item (which will throw if it is a duplicate entry),
+                // then remove the old one.
+                if (!this.itemSet.Add(item))
+                    throw new ArgumentException();
+                this.itemSet.Remove(oldItem);
 
-            oldItem.Collection = null;
-            item.Collection = this;
+                oldItem.Collection = null;
+                item.Collection = this;
+            }
+
+            base.SetItem(index, item);
         }
 
         /// <summary>
@@ -87,8 +89,11 @@ namespace KPreisser.UI
             this.boundTaskDialogContents?.DenyIfBound();
             DenyIfHasOtherCollection(item);
 
-            base.InsertItem(index, item);
+            if (!this.itemSet.Add(item))
+                throw new ArgumentException();
+
             item.Collection = this;
+            base.InsertItem(index, item);
         }
 
         /// <summary>
@@ -100,10 +105,11 @@ namespace KPreisser.UI
             // Disallow collection modification, so that we don't need to copy it
             // when binding the TaskDialogContents.
             this.boundTaskDialogContents?.DenyIfBound();
-
-            var oldItem = this[index];
-            base.RemoveItem(index);
+            
+            var oldItem = this[index];            
             oldItem.Collection = null;
+            this.itemSet.Remove(oldItem);
+            base.RemoveItem(index);
         }
 
         /// <summary>
@@ -117,6 +123,8 @@ namespace KPreisser.UI
 
             foreach (var button in this)
                 button.Collection = null;
+
+            this.itemSet.Clear();
             base.ClearItems();
         }
 

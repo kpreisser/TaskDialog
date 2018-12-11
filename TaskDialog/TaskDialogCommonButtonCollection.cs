@@ -62,6 +62,9 @@ namespace KPreisser.UI
             DenyIfHasOtherCollection(item);
 
             var oldItem = this[index];
+
+            // Call the base method first, as it will throw if we would insert a
+            // duplicate item.
             base.SetItem(index, item);
 
             oldItem.Collection = null;
@@ -80,7 +83,10 @@ namespace KPreisser.UI
             this.boundTaskDialogContents?.DenyIfBound();
             DenyIfHasOtherCollection(item);
 
+            // Call the base method first, as it will throw if we would insert a
+            // duplicate item.
             base.InsertItem(index, item);
+
             item.Collection = this;
         }
 
@@ -95,8 +101,8 @@ namespace KPreisser.UI
             this.boundTaskDialogContents?.DenyIfBound();
 
             var oldItem = this[index];
-            base.RemoveItem(index);
             oldItem.Collection = null;
+            base.RemoveItem(index);
         }
 
         /// <summary>
