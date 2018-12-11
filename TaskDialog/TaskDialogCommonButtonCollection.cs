@@ -13,7 +13,10 @@ namespace KPreisser.UI
         private TaskDialogContents boundTaskDialogContents;
 
 
-        internal TaskDialogCommonButtonCollection()
+        /// <summary>
+        /// 
+        /// </summary>
+        public TaskDialogCommonButtonCollection()
             : base()
         {
         }

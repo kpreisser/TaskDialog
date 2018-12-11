@@ -17,7 +17,10 @@ namespace KPreisser.UI
         private TaskDialogContents boundTaskDialogContents;
 
 
-        internal TaskDialogRadioButtonCollection()
+        /// <summary>
+        /// 
+        /// </summary>
+        public TaskDialogRadioButtonCollection()
             : base()
         {
         }
