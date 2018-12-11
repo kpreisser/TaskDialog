@@ -782,7 +782,7 @@ namespace KPreisser.UI
         public void Close()
         {
             //if (suppressCommonButtonClickedEvent)
-            //    this.suppressButtonClickedEvent = true;
+            this.suppressButtonClickedEvent = true;
             try
             {
                 // Send a click button message with the cancel result.
@@ -791,7 +791,7 @@ namespace KPreisser.UI
             finally
             {
                 //if (suppressCommonButtonClickedEvent)
-                //    this.suppressButtonClickedEvent = false;
+                this.suppressButtonClickedEvent = false;
             }
         }
 
