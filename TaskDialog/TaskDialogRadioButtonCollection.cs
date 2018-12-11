@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace KPreisser.UI
 {
@@ -7,11 +8,21 @@ namespace KPreisser.UI
     /// 
     /// </summary>
     public class TaskDialogRadioButtonCollection 
-        : TaskDialogControlCollection<TaskDialogRadioButton, TaskDialogRadioButton>
+        : KeyedCollection<TaskDialogRadioButton, TaskDialogRadioButton>
     {
+        private TaskDialogContents boundTaskDialogContents;
+
+
         internal TaskDialogRadioButtonCollection()
             : base()
         {
+        }
+
+
+        internal TaskDialogContents BoundTaskDialogContents
+        {
+            get => this.boundTaskDialogContents;
+            set => this.boundTaskDialogContents = value;
         }
 
 
@@ -49,10 +60,11 @@ namespace KPreisser.UI
         /// <param name="item"></param>
         protected override void SetItem(int index, TaskDialogRadioButton item)
         {
+            // Disallow collection modification, so that we don't need to copy it
+            // when binding the TaskDialogContents.
+            this.boundTaskDialogContents?.DenyIfBound();
             DenyIfHasOtherCollection(item);
 
-            // Call the base method first which will throw if the collection is
-            // already bound.
             var oldItem = this[index];
             base.SetItem(index, item);
 
@@ -67,6 +79,9 @@ namespace KPreisser.UI
         /// <param name="item"></param>
         protected override void InsertItem(int index, TaskDialogRadioButton item)
         {
+            // Disallow collection modification, so that we don't need to copy it
+            // when binding the TaskDialogContents.
+            this.boundTaskDialogContents?.DenyIfBound();
             DenyIfHasOtherCollection(item);
 
             base.InsertItem(index, item);
@@ -79,6 +94,10 @@ namespace KPreisser.UI
         /// <param name="index"></param>
         protected override void RemoveItem(int index)
         {
+            // Disallow collection modification, so that we don't need to copy it
+            // when binding the TaskDialogContents.
+            this.boundTaskDialogContents?.DenyIfBound();
+
             var oldItem = this[index];
             base.RemoveItem(index);
             oldItem.Collection = null;
@@ -89,11 +108,13 @@ namespace KPreisser.UI
         /// </summary>
         protected override void ClearItems()
         {
-            var oldItems = new List<TaskDialogRadioButton>(this);
-            base.ClearItems();
+            // Disallow collection modification, so that we don't need to copy it
+            // when binding the TaskDialogContents.
+            this.boundTaskDialogContents?.DenyIfBound();
 
-            foreach (var button in oldItems)
+            foreach (var button in this)
                 button.Collection = null;
+            base.ClearItems();
         }
 
 
