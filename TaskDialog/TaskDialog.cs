@@ -174,7 +174,8 @@ namespace KPreisser.UI
         /// </remarks>
         public TaskDialogContents CurrentContents
         {
-            get => this.currentContents;
+            get => this.currentContents ??
+                    (this.currentContents = new TaskDialogContents());
 
             set
             {
@@ -659,7 +660,7 @@ namespace KPreisser.UI
                         "Cannot recursively show the same task dialog instance.");
 
             // Validate the config.
-            this.currentContents.Validate(this);
+            this.CurrentContents.Validate(this);
 
             // Allocate a GCHandle which we will use for the callback data.
             var instanceHandle = GCHandle.Alloc(this);
@@ -1035,7 +1036,7 @@ namespace KPreisser.UI
                 out IntPtr ptrToFree,
                 out IntPtr ptrTaskDialogConfig)
         {
-            var contents = this.currentContents;
+            var contents = this.CurrentContents;
             contents.Bind(
                     this,
                     out var flags,

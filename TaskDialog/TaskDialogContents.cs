@@ -23,11 +23,11 @@ namespace KPreisser.UI
         internal const int RadioButtonStartID = 1;
 
 
-        private readonly TaskDialogCommonButtonCollection commonButtons;
+        private TaskDialogCommonButtonCollection commonButtons;
 
-        private readonly TaskDialogCustomButtonCollection customButtons;
+        private TaskDialogCustomButtonCollection customButtons;
 
-        private readonly TaskDialogRadioButtonCollection radioButtons;
+        private TaskDialogRadioButtonCollection radioButtons;
 
         private TaskDialogExpander expander;
 
@@ -98,10 +98,6 @@ namespace KPreisser.UI
         /// </summary>
         public TaskDialogContents()
         {
-            this.commonButtons = new TaskDialogCommonButtonCollection();
-            this.customButtons = new TaskDialogCustomButtonCollection();
-            this.radioButtons = new TaskDialogRadioButtonCollection();
-
             // Set default flags/properties.
             this.startupLocation = TaskDialogStartupLocation.CenterParent;
         }
@@ -112,7 +108,13 @@ namespace KPreisser.UI
         /// </summary>
         public TaskDialogCommonButtonCollection CommonButtons
         {
-            get => this.commonButtons;
+            get => this.commonButtons ??
+                    (this.commonButtons = new TaskDialogCommonButtonCollection());
+
+            set
+            {
+                this.commonButtons = value ?? throw new ArgumentNullException(nameof(value));
+            }
         }
 
         /// <summary>
@@ -120,7 +122,13 @@ namespace KPreisser.UI
         /// </summary>
         public TaskDialogCustomButtonCollection CustomButtons
         {
-            get => this.customButtons;
+            get => this.customButtons ??
+                    (this.customButtons = new TaskDialogCustomButtonCollection());
+
+            set
+            {
+                this.customButtons = value ?? throw new ArgumentNullException(nameof(value));
+            }
         }
 
         /// <summary>
@@ -128,7 +136,13 @@ namespace KPreisser.UI
         /// </summary>
         public TaskDialogRadioButtonCollection RadioButtons
         {
-            get => this.radioButtons;
+            get => this.radioButtons ??
+                    (this.radioButtons = new TaskDialogRadioButtonCollection());
+            
+            set
+            {
+                this.radioButtons = value ?? throw new ArgumentNullException(nameof(value));
+            }
         }
 
         /// <summary>
@@ -515,13 +529,17 @@ namespace KPreisser.UI
 
             // We also need to validate the controls since they could also be assinged to
             // another (bound) TaskDialogContents at the same time.
-            if (this.expander?.BoundTaskDialogContents != null && this.expander.BoundTaskDialogContents != this ||
+            // Access the collections using the property to ensure they exist.
+            if (this.CommonButtons.BoundTaskDialogContents != null && this.CommonButtons.BoundTaskDialogContents != this ||
+                    this.CustomButtons.BoundTaskDialogContents != null && this.CustomButtons.BoundTaskDialogContents != this ||
+                    this.RadioButtons.BoundTaskDialogContents != null && this.RadioButtons.BoundTaskDialogContents != this ||
+                    this.expander?.BoundTaskDialogContents != null && this.expander.BoundTaskDialogContents != this ||
                     this.progressBar?.BoundTaskDialogContents != null && this.progressBar.BoundTaskDialogContents != this ||
                     this.verificationCheckbox?.BoundTaskDialogContents != null && this.verificationCheckbox.BoundTaskDialogContents != this)
                 throw new InvalidOperationException();
-            foreach (var control in (this.commonButtons as IEnumerable<TaskDialogControl>)
-                    .Concat(this.customButtons)
-                    .Concat(this.radioButtons))
+            foreach (var control in (this.CommonButtons as IEnumerable<TaskDialogControl>)
+                    .Concat(this.CustomButtons)
+                    .Concat(this.RadioButtons))
                 if (control.BoundTaskDialogContents != null && control.BoundTaskDialogContents != this)
                     throw new InvalidOperationException();
 
@@ -584,13 +602,21 @@ namespace KPreisser.UI
                     flags |= TaskDialogFlags.UseCommandLinksNoIcon;
             }
 
+            var commonButtons = this.CommonButtons;
+            var customButtons = this.CustomButtons;
+            var radioButtons = this.RadioButtons;
+
+            commonButtons.BoundTaskDialogContents = this;
+            customButtons.BoundTaskDialogContents = this;
+            radioButtons.BoundTaskDialogContents = this;
+
             // Assign IDs to the buttons based on their index.
             // Note: The collections will be locked while this contents are bound, so we
             // don't need to copy them here.
             defaultButtonID = 0;
-            for (int i = 0; i < this.commonButtons.Count; i++)
+            for (int i = 0; i < commonButtons.Count; i++)
             {
-                var commonButton = this.commonButtons[i];
+                var commonButton = commonButtons[i];
                 commonButton.BoundTaskDialogContents = this;
                 flags |= commonButton.GetFlags();
 
@@ -598,9 +624,9 @@ namespace KPreisser.UI
                     defaultButtonID = (int)commonButton.Result;
             }
 
-            for (int i = 0; i < this.customButtons.Count; i++)
+            for (int i = 0; i < customButtons.Count; i++)
             {
-                var customButton = this.customButtons[i];
+                var customButton = customButtons[i];
                 customButton.BoundTaskDialogContents = this;
                 flags |= customButton.GetFlags();
 
@@ -610,9 +636,9 @@ namespace KPreisser.UI
             }
 
             defaultRadioButtonID = 0;
-            for (int i = 0; i < this.radioButtons.Count; i++)
+            for (int i = 0; i < radioButtons.Count; i++)
             {
-                var radioButton = this.radioButtons[i];
+                var radioButton = radioButtons[i];
                 radioButton.BoundTaskDialogContents = this;
                 flags |= radioButton.GetFlags();
 
@@ -647,25 +673,33 @@ namespace KPreisser.UI
 
         internal void Unbind()
         {
-            for (int i = 0; i < this.commonButtons.Count; i++)
+            var commonButtons = this.CommonButtons;
+            var customButtons = this.CustomButtons;
+            var radioButtons = this.RadioButtons;
+
+            for (int i = 0; i < commonButtons.Count; i++)
             {
-                var commonButton = this.commonButtons[i];
+                var commonButton = commonButtons[i];
                 commonButton.BoundTaskDialogContents = null;
             }
 
-            for (int i = 0; i < this.customButtons.Count; i++)
+            for (int i = 0; i < customButtons.Count; i++)
             {
-                var customButton = this.customButtons[i];
+                var customButton = customButtons[i];
                 customButton.BoundTaskDialogContents = null;
                 customButton.ButtonID = 0;
             }
 
-            for (int i = 0; i < this.radioButtons.Count; i++)
+            for (int i = 0; i < radioButtons.Count; i++)
             {
-                var radioButton = this.radioButtons[i];
+                var radioButton = radioButtons[i];
                 radioButton.BoundTaskDialogContents = null;
                 radioButton.RadioButtonID = 0;
             }
+
+            commonButtons.BoundTaskDialogContents = null;
+            customButtons.BoundTaskDialogContents = null;
+            radioButtons.BoundTaskDialogContents = null;
 
             if (this.expander != null)
                 this.expander.BoundTaskDialogContents = null;
@@ -679,13 +713,13 @@ namespace KPreisser.UI
 
         internal void ApplyInitialization()
         {
-            foreach (var button in this.commonButtons)
+            foreach (var button in this.CommonButtons)
                 button.ApplyInitialization();
 
-            foreach (var button in this.customButtons)
+            foreach (var button in this.CustomButtons)
                 button.ApplyInitialization();
 
-            foreach (var button in this.radioButtons)
+            foreach (var button in this.RadioButtons)
                 button.ApplyInitialization();
 
             this.expander?.ApplyInitialization();
@@ -744,7 +778,7 @@ namespace KPreisser.UI
         {
             var flags = default(TaskDialogButtons);
 
-            foreach (var button in this.commonButtons)
+            foreach (var button in this.CommonButtons)
             {
                 // Don't include hidden buttons.
                 if (!button.Visible)
