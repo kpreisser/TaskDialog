@@ -61,37 +61,6 @@ namespace KPreisser.UI
         }
 
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="buttons"></param>
-        internal static IEnumerable<TaskDialogResult> GetResultsForButtonFlags(TaskDialogButtons buttons)
-        {
-            if ((buttons & TaskDialogButtons.OK) == TaskDialogButtons.OK)
-                yield return TaskDialogResult.OK;
-            if ((buttons & TaskDialogButtons.Cancel) == TaskDialogButtons.Cancel)
-                yield return TaskDialogResult.Cancel;
-            if ((buttons & TaskDialogButtons.Abort) == TaskDialogButtons.Abort)
-                yield return TaskDialogResult.Abort;
-            if ((buttons & TaskDialogButtons.Retry) == TaskDialogButtons.Retry)
-                yield return TaskDialogResult.Retry;
-            if ((buttons & TaskDialogButtons.Ignore) == TaskDialogButtons.Ignore)
-                yield return TaskDialogResult.Ignore;
-            if ((buttons & TaskDialogButtons.Yes) == TaskDialogButtons.Yes)
-                yield return TaskDialogResult.Yes;
-            if ((buttons & TaskDialogButtons.No) == TaskDialogButtons.No)
-                yield return TaskDialogResult.No;
-            if ((buttons & TaskDialogButtons.Close) == TaskDialogButtons.Close)
-                yield return TaskDialogResult.Close;
-            if ((buttons & TaskDialogButtons.Help) == TaskDialogButtons.Help)
-                yield return TaskDialogResult.Help;
-            if ((buttons & TaskDialogButtons.TryAgain) == TaskDialogButtons.TryAgain)
-                yield return TaskDialogResult.TryAgain;
-            if ((buttons & TaskDialogButtons.Continue) == TaskDialogButtons.Continue)
-                yield return TaskDialogResult.Continue;
-        }
-
-
         private static bool IsValidCommonButton(
                 TaskDialogResult button)
         {

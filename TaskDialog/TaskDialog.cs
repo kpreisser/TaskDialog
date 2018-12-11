@@ -374,12 +374,10 @@ namespace KPreisser.UI
                     Content = content,
                     MainInstruction = instruction,
                     Title = title,
-                    MainIcon = icon
+                    MainIcon = icon,
+                    CommonButtons = buttons
                 }
             };
-
-            foreach (var result in TaskDialogCommonButton.GetResultsForButtonFlags(buttons))
-                dialog.currentContents.CommonButtons.Add(result);
 
             return ((TaskDialogCommonButton)dialog.Show(hwndOwner)).Result;
         }
