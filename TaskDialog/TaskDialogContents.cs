@@ -449,14 +449,17 @@ namespace KPreisser.UI
             set => SetFlag(TaskDialogFlags.CanBeMinimized, value);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public bool DoNotSetForeground
-        {
-            get => GetFlag(TaskDialogFlags.NoSetForeground);
-            set => SetFlag(TaskDialogFlags.NoSetForeground, value);
-        }
+        //// Note: This property is currently commented-out because it doesn't seem to have
+        //// any effect.
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        //public bool DoNotSetForeground
+        //{
+        //    get => GetFlag(TaskDialogFlags.NoSetForeground);
+        //    set => SetFlag(TaskDialogFlags.NoSetForeground, value);
+        //}
 
         /// <summary>
         /// 
