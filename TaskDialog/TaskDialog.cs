@@ -68,7 +68,7 @@ namespace KPreisser.UI
         /// </summary>
         private (TaskDialogButton button, int originalButtonID) lastHandledResultButton;
 
-        private bool resultVerificationCheckboxChecked;
+        //private bool resultVerificationCheckboxChecked;
 
         private bool suppressButtonClickedEvent;
 
@@ -232,13 +232,13 @@ namespace KPreisser.UI
         //    get => this.resultRadioButton;
         //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public bool ResultVerificationCheckboxChecked
-        {
-            get => this.resultVerificationCheckboxChecked;
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        //public bool ResultVerificationCheckboxChecked
+        //{
+        //    get => this.resultVerificationCheckboxChecked;
+        //}
 
 
         /// <summary>
@@ -668,7 +668,7 @@ namespace KPreisser.UI
                 this.currentOwnerHwnd = hwndOwner;
 
                 // Clear the previous result properties.
-                this.resultVerificationCheckboxChecked = default;
+                //this.resultVerificationCheckboxChecked = default;
                 //this.resultCommonButton = default;
                 //this.resultCustomButton = null;
                 //this.resultRadioButton = null;
@@ -683,7 +683,7 @@ namespace KPreisser.UI
                                 ptrTaskDialogConfig,
                                 out int resultButtonID,
                                 out int resultRadioButtonID,
-                                out this.resultVerificationCheckboxChecked);
+                                out bool resultVerificationCheckboxChecked);
 
                     //// Note: If a exception occurs here when hwndDialog is not 0, it means the TaskDialogIndirect
                     //// run the event loop and called a WndProc e.g. from a window, whose event handler threw an
