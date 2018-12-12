@@ -46,7 +46,6 @@ namespace KPreisser.UI
             set {
                 this.text = value;
 
-                // TODO: Maybe not throw here
                 this.boundTaskDialogContents?.DenyIfBound();
             }
         }

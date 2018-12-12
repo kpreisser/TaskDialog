@@ -30,7 +30,6 @@
             
             set
             {
-                // TODO: Maybe not throw here
                 this.boundTaskDialogContents?.DenyIfBound();
 
                 this.text = value;
@@ -50,7 +49,6 @@
 
             set
             {
-                // TODO: Maybe not throw here
                 this.boundTaskDialogContents?.DenyIfBound();
 
                 this.descriptionText = value;

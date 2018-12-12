@@ -15,7 +15,7 @@ namespace KPreisser.UI
 
         private bool expandFooterArea;
 
-        private bool expandedByDefault;
+        private bool expanded;
 
 
         /// <summary>
@@ -71,7 +71,6 @@ namespace KPreisser.UI
 
             set
             {
-                // TODO: Maybe not throw here
                 this.boundTaskDialogContents?.DenyIfBound();
 
                 this.expandedButtonText = value;
@@ -87,7 +86,6 @@ namespace KPreisser.UI
 
             set
             {
-                // TODO: Maybe not throw here
                 this.boundTaskDialogContents?.DenyIfBound();
 
                 this.collapsedButtonText = value;
@@ -97,16 +95,18 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
-        public bool ExpandedByDefault
+        public bool Expanded
         {
-            get => this.expandedByDefault;
+            get => this.expanded;
 
             set
             {
-                // TODO: Maybe not throw here
+                // The Task Dialog doesn't provide a message type to click the expando
+                // button, so we don't allow to change this property (it will however
+                // be updated when we receive an ExpandoButtonClicked notificatin).
                 this.boundTaskDialogContents?.DenyIfBound();
 
-                this.expandedByDefault = value;
+                this.expanded = value;
             }
         }
 
@@ -120,7 +120,6 @@ namespace KPreisser.UI
 
             set
             {
-                // TODO: Maybe not throw here
                 this.boundTaskDialogContents?.DenyIfBound();
 
                 this.expandFooterArea = value;
@@ -130,8 +129,21 @@ namespace KPreisser.UI
 
         internal void HandleExpandoButtonClicked(bool expanded)
         {
+            this.expanded = expanded;
             this.OnExpandoButtonClicked(
                     new TaskDialogBooleanStatusEventArgs(expanded));
+        }
+
+        internal override TaskDialogFlags GetFlags()
+        {
+            var flags = base.GetFlags();
+
+            if (this.expanded)
+                flags |= TaskDialogFlags.ExpandedByDefault;
+            if (this.expandFooterArea)
+                flags |= TaskDialogFlags.ExpandFooterArea;
+
+            return flags;
         }
 
 
@@ -143,18 +155,6 @@ namespace KPreisser.UI
                 TaskDialogBooleanStatusEventArgs e)
         {
             this.ExpandoButtonClicked?.Invoke(this, e);
-        }
-
-        internal override TaskDialogFlags GetFlags()
-        {
-            var flags = base.GetFlags();
-
-            if (this.expandedByDefault)
-                flags |= TaskDialogFlags.ExpandedByDefault;
-            if (this.expandFooterArea)
-                flags |= TaskDialogFlags.ExpandFooterArea;
-
-            return flags;
         }
     }
 }

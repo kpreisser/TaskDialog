@@ -205,7 +205,6 @@ namespace KPreisser.UI
 
             set
             {
-                // TODO: Maybe not throw here
                 this.DenyIfBound();
 
                 this.title = value;
@@ -378,7 +377,6 @@ namespace KPreisser.UI
 
             set
             {
-                // TODO: Maybe not throw here
                 this.DenyIfBound();
 
                 this.width = value;
