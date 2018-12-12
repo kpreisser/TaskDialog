@@ -205,9 +205,8 @@ namespace KPreisser.UI
 
             set
             {
-                this.DenyIfBound();
-
                 this.title = value;
+                this.boundTaskDialog?.UpdateTitle(value);
             }
         }
 

@@ -930,6 +930,40 @@ namespace KPreisser.UI
                     IntPtr.Zero);
         }
 
+        internal void UpdateTextElement(
+                TaskDialogTextElement element,
+                string text)
+        {
+            var strPtr = Marshal.StringToHGlobalUni(text);
+            try
+            {
+                // Note: SetElementText will resize the dialog while UpdateElementText will
+                // not (which would lead to clipped controls), so we use the former.
+                SendTaskDialogMessage(TaskDialogMessage.SetElementText, (int)element, strPtr);
+            }
+            finally
+            {
+                // We can now free the memory because SendMessage does not return until the
+                // message has been processed.
+                Marshal.FreeHGlobal(strPtr);
+            }
+        }
+
+        internal void UpdateIconElement(
+                TaskDialogIconElement element,
+                IntPtr icon)
+        {
+            SendTaskDialogMessage(TaskDialogMessage.UpdateIcon, (int)element, icon);
+        }
+
+        internal void UpdateTitle(string title)
+        {
+            DenyIfDialogNotActive();
+
+            if (!NativeMethods.SetWindowText(this.hwndDialog, title))
+                Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
+        }
+
 
         /// <summary>
         /// 
@@ -1244,32 +1278,6 @@ namespace KPreisser.UI
                     (int)message,
                     (IntPtr)wParam,
                     lParam);
-        }
-
-        internal void UpdateTextElement(
-                TaskDialogTextElement element,
-                string text)
-        {
-            var strPtr = Marshal.StringToHGlobalUni(text);
-            try
-            {
-                // Note: SetElementText will resize the dialog while UpdateElementText will
-                // not (which would lead to clipped controls), so we use the former.
-                SendTaskDialogMessage(TaskDialogMessage.SetElementText, (int)element, strPtr);
-            }
-            finally
-            {
-                // We can now free the memory because SendMessage does not return until the
-                // message has been processed.
-                Marshal.FreeHGlobal(strPtr);
-            }
-        }
-
-        internal void UpdateIconElement(
-                TaskDialogIconElement element,
-                IntPtr icon)
-        {
-            SendTaskDialogMessage(TaskDialogMessage.UpdateIcon, (int)element, icon);
         }
     }
 }

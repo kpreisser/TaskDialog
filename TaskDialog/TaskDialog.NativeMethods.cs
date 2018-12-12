@@ -28,6 +28,15 @@ namespace KPreisser.UI
                     int message,
                     IntPtr wParam,
                     IntPtr lParam);
+
+            [DllImport("user32",
+                CharSet = CharSet.Unicode,
+                EntryPoint = "SetWindowTextW",
+                ExactSpelling = true,
+                SetLastError = true)]
+            public static extern bool SetWindowText(
+                    IntPtr hWnd,
+                    string lpString);
         }
     }
 }
