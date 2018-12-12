@@ -139,11 +139,7 @@ namespace KPreisser.UI
         public TaskDialog(TaskDialogContents contents)
         {
             // TaskDialog is only supported on Windows.
-#if NET46
-            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
-#else
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-#endif
                 throw new PlatformNotSupportedException();
 
             this.currentContents = contents ??
