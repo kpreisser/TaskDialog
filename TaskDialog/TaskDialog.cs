@@ -1082,9 +1082,9 @@ namespace KPreisser.UI
                 // Use a byte pointer so we can use byte-wise pointer arithmetics.
                 var sizeToAllocate = (byte*)0;
                 sizeToAllocate += sizeof(TaskDialogConfig);
-                Align(ref sizeToAllocate);
 
                 // Strings in TasDialogConfig
+                Align(ref sizeToAllocate, sizeof(char));
                 sizeToAllocate += SizeOfString(contents.Title);
                 sizeToAllocate += SizeOfString(contents.MainInstruction);
                 sizeToAllocate += SizeOfString(contents.Content);
@@ -1093,28 +1093,29 @@ namespace KPreisser.UI
                 sizeToAllocate += SizeOfString(contents.Expander?.ExpandedButtonText);
                 sizeToAllocate += SizeOfString(contents.Expander?.CollapsedButtonText);
                 sizeToAllocate += SizeOfString(contents.VerificationCheckbox?.Text);
-                Align(ref sizeToAllocate);
-
+                
                 // Buttons array
                 if (contents.CustomButtons.Count > 0)
                 {
-                    sizeToAllocate += sizeof(TaskDialogButtonStruct) * contents.CustomButtons.Count;
                     Align(ref sizeToAllocate);
+                    sizeToAllocate += sizeof(TaskDialogButtonStruct) * contents.CustomButtons.Count;
+
                     // Strings in buttons array
+                    Align(ref sizeToAllocate, sizeof(char));
                     for (int i = 0; i < contents.CustomButtons.Count; i++)
                         sizeToAllocate += SizeOfString(contents.CustomButtons[i].GetResultingText());
-                    Align(ref sizeToAllocate);
                 }
 
                 // Radio buttons array
                 if (contents.RadioButtons.Count > 0)
                 {
-                    sizeToAllocate += sizeof(TaskDialogButtonStruct) * contents.RadioButtons.Count;
                     Align(ref sizeToAllocate);
+                    sizeToAllocate += sizeof(TaskDialogButtonStruct) * contents.RadioButtons.Count;
+
                     // Strings in radio buttons array
+                    Align(ref sizeToAllocate, sizeof(char));
                     for (int i = 0; i < contents.RadioButtons.Count; i++)
                         sizeToAllocate += SizeOfString(contents.RadioButtons[i].Text);
-                    Align(ref sizeToAllocate);
                 }
 
                 // Allocate the memory block. We add additional bytes to ensure we can
@@ -1131,11 +1132,11 @@ namespace KPreisser.UI
 
                     ref var taskDialogConfig = ref *(TaskDialogConfig*)currentPtr;
                     currentPtr += sizeof(TaskDialogConfig);
-                    Align(ref currentPtr);
 
                     // Assign the structure with the constructor syntax, which will
                     // automatically initialize its other members with their default
                     // value.
+                    Align(ref currentPtr, sizeof(char));
                     taskDialogConfig = new TaskDialogConfig()
                     {
                         cbSize = sizeof(TaskDialogConfig),
@@ -1160,17 +1161,17 @@ namespace KPreisser.UI
                         lpCallbackData = this.instanceHandlePtr,
                         cxWidth = contents.Width
                     };
-                    Align(ref currentPtr);
 
                     // Buttons array
                     if (contents.CustomButtons.Count > 0)
                     {
+                        Align(ref currentPtr);
                         var customButtonStructs = (TaskDialogButtonStruct*)currentPtr;
                         taskDialogConfig.pButtons = (IntPtr)customButtonStructs;
                         taskDialogConfig.cButtons = contents.CustomButtons.Count;
                         currentPtr += sizeof(TaskDialogButtonStruct) * contents.CustomButtons.Count;
-                        Align(ref currentPtr);
 
+                        Align(ref currentPtr, sizeof(char));
                         for (int i = 0; i < contents.CustomButtons.Count; i++)
                         {
                             var currentCustomButton = contents.CustomButtons[i];
@@ -1180,18 +1181,18 @@ namespace KPreisser.UI
                                 pszButtonText = MarshalString(currentCustomButton.GetResultingText())
                             };
                         }
-                        Align(ref currentPtr);
                     }
 
                     // Radio buttons array
                     if (contents.RadioButtons.Count > 0)
                     {
+                        Align(ref currentPtr);
                         var customRadioButtonStructs = (TaskDialogButtonStruct*)currentPtr;
                         taskDialogConfig.pRadioButtons = (IntPtr)customRadioButtonStructs;
                         taskDialogConfig.cRadioButtons = contents.RadioButtons.Count;
                         currentPtr += sizeof(TaskDialogButtonStruct) * contents.RadioButtons.Count;
-                        Align(ref currentPtr);
 
+                        Align(ref currentPtr, sizeof(char));
                         for (int i = 0; i < contents.RadioButtons.Count; i++)
                         {
                             var currentCustomButton = contents.RadioButtons[i];
@@ -1201,7 +1202,6 @@ namespace KPreisser.UI
                                 pszButtonText = MarshalString(currentCustomButton.Text)
                             };
                         }
-                        Align(ref currentPtr);
                     }
 
                     Debug.Assert(currentPtr == (long)ptrTaskDialogConfig + sizeToAllocate);
