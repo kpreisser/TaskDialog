@@ -23,7 +23,7 @@ namespace TaskDialogExample
                 Footer = "This is the <A HREF=\"link2\">footer</A>.",
 
                 MainIcon = TaskDialogIcon.SecuritySuccessGreenBar,
-                FooterIcon = TaskDialogIcon.QuestionNoSound,
+                FooterIcon = TaskDialogIcon.Warning,
 
                 Expander = new TaskDialogExpander()
                 {
@@ -93,7 +93,7 @@ namespace TaskDialogExample
             dialogContents.HyperlinkClicked += (s, e) =>
             {
                 Console.WriteLine("Hyperlink clicked!");
-                TaskDialog.Show(dialog, "Clicked Hyperlink: " + e.Hyperlink, icon: TaskDialogIcon.InformationNoSound);
+                TaskDialog.Show(dialog, "Clicked Hyperlink: " + e.Hyperlink, icon: TaskDialogIcon.Information);
             };
 
             // Create custom buttons that are shown as command links.
