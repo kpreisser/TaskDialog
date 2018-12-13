@@ -59,44 +59,44 @@
         // note that the Question icon only seems to be available without
         // a sound.
 
-        /// <summary>
-        /// 
-        /// </summary>
-        InformationNoSound = 81,
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        //InformationNoSound = 81,
 
-        /// <summary>
-        /// 
-        /// </summary>
-        WarningNoSound = 84,
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        //WarningNoSound = 84,
 
-        /// <summary>
-        /// 
-        /// </summary>
-        StopNoSound = 98,
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        //StopNoSound = 98,
 
-        /// <summary>
-        /// 
-        /// </summary>
-        QuestionNoSound = 99,
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        //QuestionNoSound = 99,
 
-        /// <summary>
-        /// 
-        /// </summary>
-        SecurityQuestion = 104,
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        //SecurityQuestion = 104,
 
-        /// <summary>
-        /// 
-        /// </summary>
-        SecurityError = 105,
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        //SecurityError = 105,
 
-        /// <summary>
-        /// 
-        /// </summary>
-        SecuritySuccess = 106,
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        //SecuritySuccess = 106,
 
-        /// <summary>
-        /// 
-        /// </summary>
-        SecurityWarning = 107
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        //SecurityWarning = 107
     }
 }
