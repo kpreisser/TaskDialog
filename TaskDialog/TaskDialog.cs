@@ -1119,7 +1119,7 @@ namespace KPreisser.UI
                 }
 
                 // Allocate the memory block. We add additional bytes to ensure we can
-                // align the pointer to IntPtr.Size.
+                // align the returned pointer to IntPtr.Size.
                 ptrToFree = Marshal.AllocHGlobal((IntPtr)(sizeToAllocate + IntPtr.Size - 1));
                 try
                 {
