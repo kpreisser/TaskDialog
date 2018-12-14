@@ -129,7 +129,7 @@ namespace KPreisser.UI
         /// 
         /// </summary>
         public TaskDialog()
-            : this(new TaskDialogContents())
+            : base()
         {
         }
 
@@ -137,6 +137,7 @@ namespace KPreisser.UI
         /// 
         /// </summary>
         public TaskDialog(TaskDialogContents contents)
+            : base()
         {
             // TaskDialog is only supported on Windows.
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
