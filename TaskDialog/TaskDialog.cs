@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
@@ -60,13 +61,22 @@ namespace KPreisser.UI
         private TaskDialogContents boundContents;
 
         /// <summary>
-        /// Stores the last button with its ID for which the callback returned <c>true</c>
-        /// when handling the <see cref="TaskDialogNotification.ButtonClicked"/>
-        /// notification, so that when
-        /// <see cref="NativeMethods.TaskDialogIndirect(IntPtr, out int, out int, out bool)"/>
-        /// returns, the resulting button ID should be the one we stored here.
+        /// A stack which tracks whether the dialog has been navigated while being in
+        /// a <see cref="TaskDialogNotification.ButtonClicked"/> handler.
         /// </summary>
-        private (TaskDialogButton button, int originalButtonID) lastHandledResultButton;
+        /// <remarks>
+        /// When the dialog navigates within a ButtonClicked handler, the handler should
+        /// always return S_FALSE to prevent the dialog from applying the button that
+        /// raised the handler as dialog result. Otherwise, this can lead to memory access
+        /// problems like <see cref="AccessViolationException"/>s, especially if the
+        /// previous dialog contents had radio buttons (but the new ones do not).
+        /// See the comment in
+        /// <see cref="HandleTaskDialogCallback(IntPtr, TaskDialogNotification, IntPtr, IntPtr, IntPtr)"/>
+        /// for more information.
+        /// Each entry in the list represents a ButtonClicked handler on the stack because
+        /// there can be multiple ButtonClicked handlers on the stack.
+        /// </remarks>
+        private readonly List<bool> clickEventNavigatedStack = new List<bool>();
 
         //private bool resultVerificationCheckboxChecked;
 
@@ -472,35 +482,46 @@ namespace KPreisser.UI
                             button = instance.boundContents.CommonButtons[result];
                     }
 
-                    bool handlerResult = button?.HandleButtonClicked() ?? true;
-                    if (handlerResult)
+                    // Note: When the event handler returns true but the dialog was
+                    // navigated within the handler, a the buttonID of the handler
+                    // would be set as the dialog's result even if this ID is from
+                    // the dialog contents before the dialog was navigated.
+                    // To fix this, in this case we cache the button instance and
+                    // its ID, so that when Show() returns, it can check if the
+                    // button ID equals the last handled button, and use that
+                    // instance in that case.
+                    // Additionally, memory access problems like
+                    // AccessViolationExceptions may occur in this situation
+                    // (especially if the dialog also had radio buttons before the
+                    // navigation; these would also be set as result of the dialog),
+                    // probably because this scenario isn't an expected usage of
+                    // the TaskDialog.
+                    // To fix the memory access problems, we simply always return
+                    // S_FALSE when the dialog was navigated within the ButtonClicked
+                    // event handler. This also avoids the need to cache the last
+                    // handled button instance because it can no longer happen that
+                    // TaskDialogIndirect() returns a buttonID that is no longer
+                    // present in the navigated TaskDialogContents.
+                    bool handlerResult;
+                    instance.clickEventNavigatedStack.Add(false);
+                    try
                     {
-                        // Because we will return true (which means the dialog's result
-                        // is going to be set to this button ID - except if this is the
-                        // "Help" button, but this isn't a problem), we need to cache the
-                        // last handled button instance and its original button ID,
-                        // because if this was the last ButtonClicked notification, this
-                        // will be the ID returned by TaskDialogIndirect.
-                        // However, this can be a button that is no longer part of the
-                        // TaskDialog when it already navigated, so we cannot simply
-                        // search for the returned ID in the button collections.
-                        // For example, when you navigate the dialog in a ButtonClicked
-                        // event handler (so the dialog now displays new buttons) but
-                        // then the click handler (that was called for the previous button)
-                        // returns true, the dialog will close and the result will be the
-                        // previous button, which however is no longer part of the
-                        // collections as we already navigated. Therefore, we set this
-                        // field so that when Show() returns, it can check if the
-                        // button ID equals the last handled button, and use that
-                        // instance in that case.
-                        // Note: If the dialog had radio buttons at the time this handler
-                        // was initially called, the dialog would also provide the last
-                        // selected one even if it now has different/no radio buttons.
-                        // However, because this would be complex to do correctly,
-                        // we simply don't retrieve the resulting radio button ID,
-                        // because the user can check which radio button button was
-                        // selected by checking the "Checked" property.
-                        instance.lastHandledResultButton = (button, buttonID);
+                        handlerResult = button?.HandleButtonClicked() ?? true;
+
+                        // Check if our stack frame was set to true, which means the
+                        // dialog was navigated while we called the handler. In that
+                        // case, we need to return S_FALSE to prevent the dialog from
+                        // closing (and applying the previous ButtonID and RadioButtonID
+                        // as results).
+                        bool wasNavigated = instance.clickEventNavigatedStack
+                                [instance.clickEventNavigatedStack.Count - 1];
+                        if (wasNavigated)
+                            handlerResult = false;
+                    }
+                    finally
+                    {
+                        instance.clickEventNavigatedStack.RemoveAt(
+                                instance.clickEventNavigatedStack.Count - 1);
                     }
 
                     return handlerResult ? HResultOk : HResultFalse;
@@ -703,19 +724,9 @@ namespace KPreisser.UI
                     if (ret != HResultOk)
                         Marshal.ThrowExceptionForHR(ret);
 
-                    // Check if the resulting button ID is the same as the last handled button.
-                    // This should always be the case, except when the button ID refers to a
-                    // TaskDialogResult for which the user didn't create a button.
                     TaskDialogButton resultingButton;
-                    if (this.lastHandledResultButton.button != null &&
-                            this.lastHandledResultButton.originalButtonID == resultButtonID)
+                    if (resultButtonID >= TaskDialogContents.CustomButtonStartID)
                     {
-                        resultingButton = this.lastHandledResultButton.button;
-                    }
-                    else if (resultButtonID >= TaskDialogContents.CustomButtonStartID)
-                    {
-                        // This should normally not happen as we already cached the last
-                        // handled button.
                         resultingButton = this.boundContents.CustomButtons
                                 [resultButtonID - TaskDialogContents.CustomButtonStartID];
                     }
@@ -746,7 +757,6 @@ namespace KPreisser.UI
                     // will already have been called from the callback.
                     this.boundContents.Unbind();
                     this.boundContents = null;
-                    this.lastHandledResultButton.button = null;
 
                     // We need to ensure the callback delegate is not garbage-collected
                     // as long as TaskDialogIndirect doesn't return, by calling GC.KeepAlive().
@@ -1053,6 +1063,11 @@ namespace KPreisser.UI
                         TaskDialogMessage.NavigatePage,
                         0,
                         ptrTaskDialogConfig);
+
+                // Notify the ButtonClick event handlers currently on the stack that
+                // the dialog was navigated.
+                for (int i = 0; i < this.clickEventNavigatedStack.Count; i++)
+                    this.clickEventNavigatedStack[i] = true;
             }
             finally
             {
