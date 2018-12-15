@@ -649,10 +649,11 @@ namespace KPreisser.UI
         /// </param>
         public TaskDialogButton Show(IntPtr hwndOwner)
         {
-            // Recursive Show() is not possible because we would incorrectly handle notifications.
+            // Recursive Show() is not possible because a TaskDialog instance can only
+            // represent a single native dialog.
             if (this.instanceHandlePtr != IntPtr.Zero)
                 throw new InvalidOperationException(
-                        "Cannot recursively show the same task dialog instance.");
+                        $"This {nameof(TaskDialog)} instance is already showing a task dialog.");
 
             // Validate the config.
             this.CurrentContents.Validate(this);
