@@ -8,10 +8,19 @@ namespace KPreisser.UI
     /// </summary>
     public sealed class TaskDialogCommonButton : TaskDialogButton
     {
-        private readonly TaskDialogResult result;
+        private TaskDialogResult result;
 
         private bool visible = true;
 
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public TaskDialogCommonButton()
+            : base()
+        {
+            
+        }
 
         /// <summary>
         /// 
@@ -34,6 +43,24 @@ namespace KPreisser.UI
         public TaskDialogResult Result
         {
             get => this.result;
+
+            set
+            {
+                this.boundTaskDialogContents?.DenyIfBound();
+
+                if (!IsValidCommonButton(value))
+                    throw new ArgumentException();
+
+                // If we are part of a CommonButtonCollection, we must now notify it
+                // that we changed our result.
+                (this.Collection as TaskDialogCommonButtonCollection)?.HandleKeyChange(
+                        this,
+                        value);
+
+                // If this was successful or we are not part of a collection,
+                // we can now set the result.
+                this.result = value;
+            }
         }
 
         /// <summary>

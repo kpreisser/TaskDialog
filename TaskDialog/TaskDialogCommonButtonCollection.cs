@@ -90,6 +90,14 @@ namespace KPreisser.UI
         }
 
 
+        internal void HandleKeyChange(
+                TaskDialogCommonButton button,
+                TaskDialogResult newKey)
+        {
+            this.ChangeItemKey(button, newKey);
+        }
+
+
         /// <summary>
         /// 
         /// </summary>
