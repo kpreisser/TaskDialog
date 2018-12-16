@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
@@ -16,9 +17,12 @@ namespace KPreisser.UI
     /// that contains a dependency to Microsoft.Windows.Common-Controls (6.0.0.0),
     /// and the thread needs to use the single-threaded apartment (STA) model.
     /// </remarks>
-    public partial class TaskDialog
+    [ToolboxItem(true)]
+    [DefaultProperty(nameof(CurrentContents))]
+    public partial class TaskDialog : Component
 #if !NET_STANDARD
-        : System.Windows.Forms.IWin32Window, System.Windows.Interop.IWin32Window
+        ,
+        System.Windows.Forms.IWin32Window, System.Windows.Interop.IWin32Window
 #endif
     {
         // Offset for user message types.
@@ -164,6 +168,7 @@ namespace KPreisser.UI
         /// available first in the <see cref="Opened"/> event, and last in the
         /// <see cref="Closing"/> after which you shouldn't use it any more.
         /// </summary>
+        [Browsable(false)]
         public IntPtr Handle
         {
             get => this.hwndDialog;
@@ -179,6 +184,9 @@ namespace KPreisser.UI
         /// ("navigation"). After the dialog is navigated, the <see cref="Navigated"/>
         /// and the <see cref="TaskDialogContents.Created"/> events will occur.
         /// </remarks>
+        [Category("Contents")]
+        [Description("Contains the current contents of the Task Dialog.")]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
         public TaskDialogContents CurrentContents
         {
             get => this.currentContents ??
@@ -206,6 +214,7 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
+        [Browsable(false)]
         public bool DialogIsActive
         {
             get => this.hwndDialog != IntPtr.Zero;

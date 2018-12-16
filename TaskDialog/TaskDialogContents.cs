@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 
 namespace KPreisser.UI
@@ -7,6 +8,7 @@ namespace KPreisser.UI
     /// <summary>
     /// 
     /// </summary>
+    [TypeConverter(typeof(ExpandableObjectConverter))]
     public class TaskDialogContents
     {
         /// <summary>
@@ -106,6 +108,7 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
+        [Category("Controls")]
         public TaskDialogCommonButtonCollection CommonButtons
         {
             get => this.commonButtons ??
@@ -120,6 +123,7 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
+        [Category("Controls")]
         public TaskDialogCustomButtonCollection CustomButtons
         {
             get => this.customButtons ??
@@ -134,6 +138,7 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
+        [Category("Controls")]
         public TaskDialogRadioButtonCollection RadioButtons
         {
             get => this.radioButtons ??
@@ -148,6 +153,7 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
+        [Category("Controls")]
         public TaskDialogExpander Expander
         {
             get => this.expander;
@@ -165,6 +171,7 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
+        [Category("Controls")]
         public TaskDialogProgressBar ProgressBar
         {
             get => this.progressBar;
@@ -182,6 +189,7 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
+        [Category("Controls")]
         public TaskDialogVerificationCheckbox VerificationCheckbox
         {
             get => this.verificationCheckbox;
@@ -274,6 +282,7 @@ namespace KPreisser.UI
         /// <remarks>
         /// This icon can be changed while the dialog is shown.
         /// </remarks>
+        [DefaultValue(TaskDialogIcon.None)]
         public TaskDialogIcon MainIcon
         {
             get => this.mainIcon;
@@ -323,6 +332,7 @@ namespace KPreisser.UI
         /// <remarks>
         /// This icon can be changed while the dialog is shown.
         /// </remarks>
+        [DefaultValue(TaskDialogIcon.None)]
         public TaskDialogIcon FooterIcon
         {
             get => this.footerIcon;
@@ -370,6 +380,7 @@ namespace KPreisser.UI
         /// when the dialog is is created or navigated.
         /// If <c>0</c>, the width will be automatically calculated by the system.
         /// </summary>
+        [DefaultValue(0)]
         public int Width
         {
             get => this.width;
@@ -386,6 +397,7 @@ namespace KPreisser.UI
         /// Gets or sets the <see cref="TaskDialogCommandLinkMode"/> that specifies how to
         /// display custom buttons.
         /// </summary>
+        [DefaultValue(TaskDialogCommandLinkMode.None)]
         public TaskDialogCommandLinkMode CommandLinkMode
         {
             get => this.commandLinkMode;
@@ -401,6 +413,7 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
+        [DefaultValue(TaskDialogStartupLocation.CenterParent)]
         public TaskDialogStartupLocation StartupLocation
         {
             get => this.startupLocation;
@@ -418,6 +431,7 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
+        [DefaultValue(false)]
         public bool EnableHyperlinks
         {
             get => GetFlag(TaskDialogFlags.EnableHyperlinks);
@@ -430,6 +444,7 @@ namespace KPreisser.UI
         /// <see cref="TaskDialogButtons.Cancel"/> button is specified in
         /// <see cref="CommonButtons"/>.
         /// </summary>
+        [DefaultValue(false)]
         public bool AllowCancel
         {
             get => GetFlag(TaskDialogFlags.AllowDialogCancellation);
@@ -445,6 +460,7 @@ namespace KPreisser.UI
         /// subsequent navigations to a new <see cref="TaskDialogContents"/> even when
         /// it doesn't have this flag set.
         /// </remarks>
+        [DefaultValue(false)]
         public bool RightToLeftLayout
         {
             get => GetFlag(TaskDialogFlags.RtlLayout);
@@ -454,6 +470,7 @@ namespace KPreisser.UI
         /// <summary>
         /// Gets or sets a value that indicates whether the task dialog can be minimized.
         /// </summary>
+        [DefaultValue(false)]
         public bool CanBeMinimized
         {
             get => GetFlag(TaskDialogFlags.CanBeMinimized);
@@ -466,6 +483,7 @@ namespace KPreisser.UI
         ///// <summary>
         ///// 
         ///// </summary>
+        //[DefaultValue(false)]
         //public bool DoNotSetForeground
         //{
         //    get => GetFlag(TaskDialogFlags.NoSetForeground);
@@ -475,6 +493,7 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
+        [DefaultValue(false)]
         public bool SizeToContent
         {
             get => GetFlag(TaskDialogFlags.SizeToContent);
