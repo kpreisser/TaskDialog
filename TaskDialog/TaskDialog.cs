@@ -264,20 +264,20 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="content"></param>
+        /// <param name="text"></param>
         /// <param name="instruction"></param>
         /// <param name="title"></param>
         /// <param name="buttons"></param>
         /// <param name="icon"></param>
         /// <returns></returns>
         public static TaskDialogResult Show(
-                string content,
+                string text,
                 string instruction = null,
                 string title = null,
                 TaskDialogButtons buttons = TaskDialogButtons.OK,
                 TaskDialogIcon icon = TaskDialogIcon.None)
         {
-            return Show(IntPtr.Zero, content, instruction, title, buttons, icon);
+            return Show(IntPtr.Zero, text, instruction, title, buttons, icon);
         }
 
 #if !NET_STANDARD
@@ -285,7 +285,7 @@ namespace KPreisser.UI
         /// 
         /// </summary>
         /// <param name="owner">The owner window, or <c>null</c> to show a non-modal dialog.</param>
-        /// <param name="content"></param>
+        /// <param name="text"></param>
         /// <param name="instruction"></param>
         /// <param name="title"></param>
         /// <param name="buttons"></param>
@@ -293,20 +293,20 @@ namespace KPreisser.UI
         /// <returns></returns>
         public static TaskDialogResult Show(
                 System.Windows.Window owner,
-                string content,
+                string text,
                 string instruction = null,
                 string title = null,
                 TaskDialogButtons buttons = TaskDialogButtons.OK,
                 TaskDialogIcon icon = TaskDialogIcon.None)
         {
-            return Show(GetWindowHandle(owner), content, instruction, title, buttons, icon);
+            return Show(GetWindowHandle(owner), text, instruction, title, buttons, icon);
         }
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="owner">The owner window, or <c>null</c> to show a non-modal dialog.</param>
-        /// <param name="content"></param>
+        /// <param name="text"></param>
         /// <param name="instruction"></param>
         /// <param name="title"></param>
         /// <param name="buttons"></param>
@@ -314,20 +314,20 @@ namespace KPreisser.UI
         /// <returns></returns>
         public static TaskDialogResult Show(
                 System.Windows.Interop.IWin32Window owner,
-                string content,
+                string text,
                 string instruction = null,
                 string title = null,
                 TaskDialogButtons buttons = TaskDialogButtons.OK,
                 TaskDialogIcon icon = TaskDialogIcon.None)
         {
-            return Show(GetWindowHandle(owner), content, instruction, title, buttons, icon);
+            return Show(GetWindowHandle(owner), text, instruction, title, buttons, icon);
         }
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="owner">The owner window, or <c>null</c> to show a non-modal dialog.</param>
-        /// <param name="content"></param>
+        /// <param name="text"></param>
         /// <param name="instruction"></param>
         /// <param name="title"></param>
         /// <param name="buttons"></param>
@@ -335,20 +335,20 @@ namespace KPreisser.UI
         /// <returns></returns>
         public static TaskDialogResult Show(
                 System.Windows.Forms.IWin32Window owner,
-                string content,
+                string text,
                 string instruction = null,
                 string title = null,
                 TaskDialogButtons buttons = TaskDialogButtons.OK,
                 TaskDialogIcon icon = TaskDialogIcon.None)
         {
-            return Show(GetWindowHandle(owner), content, instruction, title, buttons, icon);
+            return Show(GetWindowHandle(owner), text, instruction, title, buttons, icon);
         }
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="owner">The owner window, or <c>null</c> to show a non-modal dialog.</param>
-        /// <param name="content"></param>
+        /// <param name="text"></param>
         /// <param name="instruction"></param>
         /// <param name="title"></param>
         /// <param name="buttons"></param>
@@ -356,13 +356,13 @@ namespace KPreisser.UI
         /// <returns></returns>
         public static TaskDialogResult Show(
                 TaskDialog owner,
-                string content,
+                string text,
                 string instruction = null,
                 string title = null,
                 TaskDialogButtons buttons = TaskDialogButtons.OK,
                 TaskDialogIcon icon = TaskDialogIcon.None)
         {
-            return Show(owner.Handle, content, instruction, title, buttons, icon);
+            return Show(owner.Handle, text, instruction, title, buttons, icon);
         }
 #endif
 
@@ -373,7 +373,7 @@ namespace KPreisser.UI
         /// The window handle of the owner, or <see cref="IntPtr.Zero"/> to show a non-modal
         /// dialog.
         /// </param>
-        /// <param name="content"></param>
+        /// <param name="text"></param>
         /// <param name="instruction"></param>
         /// <param name="title"></param>
         /// <param name="buttons"></param>
@@ -381,8 +381,8 @@ namespace KPreisser.UI
         /// <returns></returns>
         public static TaskDialogResult Show(
                 IntPtr hwndOwner,
-                string content, string
-                instruction = null,
+                string text, 
+                string instruction = null,
                 string title = null,
                 TaskDialogButtons buttons = TaskDialogButtons.OK,
                 TaskDialogIcon icon = TaskDialogIcon.None)
@@ -391,10 +391,10 @@ namespace KPreisser.UI
             {
                 currentContents = new TaskDialogContents()
                 {
-                    Content = content,
-                    MainInstruction = instruction,
+                    Text = text,
+                    Instruction = instruction,
                     Title = title,
-                    MainIcon = icon,
+                    Icon = icon,
                     CommonButtons = buttons
                 }
             };
@@ -1090,9 +1090,9 @@ namespace KPreisser.UI
                 // Strings in TasDialogConfig
                 Align(ref sizeToAllocate, sizeof(char));
                 sizeToAllocate += SizeOfString(contents.Title);
-                sizeToAllocate += SizeOfString(contents.MainInstruction);
-                sizeToAllocate += SizeOfString(contents.Content);
-                sizeToAllocate += SizeOfString(contents.Footer);
+                sizeToAllocate += SizeOfString(contents.Instruction);
+                sizeToAllocate += SizeOfString(contents.Text);
+                sizeToAllocate += SizeOfString(contents.FooterText);
                 sizeToAllocate += SizeOfString(contents.Expander?.Text);
                 sizeToAllocate += SizeOfString(contents.Expander?.ExpandedButtonText);
                 sizeToAllocate += SizeOfString(contents.Expander?.CollapsedButtonText);
@@ -1148,13 +1148,13 @@ namespace KPreisser.UI
                         dwFlags = flags,
                         dwCommonButtons = commonButtonFlags,
                         hMainIcon = contents.BoundMainIconIsFromHandle ?
-                                contents.MainIconHandle : (IntPtr)contents.MainIcon,
+                                contents.IconHandle : (IntPtr)contents.Icon,
                         hFooterIcon = contents.BoundFooterIconIsFromHandle ?
                                 contents.FooterIconHandle : (IntPtr)contents.FooterIcon,
                         pszWindowTitle = MarshalString(contents.Title),
-                        pszMainInstruction = MarshalString(contents.MainInstruction),
-                        pszContent = MarshalString(contents.Content),
-                        pszFooter = MarshalString(contents.Footer),
+                        pszMainInstruction = MarshalString(contents.Instruction),
+                        pszContent = MarshalString(contents.Text),
+                        pszFooter = MarshalString(contents.FooterText),
                         pszExpandedInformation = MarshalString(contents.Expander?.Text),
                         pszExpandedControlText = MarshalString(contents.Expander?.ExpandedButtonText),
                         pszCollapsedControlText = MarshalString(contents.Expander?.CollapsedButtonText),

@@ -41,11 +41,11 @@ namespace KPreisser.UI
 
         private TaskDialogFlags flags;
         private string title;
-        private string mainInstruction;
-        private string content;
-        private string footer;
-        private TaskDialogIcon mainIcon;
-        private IntPtr mainIconHandle;
+        private string instruction;
+        private string text;
+        private string footerText;
+        private TaskDialogIcon icon;
+        private IntPtr iconHandle;
         private TaskDialogIcon footerIcon;
         private IntPtr footerIconHandle;
         private int width;
@@ -224,13 +224,13 @@ namespace KPreisser.UI
         /// <remarks>
         /// This text can be changed while the dialog is shown.
         /// </remarks>
-        public string MainInstruction
+        public string Instruction
         {
-            get => this.mainInstruction;
+            get => this.instruction;
 
             set
             {
-                this.mainInstruction = value;
+                this.instruction = value;
                 this.boundTaskDialog?.UpdateTextElement(
                         TaskDialogTextElement.MainInstruction,
                         value);
@@ -238,18 +238,18 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// Gets or sets the dialog's primary content.
+        /// Gets or sets the dialog's primary text content.
         /// </summary>
         /// <remarks>
         /// This text can be changed while the dialog is shown.
         /// </remarks>
-        public string Content
+        public string Text
         {
-            get => this.content;
+            get => this.text;
 
             set
             {
-                this.content = value;
+                this.text = value;
                 this.boundTaskDialog?.UpdateTextElement(
                         TaskDialogTextElement.Content,
                         value);
@@ -262,13 +262,13 @@ namespace KPreisser.UI
         /// <remarks>
         /// This text can be changed while the dialog is shown.
         /// </remarks>
-        public string Footer
+        public string FooterText
         {
-            get => this.footer;
+            get => this.footerText;
 
             set
             {
-                this.footer = value;
+                this.footerText = value;
                 this.boundTaskDialog?.UpdateTextElement(
                         TaskDialogTextElement.Footer,
                         value);
@@ -276,16 +276,16 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// Gets or sets the main icon, if <see cref="MainIconHandle"/> is
+        /// Gets or sets the main icon, if <see cref="IconHandle"/> is
         /// <see cref="IntPtr.Zero"/>.
         /// </summary>
         /// <remarks>
         /// This icon can be changed while the dialog is shown.
         /// </remarks>
         [DefaultValue(TaskDialogIcon.None)]
-        public TaskDialogIcon MainIcon
+        public TaskDialogIcon Icon
         {
-            get => this.mainIcon;
+            get => this.icon;
 
             set
             {
@@ -293,7 +293,7 @@ namespace KPreisser.UI
                         this.boundMainIconIsFromHandle)
                     throw new InvalidOperationException();
 
-                this.mainIcon = value;
+                this.icon = value;
                 this.boundTaskDialog?.UpdateIconElement(
                         TaskDialogIconElement.Main,
                         (IntPtr)value);
@@ -302,15 +302,15 @@ namespace KPreisser.UI
 
         /// <summary>
         /// Gets or sets the handle to the main icon. When this member is not
-        /// <see cref="IntPtr.Zero"/>, the <see cref="MainIcon"/> property will
+        /// <see cref="IntPtr.Zero"/>, the <see cref="Icon"/> property will
         /// be ignored.
         /// </summary>
         /// <remarks>
         /// This icon can be changed while the dialog is shown.
         /// </remarks>
-        public IntPtr MainIconHandle
+        public IntPtr IconHandle
         {
-            get => this.mainIconHandle;
+            get => this.iconHandle;
 
             set
             {
@@ -318,7 +318,7 @@ namespace KPreisser.UI
                         !this.boundMainIconIsFromHandle)
                     throw new InvalidOperationException();
 
-                this.mainIconHandle = value;
+                this.iconHandle = value;
                 this.boundTaskDialog?.UpdateIconElement(
                         TaskDialogIconElement.Main,
                         value);
@@ -622,7 +622,7 @@ namespace KPreisser.UI
             flags = this.flags;
             buttonFlags = GetCommonButtonFlags();
 
-            this.boundMainIconIsFromHandle = this.MainIconHandle != IntPtr.Zero;
+            this.boundMainIconIsFromHandle = this.IconHandle != IntPtr.Zero;
             this.boundFooterIconIsFromHandle = this.FooterIconHandle != IntPtr.Zero;
             if (this.boundMainIconIsFromHandle)
                 flags |= TaskDialogFlags.UseHIconMain;
