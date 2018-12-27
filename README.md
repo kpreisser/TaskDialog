@@ -63,7 +63,7 @@ different thread than the Main Thread, you will need to set it to
 Show a simple dialog:
 ```c#
     TaskDialogResult result = TaskDialog.Show(
-        content: "This is a new dialog!",
+        text: "This is a new dialog!",
         instruction: "Hi there!",
         buttons: TaskDialogButtons.Yes | TaskDialogButtons.No,
         icon: TaskDialogIcon.Information);
@@ -73,11 +73,11 @@ Show a dialog with command links and a marquee progress bar:
 ```c#
     TaskDialogContents contents = new TaskDialogContents()
     {
-        MainInstruction = "Hi there!",
-        Content = "This is a new dialog!",
-        MainIcon = TaskDialogIcon.Information,
-        UseCommandLinks = true, // Show command links instead of custom buttons
-                
+        Instruction = "Hi there!",
+        Text = "This is a new dialog!",
+        Icon = TaskDialogIcon.Information,
+        CommandLinkMode = TaskDialogCommandLinkMode.CommandLinks, // Show command links instead of custom buttons
+
         ProgressBar = new TaskDialogProgressBar()
         {
             State = TaskDialogProgressBarState.Marquee
@@ -102,24 +102,24 @@ Update the dialog's content when clicking one of its buttons:
 
     TaskDialogContents contents = new TaskDialogContents()
     {
-        MainInstruction = "Update number?",
-        Content = $"Current number: {number}",
-        MainIcon = TaskDialogIcon.QuestionNoSound
+        Instruction = "Update number?",
+        Text = $"Current number: {number}",
+        Icon = (TaskDialogIcon)99
     };
-    
+
     var buttonYes = contents.CommonButtons.Add(TaskDialogResult.Yes);
     var buttonClose = contents.CommonButtons.Add(TaskDialogResult.Close);
 
     // Handle the event when the "Yes" button was clicked.
-    buttonYes.ButtonClicked += (s, e) =>
+    buttonYes.Click += (s, e) =>
     {
         // When clicking the "Yes" button, don't close the dialog, but
         // instead increment the number and update the dialog content.
         e.CancelClose = true;
 
         // Update the content.
-        number++;                
-        contents.Content = $"Current number: {number}";
+        number++;
+        contents.Text = $"Current number: {number}";
     };
 
     TaskDialog dialog = new TaskDialog(contents);
