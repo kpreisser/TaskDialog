@@ -570,8 +570,8 @@ namespace KPreisser.UI
                 if (control.BoundTaskDialogContents != null && control.BoundTaskDialogContents != this)
                     throw new InvalidOperationException();
 
-            if (this.customButtons?.Count > int.MaxValue - CustomButtonStartID + 1 ||
-                    this.radioButtons?.Count > int.MaxValue - RadioButtonStartID + 1)
+            if (this.CustomButtons.Count > int.MaxValue - CustomButtonStartID + 1 ||
+                    this.RadioButtons.Count > int.MaxValue - RadioButtonStartID + 1)
                 throw new InvalidOperationException(
                         "Too many custom buttons or radio buttons have been added.");
 
@@ -584,12 +584,30 @@ namespace KPreisser.UI
                     $"When a {nameof(this.VerificationCheckbox)} is set, its " +
                     $"{nameof(this.VerificationCheckbox.Text)} must not be null or empty.");
 
+            bool foundDefaultButton = false;
+            foreach (var button in (this.CommonButtons as IEnumerable<TaskDialogButton>)
+                    .Concat(this.CustomButtons))
+            {
+                if (button.DefaultButton)
+                {
+                    if (!foundDefaultButton)
+                        foundDefaultButton = true;
+                    else
+                        throw new InvalidOperationException("Only one button can be set as default button.");
+                }
+            }
+
             foreach (var button in this.customButtons)
+            {
                 if (button.Text == null)
                     throw new InvalidOperationException("The text of a custom button must not be null.");
+            }
+
             foreach (var button in this.radioButtons)
+            {
                 if (button.Text == null)
                     throw new InvalidOperationException("The text of a radio button must not be null.");
+            }
         }
 
         internal void Bind(TaskDialog owner,
