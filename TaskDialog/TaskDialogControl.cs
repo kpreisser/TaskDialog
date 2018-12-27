@@ -17,6 +17,16 @@ namespace KPreisser.UI
         }
 
 
+        /// <summary>
+        /// Gets or sets the object that contains data about the control.
+        /// </summary>
+        public object Tag
+        {
+            get;
+            set;
+        }
+
+
         internal TaskDialogContents BoundTaskDialogContents
         {
             get => this.boundTaskDialogContents;
