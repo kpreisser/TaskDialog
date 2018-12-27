@@ -43,9 +43,11 @@ namespace KPreisser.UI
 
                 // Check if we can update the button.
                 if (CanUpdate())
+                {
                     this.boundTaskDialogContents?.BoundTaskDialog.SetButtonEnabled(
                             this.GetButtonID(),
                             value);
+                }
             }
         }
 
@@ -59,11 +61,13 @@ namespace KPreisser.UI
             set
             {
                 this.elevationRequired = value;
-                
+
                 if (CanUpdate())
+                {
                     this.boundTaskDialogContents?.BoundTaskDialog.SetButtonElevationRequiredState(
                             this.GetButtonID(),
                             value);
+                }
             }
         }
 
@@ -83,8 +87,8 @@ namespace KPreisser.UI
                 {
                     // When we are part of a collection, set the defaultButton value of
                     // all other buttons to False.
-                    // Note that this does not handle buttons that are added later to the
-                    // collection.
+                    // Note that this does not handle buttons that are added later to
+                    // the collection.
                     foreach (var button in this.collection)
                         button.defaultButton = button == this;
                 }
@@ -100,7 +104,7 @@ namespace KPreisser.UI
 
 
         /// <summary>
-        /// 
+        /// Simulates a click on this button.
         /// </summary>
         public void Click()
         {

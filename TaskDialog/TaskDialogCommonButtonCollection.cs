@@ -49,7 +49,8 @@ namespace KPreisser.UI
         /// 
         /// </summary>
         /// <param name="buttons"></param>
-        internal static IEnumerable<TaskDialogResult> GetResultsForButtonFlags(TaskDialogButtons buttons)
+        internal static IEnumerable<TaskDialogResult> GetResultsForButtonFlags(
+                TaskDialogButtons buttons)
         {
             if ((buttons & TaskDialogButtons.OK) == TaskDialogButtons.OK)
                 yield return TaskDialogResult.OK;

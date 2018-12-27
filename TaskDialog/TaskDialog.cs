@@ -35,7 +35,7 @@ namespace KPreisser.UI
 
         /// <summary>
         /// The delegate for the dialog callback. We must ensure to prevent this delegate
-        /// from being garbage-collected as long as at least one dialog is active.
+        /// from being garbage-collected as long as at least one dialog is being shown.
         /// </summary>
         private static readonly TaskDialogCallbackProcDelegate callbackProcDelegate;
 
@@ -48,7 +48,7 @@ namespace KPreisser.UI
 
 
         /// <summary>
-        /// Window handle of the task dialog.
+        /// Window handle of the task dialog when it is being shown.
         /// </summary>
         private IntPtr hwndDialog;
 
@@ -163,11 +163,14 @@ namespace KPreisser.UI
 
 
         /// <summary>
-        /// The window handle of the active dialog, or <see cref="IntPtr.Zero"/>
-        /// if the dialog is not active. When showing the dialog, the handle will be
-        /// available first in the <see cref="Opened"/> event, and last in the
-        /// <see cref="Closing"/> after which you shouldn't use it any more.
+        /// Gets the window handle of the task dialog window, or <see cref="IntPtr.Zero"/>
+        /// if the dialog is currently not being shown.
         /// </summary>
+        /// <remarks>
+        /// When showing the dialog, the handle will be available first in the
+        /// <see cref="Opened"/> event, and last in the
+        /// <see cref="Closing"/> after which you shouldn't use it any more.
+        /// </remarks>
         [Browsable(false)]
         public IntPtr Handle
         {
@@ -197,7 +200,7 @@ namespace KPreisser.UI
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
 
-                if (this.DialogIsActive)
+                if (this.DialogIsShown)
                 {
                     // Try to navigate the dialog. This will validate the new contents
                     // and assign them only if they are OK.
@@ -208,16 +211,6 @@ namespace KPreisser.UI
                     this.currentContents = value;
                 }
             }
-        }
-
-
-        /// <summary>
-        /// 
-        /// </summary>
-        [Browsable(false)]
-        public bool DialogIsActive
-        {
-            get => this.hwndDialog != IntPtr.Zero;
         }
 
         ///// <summary>
@@ -255,6 +248,17 @@ namespace KPreisser.UI
         //{
         //    get => this.resultVerificationCheckboxChecked;
         //}
+
+
+        /// <summary>
+        /// Gets a value that indicates whether the native task dialog window has been
+        /// created and its handle is available using the <see cref="Handle"/> property.
+        /// </summary>
+        [Browsable(false)]
+        internal bool DialogIsShown
+        {
+            get => this.hwndDialog != IntPtr.Zero;
+        }
 
 
         /// <summary>
@@ -595,12 +599,7 @@ namespace KPreisser.UI
 
 
         /// <summary>
-        /// Shows the dialog. After the dialog is created, the <see cref="Opened"/>
-        /// event occurs which allows to customize the dialog. When the dialog is about to 
-        /// close, the <see cref="Closing"/> event occurs.
-        /// 
-        /// Starting with the <see cref="Opened"/> event, you can call methods on the active 
-        /// task dialog to update its state until the <see cref="Closing"/> event occurs.
+        /// Shows the task dialog.
         /// </summary>
         public TaskDialogButton Show()
         {
@@ -609,12 +608,7 @@ namespace KPreisser.UI
 
 #if !NET_STANDARD
         /// <summary>
-        /// Shows the dialog. After the dialog is created, the <see cref="Opened"/>
-        /// event occurs which allows to customize the dialog. When the dialog is about to 
-        /// close, the <see cref="Closing"/> event occurs.
-        /// 
-        /// Starting with the <see cref="Opened"/> event, you can call methods on the active 
-        /// task dialog to update its state until the <see cref="Closing"/> event occurs.
+        /// Shows the task dialog.
         /// </summary>
         /// <param name="owner">The owner window, or <c>null</c> to show a non-modal dialog.</param>
         public TaskDialogButton Show(System.Windows.Window owner)
@@ -623,12 +617,7 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// Shows the dialog. After the dialog is created, the <see cref="Opened"/>
-        /// event occurs which allows to customize the dialog. When the dialog is about to 
-        /// close, the <see cref="Closing"/> event occurs.
-        /// 
-        /// Starting with the <see cref="Opened"/> event, you can call methods on the active 
-        /// task dialog to update its state until the <see cref="Closing"/> event occurs.
+        /// Shows the task dialog.
         /// </summary>
         /// <param name="owner">The owner window, or <c>null</c> to show a non-modal dialog.</param>
         public TaskDialogButton Show(System.Windows.Interop.IWin32Window owner)
@@ -637,12 +626,7 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// Shows the dialog. After the dialog is created, the <see cref="Opened"/>
-        /// event occurs which allows to customize the dialog. When the dialog is about to 
-        /// close, the <see cref="Closing"/> event occurs.
-        /// 
-        /// Starting with the <see cref="Opened"/> event, you can call methods on the active 
-        /// task dialog to update its state until the <see cref="Closing"/> event occurs.
+        /// Shows the task dialog.
         /// </summary>
         /// <param name="owner">The owner window, or <c>null</c> to show a non-modal dialog.</param>
         public TaskDialogButton Show(System.Windows.Forms.IWin32Window owner)
@@ -652,12 +636,7 @@ namespace KPreisser.UI
 #endif
 
         /// <summary>
-        /// Shows the dialog. After the dialog is created, the <see cref="Opened"/>
-        /// event occurs which allows to customize the dialog. When the dialog is about to 
-        /// close, the <see cref="Closing"/> event occurs.
-        /// 
-        /// Starting with the <see cref="Opened"/> event, you can call methods on the active 
-        /// task dialog to update its state until the <see cref="Closing"/> event occurs.
+        /// Shows the task dialog.
         /// </summary>
         /// <param name="owner">The owner window, or <c>null</c> to show a non-modal dialog.</param>
         public TaskDialogButton Show(TaskDialog owner)
@@ -666,12 +645,7 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// Shows the dialog. After the dialog is created, the <see cref="Opened"/>
-        /// event occurs which allows to customize the dialog. When the dialog is about to 
-        /// close, the <see cref="Closing"/> event occurs.
-        /// 
-        /// Starting with the <see cref="Opened"/> event, you can call methods on the active 
-        /// task dialog to update its state until the <see cref="Closing"/> event occurs.
+        /// Shows the task dialog.
         /// </summary>
         /// <param name="hwndOwner">
         /// The window handle of the owner, or <see cref="IntPtr.Zero"/> to show a non-modal
@@ -789,15 +763,14 @@ namespace KPreisser.UI
             }
         }
 
-        //// Messages that can be sent to the dialog while it is active.
+        //// Messages that can be sent to the dialog while it is being shown.
 
         /// <summary>
-        /// While the dialog is active, closes the dialog with a 
+        /// Closes the shown task dialog with a 
         /// <see cref="TaskDialogResult.Cancel"/> result.
         /// </summary>
         public void Close()
         {
-            //if (suppressCommonButtonClickedEvent)
             this.suppressButtonClickedEvent = true;
             try
             {
@@ -806,14 +779,13 @@ namespace KPreisser.UI
             }
             finally
             {
-                //if (suppressCommonButtonClickedEvent)
                 this.suppressButtonClickedEvent = false;
             }
         }
 
 
         /// <summary>
-        /// While the dialog is active, switches the progress bar mode to either a
+        /// While the dialog is being shown, switches the progress bar mode to either a
         /// marquee progress bar or to a regular progress bar.
         /// For a marquee progress bar, you can enable or disable the marquee using
         /// <see cref="SetProgressBarMarquee(bool, int)"/>.
@@ -828,7 +800,7 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// While the dialog is active, enables or disables progress bar marquee when
+        /// While the dialog is being shown, enables or disables progress bar marquee when
         /// an marquee progress bar is displayed.
         /// </summary>
         /// <param name="enableMarquee"></param>
@@ -848,10 +820,13 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// While the dialog is active, sets the progress bar range. The default range is 0 to 100.
+        /// While the dialog is being shown, sets the progress bar range.
         /// </summary>
         /// <param name="min"></param>
         /// <param name="max"></param>
+        /// <remarks>
+        /// The default range is 0 to 100.
+        /// </remarks>
         internal void SetProgressBarRange(int min, int max)
         {
             if (min < 0 || min > ushort.MaxValue)
@@ -867,7 +842,7 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// While the dialog is active, sets the progress bar position.
+        /// While the dialog is being shown, sets the progress bar position.
         /// </summary>
         /// <param name="pos"></param>
         internal void SetProgressBarPos(int pos)
@@ -882,7 +857,7 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// While the dialog is active, sets the progress bar state.
+        /// While the dialog is being shown, sets the progress bar state.
         /// </summary>
         /// <param name="state"></param>
         internal void SetProgressBarState(TaskDialogProgressBarNativeState state)
@@ -894,7 +869,7 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// While the dialog is active, sets the verification checkbox to the specified
+        /// While the dialog is being shown, sets the verification checkbox to the specified
         /// state.
         /// </summary>
         /// <param name="isChecked"></param>
@@ -951,6 +926,8 @@ namespace KPreisser.UI
                 TaskDialogTextElement element,
                 string text)
         {
+            DenyIfDialogNotShown();
+
             var strPtr = Marshal.StringToHGlobalUni(text);
             try
             {
@@ -975,7 +952,7 @@ namespace KPreisser.UI
 
         internal void UpdateTitle(string title)
         {
-            DenyIfDialogNotActive();
+            DenyIfDialogNotShown();
 
             if (!NativeMethods.SetWindowText(this.hwndDialog, title))
                 Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
@@ -1038,7 +1015,8 @@ namespace KPreisser.UI
 
 
         /// <summary>
-        /// While the dialog is active, recreates the dialog from the current properties.
+        /// While the dialog is being shown, recreates the dialog from the current
+        /// properties.
         /// </summary>
         /// <remarks>
         /// Note that you should not call this method in the <see cref="Opened"/> event
@@ -1046,7 +1024,7 @@ namespace KPreisser.UI
         /// </remarks>
         private void Navigate(TaskDialogContents contents)
         {
-            Debug.Assert(this.DialogIsActive);
+            Debug.Assert(this.DialogIsShown);
 
             // Validate the config.
             contents.Validate(this);
@@ -1284,16 +1262,16 @@ namespace KPreisser.UI
             }
         }
 
-        private void DenyIfDialogNotActive()
+        private void DenyIfDialogNotShown()
         {
-            if (!this.DialogIsActive)
+            if (!this.DialogIsShown)
                 throw new InvalidOperationException(
-                        "Can only update the state of a task dialog while it is active.");
+                        "Can only update the state of a task dialog while it is shown.");
         }
 
         private void SendTaskDialogMessage(TaskDialogMessage message, int wParam, IntPtr lParam)
         {
-            DenyIfDialogNotActive();
+            DenyIfDialogNotShown();
 
             NativeMethods.SendMessage(
                     this.hwndDialog,
