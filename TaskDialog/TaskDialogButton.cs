@@ -18,9 +18,16 @@ namespace KPreisser.UI
 
 
         /// <summary>
-        /// 
+        /// Occurs when the button is clicked.
         /// </summary>
-        public event EventHandler<TaskDialogButtonClickedEventArgs> ButtonClicked;
+        /// <remarks>
+        /// By default, the dialog will be closed after the event handler returns 
+        /// (except for the <see cref="TaskDialogResult.Help"/> button).
+        /// To prevent the dialog from closing, set the
+        /// <see cref="TaskDialogButtonClickedEventArgs.CancelClose"/> property to
+        /// <c>true</c>.
+        /// </remarks>
+        public event EventHandler<TaskDialogButtonClickedEventArgs> Click;
 
 
         // Disallow inheritance by specifying a private protected constructor.
@@ -106,7 +113,7 @@ namespace KPreisser.UI
         /// <summary>
         /// Simulates a click on this button.
         /// </summary>
-        public void Click()
+        public void PerformClick()
         {
             DenyIfNotBound();
             this.boundTaskDialogContents.BoundTaskDialog.ClickButton(this.GetButtonID());
@@ -116,7 +123,7 @@ namespace KPreisser.UI
         internal bool HandleButtonClicked()
         {
             var e = new TaskDialogButtonClickedEventArgs();
-            this.OnButtonClicked(e);
+            this.OnClick(e);
             return !e.CancelClose;
         }
 
@@ -130,9 +137,9 @@ namespace KPreisser.UI
         }
 
 
-        private protected void OnButtonClicked(TaskDialogButtonClickedEventArgs e)
+        private protected void OnClick(TaskDialogButtonClickedEventArgs e)
         {
-            this.ButtonClicked?.Invoke(this, e);
+            this.Click?.Invoke(this, e);
         }
 
         private protected abstract int GetButtonID();

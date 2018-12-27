@@ -284,7 +284,7 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="owner">The owner window, or <c>null</c> to show a non-modal dialog.</param>
+        /// <param name="owner">The owner window, or <c>null</c> to show a modeless dialog.</param>
         /// <param name="text"></param>
         /// <param name="instruction"></param>
         /// <param name="title"></param>
@@ -305,7 +305,7 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="owner">The owner window, or <c>null</c> to show a non-modal dialog.</param>
+        /// <param name="owner">The owner window, or <c>null</c> to show a modeless dialog.</param>
         /// <param name="text"></param>
         /// <param name="instruction"></param>
         /// <param name="title"></param>
@@ -326,7 +326,7 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="owner">The owner window, or <c>null</c> to show a non-modal dialog.</param>
+        /// <param name="owner">The owner window, or <c>null</c> to show a modeless dialog.</param>
         /// <param name="text"></param>
         /// <param name="instruction"></param>
         /// <param name="title"></param>
@@ -347,7 +347,7 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="owner">The owner window, or <c>null</c> to show a non-modal dialog.</param>
+        /// <param name="owner">The owner window, or <c>null</c> to show a modeless dialog.</param>
         /// <param name="text"></param>
         /// <param name="instruction"></param>
         /// <param name="title"></param>
@@ -370,8 +370,8 @@ namespace KPreisser.UI
         /// 
         /// </summary>
         /// <param name="hwndOwner">
-        /// The window handle of the owner, or <see cref="IntPtr.Zero"/> to show a non-modal
-        /// dialog.
+        /// The window handle of the owner, or <see cref="IntPtr.Zero"/> to show a
+        /// modeless dialog.
         /// </param>
         /// <param name="text"></param>
         /// <param name="instruction"></param>
@@ -610,7 +610,11 @@ namespace KPreisser.UI
         /// <summary>
         /// Shows the task dialog.
         /// </summary>
-        /// <param name="owner">The owner window, or <c>null</c> to show a non-modal dialog.</param>
+        /// <remarks>
+        /// Showing the dialog will bind the <see cref="CurrentContents"/> and their
+        /// controls until this method returns.
+        /// </remarks>
+        /// <param name="owner">The owner window, or <c>null</c> to show a modeless dialog.</param>
         public TaskDialogButton Show(System.Windows.Window owner)
         {
             return Show(GetWindowHandle(owner));
@@ -619,7 +623,11 @@ namespace KPreisser.UI
         /// <summary>
         /// Shows the task dialog.
         /// </summary>
-        /// <param name="owner">The owner window, or <c>null</c> to show a non-modal dialog.</param>
+        /// <remarks>
+        /// Showing the dialog will bind the <see cref="CurrentContents"/> and their
+        /// controls until this method returns.
+        /// </remarks>
+        /// <param name="owner">The owner window, or <c>null</c> to show a modeless dialog.</param>
         public TaskDialogButton Show(System.Windows.Interop.IWin32Window owner)
         {
             return Show(GetWindowHandle(owner));
@@ -628,7 +636,11 @@ namespace KPreisser.UI
         /// <summary>
         /// Shows the task dialog.
         /// </summary>
-        /// <param name="owner">The owner window, or <c>null</c> to show a non-modal dialog.</param>
+        /// <remarks>
+        /// Showing the dialog will bind the <see cref="CurrentContents"/> and their
+        /// controls until this method returns.
+        /// </remarks>
+        /// <param name="owner">The owner window, or <c>null</c> to show a modeless dialog.</param>
         public TaskDialogButton Show(System.Windows.Forms.IWin32Window owner)
         {
             return Show(GetWindowHandle(owner));
@@ -638,7 +650,11 @@ namespace KPreisser.UI
         /// <summary>
         /// Shows the task dialog.
         /// </summary>
-        /// <param name="owner">The owner window, or <c>null</c> to show a non-modal dialog.</param>
+        /// <remarks>
+        /// Showing the dialog will bind the <see cref="CurrentContents"/> and their
+        /// controls until this method returns.
+        /// </remarks>
+        /// <param name="owner">The owner window, or <c>null</c> to show a modeless dialog.</param>
         public TaskDialogButton Show(TaskDialog owner)
         {
             return Show(owner.Handle);
@@ -647,9 +663,13 @@ namespace KPreisser.UI
         /// <summary>
         /// Shows the task dialog.
         /// </summary>
+        /// <remarks>
+        /// Showing the dialog will bind the <see cref="CurrentContents"/> and their
+        /// controls until this method returns.
+        /// </remarks>
         /// <param name="hwndOwner">
-        /// The window handle of the owner, or <see cref="IntPtr.Zero"/> to show a non-modal
-        /// dialog.
+        /// The window handle of the owner, or <see cref="IntPtr.Zero"/> to show a
+        /// modeless dialog.
         /// </param>
         public TaskDialogButton Show(IntPtr hwndOwner)
         {

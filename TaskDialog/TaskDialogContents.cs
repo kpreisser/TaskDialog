@@ -688,10 +688,10 @@ namespace KPreisser.UI
                 flags |= radioButton.GetFlags();
 
                 radioButton.RadioButtonID = RadioButtonStartID + i;
-                if (radioButton.Checked && defaultRadioButtonID == 0)
+                if (radioButton.IsChecked && defaultRadioButtonID == 0)
                     defaultRadioButtonID = radioButton.RadioButtonID;
-                else if (radioButton.Checked)
-                    radioButton.Checked = false;
+                else if (radioButton.IsChecked)
+                    radioButton.IsChecked = false;
             }
 
             if (defaultRadioButtonID == 0)

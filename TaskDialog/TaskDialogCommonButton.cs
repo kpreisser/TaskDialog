@@ -69,10 +69,10 @@ namespace KPreisser.UI
         /// </summary>
         /// <remarks>
         /// Setting this to <c>false</c> allows you to still receive the
-        /// <see cref="TaskDialogButton.ButtonClicked"/> event (e.g. for the
+        /// <see cref="TaskDialogButton.Click"/> event (e.g. for the
         /// <see cref="TaskDialogResult.Cancel"/> button when
         /// <see cref="TaskDialogContents.AllowCancel"/> is set), or to call the
-        /// <see cref="TaskDialogButton.Click"/> method even if the button is not
+        /// <see cref="TaskDialogButton.PerformClick"/> method even if the button is not
         /// shown.
         /// </remarks>
         public bool Visible

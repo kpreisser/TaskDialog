@@ -18,11 +18,11 @@ namespace TaskDialogExample
             var dialogContents = new TaskDialogContents()
             {
                 Title = "Example 1",
-                MainInstruction = "Hello Task Dialog!   👍",
-                Content = "Hi, this is <A HREF=\"link1\">the Content</A>.\nBlah blah blah…",
-                Footer = "This is the <A HREF=\"link2\">footer</A>.",
+                Instruction = "Hello Task Dialog!   👍",
+                Text = "Hi, this is <A HREF=\"link1\">the Content</A>.\nBlah blah blah…",
+                FooterText = "This is the <A HREF=\"link2\">footer</A>.",
 
-                MainIcon = TaskDialogIcon.SecuritySuccessGreenBar,
+                Icon = TaskDialogIcon.SecuritySuccessGreenBar,
                 FooterIcon = TaskDialogIcon.Warning,
 
                 Expander = new TaskDialogExpander()
@@ -70,7 +70,7 @@ namespace TaskDialogExample
                 // cancel the close operation).
                 var buttonCancelHidden = dialogContents.CommonButtons.Add(TaskDialogResult.Cancel);
                 buttonCancelHidden.Visible = false;
-                buttonCancelHidden.ButtonClicked += (s, e) =>
+                buttonCancelHidden.Click += (s, e) =>
                 {
                     Console.WriteLine("Cancel clicked!");
                 };
@@ -104,7 +104,7 @@ namespace TaskDialogExample
                 button3.ElevationRequired = true;
 
                 TaskDialogIcon nextIcon = 0;
-                button1.ButtonClicked += (s, e) =>
+                button1.Click += (s, e) =>
                 {
                     Console.WriteLine("Button1 clicked!");
 
@@ -114,8 +114,8 @@ namespace TaskDialogExample
                     nextIcon++;
 
                     // Set the icon and the content.
-                    dialogContents.MainIcon = nextIcon;
-                    dialogContents.MainInstruction = "Icon: " + nextIcon;
+                    dialogContents.Icon = nextIcon;
+                    dialogContents.Instruction = "Icon: " + nextIcon;
 
                     // Enable the "Yes" button and the 3rd button when the checkbox is set.
                     buttonYes.Enabled = true;
@@ -123,7 +123,7 @@ namespace TaskDialogExample
                 };
 
                 button2.Enabled = false;
-                button2.ButtonClicked += (s, e) =>
+                button2.Click += (s, e) =>
                 {
                     Console.WriteLine("Button2 clicked!");
 
@@ -133,8 +133,8 @@ namespace TaskDialogExample
                     // Show a new Taskdialog that shows an incrementing number.
                     var contents = new TaskDialogContents()
                     {
-                        Content = "This is a new non-modal dialog!",
-                        MainIcon = TaskDialogIcon.Information,
+                        Text = "This is a new non-modal dialog!",
+                        Icon = TaskDialogIcon.Information,
                     };
 
                     var buttonClose = contents.CommonButtons.Add(TaskDialogResult.Close);
@@ -144,7 +144,7 @@ namespace TaskDialogExample
                     void UpdateNumberText(bool callUpdate = true)
                     {
                         // Update the instruction with the new number.
-                        contents.MainInstruction = "Hi there!  Number: " + number.ToString();
+                        contents.Instruction = "Hi there!  Number: " + number.ToString();
                     }
                     UpdateNumberText(false);
 
@@ -154,7 +154,7 @@ namespace TaskDialogExample
                         UpdateNumberText();
                     };
 
-                    buttonContinue.ButtonClicked += (s2, e2) =>
+                    buttonContinue.Click += (s2, e2) =>
                     {
                         Console.WriteLine("New dialog - Continue Button clicked");
 
@@ -170,7 +170,7 @@ namespace TaskDialogExample
                     }
                 };
 
-                button3.ButtonClicked += (s, e) =>
+                button3.Click += (s, e) =>
                 {
                     Console.WriteLine("Button3 clicked!");
 
@@ -180,9 +180,9 @@ namespace TaskDialogExample
                     // Create a new contents instance to which we will navigate the dialog.
                     var newContents = new TaskDialogContents()
                     {
-                        MainInstruction = "Page 2",
-                        Content = "Welcome to the second page!",
-                        MainIcon = TaskDialogIcon.SecurityShieldBlueBar,
+                        Instruction = "Page 2",
+                        Text = "Welcome to the second page!",
+                        Icon = TaskDialogIcon.SecurityShieldBlueBar,
                         SizeToContent = true,
 
                         VerificationCheckbox = new TaskDialogVerificationCheckbox()
@@ -200,7 +200,7 @@ namespace TaskDialogExample
 
                         // Set a new icon after navigating the dialog. This allows us to show the
                         // yellow bar from the "SecurityWarningBar" icon with a different icon.
-                        newContents.MainIcon = TaskDialogIcon.Warning;
+                        newContents.Icon = TaskDialogIcon.Warning;
                     };
                     newContents.Destroying += (s2, e2) =>
                     {
@@ -217,10 +217,10 @@ namespace TaskDialogExample
                     // Add radio buttons.
                     var radioButton1 = newContents.RadioButtons.Add("My Radio Button 1");
                     var radioButton2 = newContents.RadioButtons.Add("My Radio Button 2");
-                    radioButton2.Checked = true;
+                    radioButton2.IsChecked = true;
 
-                    radioButton1.RadioButtonClicked += (s2, e2) => Console.WriteLine("Radio Button 1 clicked!");
-                    radioButton2.RadioButtonClicked += (s2, e2) => Console.WriteLine("Radio Button 2 clicked!");
+                    radioButton1.Checked += (s2, e2) => Console.WriteLine("Radio Button 1 checked!");
+                    radioButton2.Checked += (s2, e2) => Console.WriteLine("Radio Button 2 checked!");
 
                     newContents.VerificationCheckbox.CheckboxClicked += (s2, e2) =>
                     {

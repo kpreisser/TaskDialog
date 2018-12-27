@@ -19,9 +19,11 @@ namespace KPreisser.UI
 
 
         /// <summary>
-        /// 
+        /// Occurs when this <see cref="TaskDialogRadioButton"/> by the user (or
+        /// by setting the <see cref="Checked"/> property) while the task dialog is
+        /// shown.
         /// </summary>
-        public event EventHandler RadioButtonClicked;
+        public event EventHandler Checked;
 
 
         /// <summary>
@@ -67,7 +69,7 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
-        public bool Checked
+        public bool IsChecked
         {
             get => this.@checked;
 
@@ -133,7 +135,7 @@ namespace KPreisser.UI
             foreach (var radioButton in this.boundTaskDialogContents.RadioButtons)            
                 radioButton.@checked = radioButton == this;
 
-            this.OnRadioButtonClicked(EventArgs.Empty);            
+            this.OnChecked(EventArgs.Empty);            
         }
 
         internal override void ApplyInitialization()
@@ -144,9 +146,9 @@ namespace KPreisser.UI
         }
 
 
-        private void OnRadioButtonClicked(EventArgs e)
+        private void OnChecked(EventArgs e)
         {
-            this.RadioButtonClicked?.Invoke(this, e);
+            this.Checked?.Invoke(this, e);
         }
     }
 }
