@@ -444,6 +444,12 @@ namespace KPreisser.UI
         /// <see cref="TaskDialogButtons.Cancel"/> button is specified in
         /// <see cref="CommonButtons"/>.
         /// </summary>
+        /// <remarks>
+        /// You can intercept cancellation of the dialog without displaying a "Cancel"
+        /// button by adding a <see cref="TaskDialogCommonButton"/> with its
+        /// <see cref="TaskDialogCommonButton.Visible"/> set to <c>false</c> and specifying
+        /// a <see cref="TaskDialogResult.Cancel"/> result.
+        /// </remarks>
         [DefaultValue(false)]
         public bool AllowCancel
         {
@@ -468,8 +474,13 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// Gets or sets a value that indicates whether the task dialog can be minimized.
+        /// Gets or sets a value that indicates whether the task dialog can be minimized
+        /// when it is shown modeless.
         /// </summary>
+        /// <remarks>
+        /// When setting this property to <c>true</c>, <see cref="AllowCancel"/> is
+        /// automatically implied.
+        /// </remarks>
         [DefaultValue(false)]
         public bool CanBeMinimized
         {
