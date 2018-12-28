@@ -213,8 +213,10 @@ namespace KPreisser.UI
 
             set
             {
-                this.title = value;
+                // Note: We set the field values after calling the method to ensure
+                // it still has the previous value it the method throws.
                 this.boundTaskDialog?.UpdateTitle(value);
+                this.title = value;
             }
         }
 
@@ -230,10 +232,10 @@ namespace KPreisser.UI
 
             set
             {
-                this.instruction = value;
                 this.boundTaskDialog?.UpdateTextElement(
                         TaskDialogTextElement.MainInstruction,
                         value);
+                this.instruction = value;
             }
         }
 
@@ -249,10 +251,10 @@ namespace KPreisser.UI
 
             set
             {
-                this.text = value;
                 this.boundTaskDialog?.UpdateTextElement(
                         TaskDialogTextElement.Content,
                         value);
+                this.text = value;
             }
         }
 
@@ -268,10 +270,10 @@ namespace KPreisser.UI
 
             set
             {
-                this.footerText = value;
                 this.boundTaskDialog?.UpdateTextElement(
                         TaskDialogTextElement.Footer,
                         value);
+                this.footerText = value;
             }
         }
 
@@ -293,10 +295,10 @@ namespace KPreisser.UI
                         this.boundMainIconIsFromHandle)
                     throw new InvalidOperationException();
 
-                this.icon = value;
                 this.boundTaskDialog?.UpdateIconElement(
                         TaskDialogIconElement.Main,
                         (IntPtr)value);
+                this.icon = value;
             }
         }
 
@@ -318,10 +320,10 @@ namespace KPreisser.UI
                         !this.boundMainIconIsFromHandle)
                     throw new InvalidOperationException();
 
-                this.iconHandle = value;
                 this.boundTaskDialog?.UpdateIconElement(
                         TaskDialogIconElement.Main,
                         value);
+                this.iconHandle = value;
             }
         }
 
@@ -343,10 +345,10 @@ namespace KPreisser.UI
                         this.boundFooterIconIsFromHandle == true)
                     throw new InvalidOperationException();
 
-                this.footerIcon = value;
                 this.boundTaskDialog?.UpdateIconElement(
                         TaskDialogIconElement.Footer,
                         (IntPtr)value);
+                this.footerIcon = value;
             }
         }
 
@@ -368,10 +370,10 @@ namespace KPreisser.UI
                         !this.boundFooterIconIsFromHandle == false)
                     throw new InvalidOperationException();
 
-                this.footerIconHandle = value;
                 this.boundTaskDialog?.UpdateIconElement(
                         TaskDialogIconElement.Footer,
                         value);
+                this.footerIconHandle = value;
             }
         }
 

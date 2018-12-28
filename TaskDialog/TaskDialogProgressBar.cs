@@ -36,53 +36,60 @@ namespace KPreisser.UI
 
                 var previousState = this.state;
                 this.state = value;
-
-                if (this.boundTaskDialogContents != null)
+                try
                 {
-                    var taskDialog = this.boundTaskDialogContents.BoundTaskDialog;
-
-                    // Check if we need to switch between a marquee and a non-marquee bar.
-                    bool newStateIsMarquee = ProgressBarStateIsMarquee(this.state);
-                    bool switchMode = ProgressBarStateIsMarquee(previousState) != newStateIsMarquee;
-                    if (switchMode)
+                    if (this.boundTaskDialogContents != null)
                     {
-                        // When switching from non-marquee to marquee mode, we first need to
-                        // set the state to "Normal"; otherwise the marquee will not show.
-                        if (newStateIsMarquee && previousState != TaskDialogProgressBarState.Normal)
-                            taskDialog.SetProgressBarState(TaskDialogProgressBarNativeState.Normal);
+                        var taskDialog = this.boundTaskDialogContents.BoundTaskDialog;
 
-                        taskDialog.SwitchProgressBarMode(newStateIsMarquee);
-                    }
-
-                    // Update the properties.
-                    if (newStateIsMarquee)
-                    {
-                        taskDialog.SetProgressBarMarquee(
-                                this.state == TaskDialogProgressBarState.Marquee,
-                                this.marqueeSpeed);                        
-                    }
-                    else
-                    {
-                        taskDialog.SetProgressBarState(GetNativeProgressBarState(this.state));
-
+                        // Check if we need to switch between a marquee and a non-marquee bar.
+                        bool newStateIsMarquee = ProgressBarStateIsMarquee(this.state);
+                        bool switchMode = ProgressBarStateIsMarquee(previousState) != newStateIsMarquee;
                         if (switchMode)
                         {
-                            // Also need to set the other properties after switching
-                            // the mode.
-                            this.Range = this.range;
-                            this.Position = this.position;
+                            // When switching from non-marquee to marquee mode, we first need to
+                            // set the state to "Normal"; otherwise the marquee will not show.
+                            if (newStateIsMarquee && previousState != TaskDialogProgressBarState.Normal)
+                                taskDialog.SetProgressBarState(TaskDialogProgressBarNativeState.Normal);
 
-                            // We need to set the position a secondtime to work reliably if the
-                            // state is not "Normal".
-                            // See this comment in the TaskDialog implementation of the
-                            // Windows API Code Pack 1.1:
-                            // "Due to a bug that wasn't fixed in time for RTM of Vista,
-                            // second SendMessage is required if the state is non-Normal."
-                            // Apparently, this bug is still present in Win10 V1803.
-                            if (this.state != TaskDialogProgressBarState.Normal)
+                            taskDialog.SwitchProgressBarMode(newStateIsMarquee);
+                        }
+
+                        // Update the properties.
+                        if (newStateIsMarquee)
+                        {
+                            taskDialog.SetProgressBarMarquee(
+                                    this.state == TaskDialogProgressBarState.Marquee,
+                                    this.marqueeSpeed);
+                        }
+                        else
+                        {
+                            taskDialog.SetProgressBarState(GetNativeProgressBarState(this.state));
+
+                            if (switchMode)
+                            {
+                                // Also need to set the other properties after switching
+                                // the mode.
+                                this.Range = this.range;
                                 this.Position = this.position;
+
+                                // We need to set the position a secondtime to work reliably if the
+                                // state is not "Normal".
+                                // See this comment in the TaskDialog implementation of the
+                                // Windows API Code Pack 1.1:
+                                // "Due to a bug that wasn't fixed in time for RTM of Vista,
+                                // second SendMessage is required if the state is non-Normal."
+                                // Apparently, this bug is still present in Win10 V1803.
+                                if (this.state != TaskDialogProgressBarState.Normal)
+                                    this.Position = this.position;
+                            }
                         }
                     }
+                }
+                catch
+                {
+                    this.state = previousState;
+                    throw;
                 }
             }
         }
@@ -102,15 +109,23 @@ namespace KPreisser.UI
 
                 if (value.min > value.max)
                     throw new ArgumentException();
-                    
-                this.range = value;
 
-                // We only update the TaskDialog if the current state is a non-marquee progress bar.
-                if (this.boundTaskDialogContents != null && !ProgressBarStateIsMarquee(this.state))
+                var previousRange = this.range;
+                this.range = value;
+                try
                 {
-                    this.boundTaskDialogContents.BoundTaskDialog.SetProgressBarRange(
-                            this.range.min,
-                            this.range.max);
+                    // We only update the TaskDialog if the current state is a non-marquee progress bar.
+                    if (this.boundTaskDialogContents != null && !ProgressBarStateIsMarquee(this.state))
+                    {
+                        this.boundTaskDialogContents.BoundTaskDialog.SetProgressBarRange(
+                                this.range.min,
+                                this.range.max);
+                    }
+                }
+                catch
+                {
+                    this.range = previousRange;
+                    throw;
                 }
             }
         }
@@ -127,13 +142,21 @@ namespace KPreisser.UI
                 if (value < 0 || value > ushort.MaxValue)
                     throw new ArgumentOutOfRangeException(nameof(value));
 
+                int previousPosition = this.position;
                 this.position = value;
-
-                // We only update the TaskDialog if the current state is a non-marquee progress bar.
-                if (this.boundTaskDialogContents != null && !ProgressBarStateIsMarquee(this.state))
+                try
                 {
-                    this.boundTaskDialogContents.BoundTaskDialog.SetProgressBarPos(
-                            this.position);
+                    // We only update the TaskDialog if the current state is a non-marquee progress bar.
+                    if (this.boundTaskDialogContents != null && !ProgressBarStateIsMarquee(this.state))
+                    {
+                        this.boundTaskDialogContents.BoundTaskDialog.SetProgressBarPos(
+                                this.position);
+                    }
+                }
+                catch
+                {
+                    this.position = previousPosition;
+                    throw;
                 }
             }
         }
@@ -147,11 +170,19 @@ namespace KPreisser.UI
 
             set
             {
+                int previousMarqueeSpeed = this.marqueeSpeed;
                 this.marqueeSpeed = value;
-
-                // We only update the TaskDialog if the current state is a marquee progress bar.
-                if (this.boundTaskDialogContents != null && ProgressBarStateIsMarquee(this.state))
-                    this.State = this.state;
+                try
+                {
+                    // We only update the TaskDialog if the current state is a marquee progress bar.
+                    if (this.boundTaskDialogContents != null && ProgressBarStateIsMarquee(this.state))
+                        this.State = this.state;
+                }
+                catch
+                {
+                    this.marqueeSpeed = previousMarqueeSpeed;
+                    throw;
+                }
             }
         }
 

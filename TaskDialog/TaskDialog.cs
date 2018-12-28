@@ -64,6 +64,8 @@ namespace KPreisser.UI
 
         private TaskDialogContents boundContents;
 
+        private bool waitingForNavigatedEvent;
+
         /// <summary>
         /// A stack which tracks whether the dialog has been navigated while being in
         /// a <see cref="TaskDialogNotification.ButtonClicked"/> handler.
@@ -186,6 +188,11 @@ namespace KPreisser.UI
         /// recreate its contents from the specified <see cref="TaskDialogContents"/>
         /// ("navigation"). After the dialog is navigated, the <see cref="Navigated"/>
         /// and the <see cref="TaskDialogContents.Created"/> events will occur.
+        /// 
+        /// Please note that you cannot update the task dialog or its controls
+        /// directly after navigating it (by setting this property). You will need
+        /// to wait for one of the mentioned events to occur before you can update
+        /// it.
         /// </remarks>
         [Category("Contents")]
         [Description("Contains the current contents of the Task Dialog.")]
@@ -258,6 +265,11 @@ namespace KPreisser.UI
         internal bool DialogIsShown
         {
             get => this.hwndDialog != IntPtr.Zero;
+        }
+
+        internal bool WaitingForNavigatedEvent
+        {
+            get => this.waitingForNavigatedEvent;
         }
 
 
@@ -461,6 +473,7 @@ namespace KPreisser.UI
                     break;
 
                 case TaskDialogNotification.Navigated:
+                    instance.waitingForNavigatedEvent = false;
                     instance.boundContents.ApplyInitialization();
 
                     instance.OnNavigated(EventArgs.Empty);
@@ -762,6 +775,8 @@ namespace KPreisser.UI
                     this.boundContents.Unbind();
                     this.boundContents = null;
 
+                    this.waitingForNavigatedEvent = false;
+
                     // We need to ensure the callback delegate is not garbage-collected
                     // as long as TaskDialogIndirect doesn't return, by calling GC.KeepAlive().
                     // 
@@ -947,7 +962,7 @@ namespace KPreisser.UI
                 TaskDialogTextElement element,
                 string text)
         {
-            DenyIfDialogNotShown();
+            DenyIfDialogNotShownOrWaitingForNavigatedEvent();
 
             var strPtr = Marshal.StringToHGlobalUni(text);
             try
@@ -973,7 +988,7 @@ namespace KPreisser.UI
 
         internal void UpdateTitle(string title)
         {
-            DenyIfDialogNotShown();
+            DenyIfDialogNotShownOrWaitingForNavigatedEvent();
 
             if (!NativeMethods.SetWindowText(this.hwndDialog, title))
                 Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
@@ -1045,7 +1060,7 @@ namespace KPreisser.UI
         /// </remarks>
         private void Navigate(TaskDialogContents contents)
         {
-            Debug.Assert(this.DialogIsShown);
+            DenyIfDialogNotShownOrWaitingForNavigatedEvent();
 
             // Validate the config.
             contents.Validate(this);
@@ -1078,6 +1093,14 @@ namespace KPreisser.UI
                 // the dialog was navigated.
                 for (int i = 0; i < this.clickEventNavigatedStack.Count; i++)
                     this.clickEventNavigatedStack[i] = true;
+
+                // Also, disallow updates until we received the Navigated event
+                // because that messages would be lost.
+                // TODO: We might cache the change so that the Navigated event handler
+                // can then make the outstanding update calls.
+                // However, this is probably not so simple e.g. for the "Checked"
+                // setter because the CheckedChanged event would be delayed.
+                this.waitingForNavigatedEvent = true;
             }
             finally
             {
@@ -1302,16 +1325,24 @@ namespace KPreisser.UI
             }
         }
 
-        private void DenyIfDialogNotShown()
+        private void DenyIfDialogNotShownOrWaitingForNavigatedEvent()
         {
             if (!this.DialogIsShown)
                 throw new InvalidOperationException(
                         "Can only update the state of a task dialog while it is shown.");
+
+            if (this.waitingForNavigatedEvent)
+                throw new InvalidOperationException(
+                        "Cannot update the task dialog directly after navigating it. " +
+                        $"Please wait for the {nameof(TaskDialog)}.{nameof(this.Navigated)} " +
+                        $"event or for the " +
+                        $"{nameof(TaskDialogContents)}.{nameof(TaskDialogContents.Created)} " +
+                        $"event to occur.");
         }
 
         private void SendTaskDialogMessage(TaskDialogMessage message, int wParam, IntPtr lParam)
         {
-            DenyIfDialogNotShown();
+            DenyIfDialogNotShownOrWaitingForNavigatedEvent();
 
             NativeMethods.SendMessage(
                     this.hwndDialog,

@@ -147,7 +147,12 @@ namespace KPreisser.UI
 
         private protected virtual bool CanUpdate()
         {
-            return true;
+            // Only update the button when bound to a task dialog and we are not
+            // waiting for the Navigated event. In the latter case we don't throw
+            // an exception however, because ApplyInitialization will be called in
+            // the Navigated handler that does the necessary updates.
+            return this.boundTaskDialogContents?.BoundTaskDialog
+                    .WaitingForNavigatedEvent == false;
         }
     }
 }

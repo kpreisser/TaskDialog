@@ -128,7 +128,7 @@ namespace KPreisser.UI
 
         private protected override bool CanUpdate()
         {
-            return this.visible;
+            return base.CanUpdate() && this.visible;
         }
     }
 }
