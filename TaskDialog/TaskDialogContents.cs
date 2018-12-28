@@ -530,6 +530,14 @@ namespace KPreisser.UI
         }
 
 
+        private static bool IsNativeStringNullOrEmpty(string str)
+        {
+            // From a native point of view, the string is empty if its first
+            // character is a NUL char.
+            return string.IsNullOrEmpty(str) || str[0] == '\0';
+        }
+
+
         internal void DenyIfBound()
         {
             if (this.boundTaskDialog != null)
@@ -580,8 +588,7 @@ namespace KPreisser.UI
             // Ensure that if we have a checkbox, its text is not null/empty.
             // Otherwise we will get AccessViolationExceptions when sending a Click message.
             if (this.checkBox != null &&
-                    (!(this.checkBox.Text?.Length > 0) ||
-                    this.checkBox.Text[0] == '\0'))
+                    IsNativeStringNullOrEmpty(this.checkBox.Text))
                 throw new InvalidOperationException(
                     $"When a {nameof(this.CheckBox)} is set, its " +
                     $"{nameof(this.CheckBox.Text)} must not be null or empty.");
@@ -601,15 +608,15 @@ namespace KPreisser.UI
 
             foreach (var button in this.customButtons)
             {
-                if (button.Text == null)
-                    throw new InvalidOperationException("The text of a custom button must not be null.");
+                if (IsNativeStringNullOrEmpty(button.Text))
+                    throw new InvalidOperationException("The text of a custom button must not be null or empty.");
             }
 
             bool foundCheckedRadioButton = false;
             foreach (var button in this.radioButtons)
             {
-                if (button.Text == null)
-                    throw new InvalidOperationException("The text of a radio button must not be null.");
+                if (IsNativeStringNullOrEmpty(button.Text))
+                    throw new InvalidOperationException("The text of a radio button must not be null or empty.");
 
                 if (button.Checked)
                 {
