@@ -1143,13 +1143,15 @@ namespace KPreisser.UI
                 }
 
                 // Allocate the memory block. We add additional bytes to ensure we can
-                // align the returned pointer to IntPtr.Size.
-                ptrToFree = Marshal.AllocHGlobal((IntPtr)(sizeToAllocate + IntPtr.Size - 1));
+                // align the returned pointer to IntPtr.Size (the biggest align size
+                // that we will use).
+                ptrToFree = Marshal.AllocHGlobal((IntPtr)(sizeToAllocate + (IntPtr.Size - 1)));
                 try
                 {
                     // Align the pointer before using it. This is important since we also
                     // started with an aligned "address" value (0) when calculating the
-                    // required allocation size.
+                    // required allocation size. We must use the same size that we added
+                    // as additional size when allocating the memory.
                     var currentPtr = (byte*)ptrToFree;
                     Align(ref currentPtr);
                     ptrTaskDialogConfig = (IntPtr)currentPtr;
