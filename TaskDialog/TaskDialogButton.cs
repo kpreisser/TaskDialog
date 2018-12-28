@@ -22,7 +22,8 @@ namespace KPreisser.UI
         /// </summary>
         /// <remarks>
         /// By default, the dialog will be closed after the event handler returns 
-        /// (except for the <see cref="TaskDialogResult.Help"/> button).
+        /// (except for the <see cref="TaskDialogResult.Help"/> button which instead
+        /// will raise the <see cref="TaskDialogContents.Help"/> event afterwards).
         /// To prevent the dialog from closing, set the
         /// <see cref="TaskDialogButtonClickedEventArgs.CancelClose"/> property to
         /// <c>true</c>.
