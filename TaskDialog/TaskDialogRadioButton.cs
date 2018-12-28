@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 
 namespace KPreisser.UI
 {
@@ -19,11 +20,10 @@ namespace KPreisser.UI
 
 
         /// <summary>
-        /// Occurs when this <see cref="TaskDialogRadioButton"/> by the user (or
-        /// by setting the <see cref="Checked"/> property) while the task dialog is
-        /// shown.
+        /// Occurs when the value of the <see cref="Checked"/> property has changed
+        /// while this control is bound to a task dialog.
         /// </summary>
-        public event EventHandler Checked;
+        public event EventHandler CheckedChanged;
 
 
         /// <summary>
@@ -32,6 +32,15 @@ namespace KPreisser.UI
         public TaskDialogRadioButton()
             : base()
         {
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public TaskDialogRadioButton(string text)
+            : base()
+        {
+            this.text = text;
         }
 
 
@@ -69,13 +78,15 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
-        public bool IsChecked
+        public bool Checked
         {
             get => this.@checked;
 
             set
             {
                 // Unchecking a radio button is not possible in the task dialog.
+                // TODO: Should we throw only if the new value is different than the
+                // old one?
                 if (this.boundTaskDialogContents != null && !value)
                     throw new InvalidOperationException(
                             "Cannot uncheck a radio button while it is bound to a task dialog.");
@@ -88,7 +99,7 @@ namespace KPreisser.UI
                     // all other buttons to False.
                     // Note that this does not handle buttons that are added later to the
                     // collection.
-                    if (this.collection != null)
+                    if (value && this.collection != null)
                     {
                         foreach (var radioButton in this.collection)
                             radioButton.@checked = radioButton == this;
@@ -125,17 +136,29 @@ namespace KPreisser.UI
         /// <returns></returns>
         public override string ToString()
         {
-            return this.text;
+            return this.text ?? base.ToString();
         }
 
 
         internal void HandleRadioButtonClicked()
         {
-            // Update the "checked" state of this and the other radio buttons.
-            foreach (var radioButton in this.boundTaskDialogContents.RadioButtons)            
-                radioButton.@checked = radioButton == this;
+            // First, uncheck the other radio buttons.
+            foreach (var radioButton in this.boundTaskDialogContents.RadioButtons
+                    .Where(e => e != this))
+            {
+                if (radioButton.@checked)
+                {
+                    radioButton.@checked = false;
+                    radioButton.OnCheckedChanged(EventArgs.Empty);
+                }
+            }
 
-            this.OnChecked(EventArgs.Empty);            
+            // Then, check the current radio button.
+            if (!this.@checked)
+            {
+                this.@checked = true;
+                this.OnCheckedChanged(EventArgs.Empty);
+            }           
         }
 
         internal override void ApplyInitialization()
@@ -145,10 +168,10 @@ namespace KPreisser.UI
                 this.Enabled = this.enabled;
         }
 
-
-        private void OnChecked(EventArgs e)
+        
+        private void OnCheckedChanged(EventArgs e)
         {
-            this.Checked?.Invoke(this, e);
+            this.CheckedChanged?.Invoke(this, e);
         }
     }
 }

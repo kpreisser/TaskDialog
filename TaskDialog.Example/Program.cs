@@ -217,16 +217,16 @@ namespace TaskDialogExample
                     // Add radio buttons.
                     var radioButton1 = newContents.RadioButtons.Add("My Radio Button 1");
                     var radioButton2 = newContents.RadioButtons.Add("My Radio Button 2");
-                    radioButton2.IsChecked = true;
+                    radioButton2.Checked = true;
 
-                    radioButton1.Checked += (s2, e2) => Console.WriteLine("Radio Button 1 checked!");
-                    radioButton2.Checked += (s2, e2) => Console.WriteLine("Radio Button 2 checked!");
+                    radioButton1.CheckedChanged += (s2, e2) => Console.WriteLine("Radio Button 1 CheckedChanged: " + radioButton1.Checked);
+                    radioButton2.CheckedChanged += (s2, e2) => Console.WriteLine("Radio Button 2 CheckedChanged: " + radioButton2.Checked);
 
-                    newContents.VerificationCheckbox.CheckboxClicked += (s2, e2) =>
+                    newContents.VerificationCheckbox.CheckedChanged += (s2, e2) =>
                     {
-                        Console.WriteLine("Verification clicked!");
+                        Console.WriteLine("Verification CheckedChanged: " + newContents.VerificationCheckbox.Checked);
 
-                        buttonCancel.Enabled = e2.Status;
+                        buttonCancel.Enabled = newContents.VerificationCheckbox.Checked;
                     };
 
                     // Now navigate the dialog.

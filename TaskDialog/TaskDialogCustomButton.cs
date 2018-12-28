@@ -20,6 +20,16 @@
         {
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public TaskDialogCustomButton(string text, string descriptionText = null)
+            : base()
+        {
+            this.text = text;
+            this.descriptionText = descriptionText;
+        }
+
 
         /// <summary>
         /// 
@@ -69,7 +79,7 @@
         /// <returns></returns>
         public override string ToString()
         {
-            return this.text;
+            return this.text ?? base.ToString();
         }
 
 

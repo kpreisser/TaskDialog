@@ -603,14 +603,24 @@ namespace KPreisser.UI
                     throw new InvalidOperationException("The text of a custom button must not be null.");
             }
 
+            bool foundCheckedRadioButton = false;
             foreach (var button in this.radioButtons)
             {
                 if (button.Text == null)
                     throw new InvalidOperationException("The text of a radio button must not be null.");
+
+                if (button.Checked)
+                {
+                    if (!foundCheckedRadioButton)
+                        foundCheckedRadioButton = true;
+                    else
+                        throw new InvalidOperationException("Only one radio button can be set as checked.");
+                }
             }
         }
 
-        internal void Bind(TaskDialog owner,
+        internal void Bind(
+                TaskDialog owner,
                 out TaskDialogFlags flags,
                 out TaskDialogButtons buttonFlags,
                 out int defaultButtonID,
@@ -688,10 +698,10 @@ namespace KPreisser.UI
                 flags |= radioButton.GetFlags();
 
                 radioButton.RadioButtonID = RadioButtonStartID + i;
-                if (radioButton.IsChecked && defaultRadioButtonID == 0)
+                if (radioButton.Checked && defaultRadioButtonID == 0)
                     defaultRadioButtonID = radioButton.RadioButtonID;
-                else if (radioButton.IsChecked)
-                    radioButton.IsChecked = false;
+                else if (radioButton.Checked)
+                    radioButton.Checked = false;
             }
 
             if (defaultRadioButtonID == 0)

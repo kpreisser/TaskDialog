@@ -103,7 +103,9 @@ namespace KPreisser.UI
             {
                 // The Task Dialog doesn't provide a message type to click the expando
                 // button, so we don't allow to change this property (it will however
-                // be updated when we receive an ExpandoButtonClicked notificatin).
+                // be updated when we receive an ExpandoButtonClicked notification).
+                // TODO: Should we throw only if the new value is different than the
+                // old one?
                 this.boundTaskDialogContents?.DenyIfBound();
 
                 this.expanded = value;
@@ -127,6 +129,16 @@ namespace KPreisser.UI
         }
 
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString()
+        {
+            return this.text ?? base.ToString();
+        }
+
+
         internal void HandleExpandoButtonClicked(bool expanded)
         {
             this.expanded = expanded;
@@ -147,10 +159,6 @@ namespace KPreisser.UI
         }
 
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="e"></param>
         private void OnExpandoButtonClicked(
                 TaskDialogBooleanStatusEventArgs e)
         {

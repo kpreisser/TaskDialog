@@ -15,7 +15,7 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
-        public event EventHandler<TaskDialogBooleanStatusEventArgs> CheckboxClicked;
+        public event EventHandler CheckedChanged;
 
 
         /// <summary>
@@ -85,11 +85,24 @@ namespace KPreisser.UI
                     true);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString()
+        {
+            return this.text ?? base.ToString();
+        }
+
 
         internal void HandleCheckboxClicked(bool @checked)
         {
-            this.@checked = @checked;
-            this.OnCheckboxClicked(new TaskDialogBooleanStatusEventArgs(@checked));
+            // Only raise the event if the state actually changed.
+            if (@checked != this.@checked)
+            {
+                this.@checked = @checked;
+                this.OnCheckedChanged(EventArgs.Empty);
+            }
         }
 
         internal override TaskDialogFlags GetFlags()
@@ -107,9 +120,9 @@ namespace KPreisser.UI
         /// 
         /// </summary>
         /// <param name="e"></param>
-        private void OnCheckboxClicked(TaskDialogBooleanStatusEventArgs e)
+        private void OnCheckedChanged(EventArgs e)
         {
-            this.CheckboxClicked?.Invoke(this, e);
+            this.CheckedChanged?.Invoke(this, e);
         }
     }
 }
