@@ -35,7 +35,7 @@ namespace KPreisser.UI
 
         private TaskDialogProgressBar progressBar;
 
-        private TaskDialogVerificationCheckbox verificationCheckbox;
+        private TaskDialogCheckBox checkBox;
 
         private TaskDialog boundTaskDialog;
 
@@ -190,9 +190,9 @@ namespace KPreisser.UI
         /// 
         /// </summary>
         [Category("Controls")]
-        public TaskDialogVerificationCheckbox VerificationCheckbox
+        public TaskDialogCheckBox CheckBox
         {
-            get => this.verificationCheckbox;
+            get => this.checkBox;
 
             set
             {
@@ -200,7 +200,7 @@ namespace KPreisser.UI
                 // access the control from the task dialog's callback.
                 this.DenyIfBound();
 
-                this.verificationCheckbox = value;
+                this.checkBox = value;
             }
         }
 
@@ -562,7 +562,7 @@ namespace KPreisser.UI
                     this.RadioButtons.BoundTaskDialogContents != null && this.RadioButtons.BoundTaskDialogContents != this ||
                     this.expander?.BoundTaskDialogContents != null && this.expander.BoundTaskDialogContents != this ||
                     this.progressBar?.BoundTaskDialogContents != null && this.progressBar.BoundTaskDialogContents != this ||
-                    this.verificationCheckbox?.BoundTaskDialogContents != null && this.verificationCheckbox.BoundTaskDialogContents != this)
+                    this.checkBox?.BoundTaskDialogContents != null && this.checkBox.BoundTaskDialogContents != this)
                 throw new InvalidOperationException();
             foreach (var control in (this.CommonButtons as IEnumerable<TaskDialogControl>)
                     .Concat(this.CustomButtons)
@@ -575,14 +575,14 @@ namespace KPreisser.UI
                 throw new InvalidOperationException(
                         "Too many custom buttons or radio buttons have been added.");
 
-            // Ensure that if we have a verification checkbox, its text is not null/empty.
+            // Ensure that if we have a checkbox, its text is not null/empty.
             // Otherwise we will get AccessViolationExceptions when sending a Click message.
-            if (this.verificationCheckbox != null &&
-                    (!(this.verificationCheckbox.Text?.Length > 0) ||
-                    this.verificationCheckbox.Text[0] == '\0'))
+            if (this.checkBox != null &&
+                    (!(this.checkBox.Text?.Length > 0) ||
+                    this.checkBox.Text[0] == '\0'))
                 throw new InvalidOperationException(
-                    $"When a {nameof(this.VerificationCheckbox)} is set, its " +
-                    $"{nameof(this.VerificationCheckbox.Text)} must not be null or empty.");
+                    $"When a {nameof(this.CheckBox)} is set, its " +
+                    $"{nameof(this.CheckBox.Text)} must not be null or empty.");
 
             bool foundDefaultButton = false;
             foreach (var button in (this.CommonButtons as IEnumerable<TaskDialogButton>)
@@ -719,10 +719,10 @@ namespace KPreisser.UI
                 flags |= this.progressBar.GetFlags();
             }
 
-            if (this.verificationCheckbox != null)
+            if (this.checkBox != null)
             {
-                this.verificationCheckbox.BoundTaskDialogContents = this;
-                flags |= this.verificationCheckbox.GetFlags();
+                this.checkBox.BoundTaskDialogContents = this;
+                flags |= this.checkBox.GetFlags();
             }
         }
 
@@ -760,8 +760,8 @@ namespace KPreisser.UI
                 this.expander.BoundTaskDialogContents = null;
             if (this.progressBar != null)
                 this.progressBar.BoundTaskDialogContents = null;
-            if (this.verificationCheckbox != null)
-                this.verificationCheckbox.BoundTaskDialogContents = null;
+            if (this.checkBox != null)
+                this.checkBox.BoundTaskDialogContents = null;
 
             this.boundTaskDialog = null;
         }
@@ -779,7 +779,7 @@ namespace KPreisser.UI
 
             this.expander?.ApplyInitialization();
             this.progressBar?.ApplyInitialization();
-            this.verificationCheckbox?.ApplyInitialization();
+            this.checkBox?.ApplyInitialization();
         }
 
 

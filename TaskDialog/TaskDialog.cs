@@ -82,7 +82,7 @@ namespace KPreisser.UI
         /// </remarks>
         private readonly List<bool> clickEventNavigatedStack = new List<bool>();
 
-        //private bool resultVerificationCheckboxChecked;
+        //private bool resultCheckBoxChecked;
 
         private bool suppressButtonClickedEvent;
 
@@ -244,9 +244,9 @@ namespace KPreisser.UI
         ///// <summary>
         ///// 
         ///// </summary>
-        //public bool ResultVerificationCheckboxChecked
+        //public bool ResultCheckBoxChecked
         //{
-        //    get => this.resultVerificationCheckboxChecked;
+        //    get => this.resultCheckBoxChecked;
         //}
 
 
@@ -554,7 +554,7 @@ namespace KPreisser.UI
                     break;
 
                 case TaskDialogNotification.VerificationClicked:
-                    instance.boundContents.VerificationCheckbox.HandleCheckboxClicked(
+                    instance.boundContents.CheckBox.HandleCheckBoxClicked(
                             wParam != IntPtr.Zero);
                     break;
 
@@ -690,7 +690,7 @@ namespace KPreisser.UI
                 this.currentOwnerHwnd = hwndOwner;
 
                 // Clear the previous result properties.
-                //this.resultVerificationCheckboxChecked = default;
+                //this.resultCheckBoxChecked = default;
                 //this.resultCommonButton = default;
                 //this.resultCustomButton = null;
                 //this.resultRadioButton = null;
@@ -705,7 +705,7 @@ namespace KPreisser.UI
                                 ptrTaskDialogConfig,
                                 out int resultButtonID,
                                 out int resultRadioButtonID,
-                                out bool resultVerificationCheckboxChecked);
+                                out bool resultCheckBoxChecked);
 
                     //// Note: If a exception occurs here when hwndDialog is not 0, it means the TaskDialogIndirect
                     //// run the event loop and called a WndProc e.g. from a window, whose event handler threw an
@@ -889,12 +889,12 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// While the dialog is being shown, sets the verification checkbox to the specified
+        /// While the dialog is being shown, sets the checkbox to the specified
         /// state.
         /// </summary>
         /// <param name="isChecked"></param>
         /// <param name="focus"></param>
-        internal void ClickVerification(bool isChecked, bool focus = false)
+        internal void ClickCheckBox(bool isChecked, bool focus = false)
         {
             SendTaskDialogMessage(
                     TaskDialogMessage.ClickVerification,
@@ -1116,7 +1116,7 @@ namespace KPreisser.UI
                 sizeToAllocate += SizeOfString(contents.Expander?.Text);
                 sizeToAllocate += SizeOfString(contents.Expander?.ExpandedButtonText);
                 sizeToAllocate += SizeOfString(contents.Expander?.CollapsedButtonText);
-                sizeToAllocate += SizeOfString(contents.VerificationCheckbox?.Text);
+                sizeToAllocate += SizeOfString(contents.CheckBox?.Text);
                 
                 // Buttons array
                 if (contents.CustomButtons.Count > 0)
@@ -1178,7 +1178,7 @@ namespace KPreisser.UI
                         pszExpandedInformation = MarshalString(contents.Expander?.Text),
                         pszExpandedControlText = MarshalString(contents.Expander?.ExpandedButtonText),
                         pszCollapsedControlText = MarshalString(contents.Expander?.CollapsedButtonText),
-                        pszVerificationText = MarshalString(contents.VerificationCheckbox?.Text),
+                        pszVerificationText = MarshalString(contents.CheckBox?.Text),
                         nDefaultButton = defaultButtonID,
                         nDefaultRadioButton = defaultRadioButtonID,
                         pfCallback = callbackProcDelegatePtr,

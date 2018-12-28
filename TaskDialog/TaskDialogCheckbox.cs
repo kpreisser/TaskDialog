@@ -5,7 +5,7 @@ namespace KPreisser.UI
     /// <summary>
     /// 
     /// </summary>
-    public sealed class TaskDialogVerificationCheckbox : TaskDialogControl
+    public sealed class TaskDialogCheckBox : TaskDialogControl
     {
         private string text;
 
@@ -21,7 +21,7 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
-        public TaskDialogVerificationCheckbox()
+        public TaskDialogCheckBox()
             : base()
         {
         }
@@ -30,7 +30,7 @@ namespace KPreisser.UI
         /// 
         /// </summary>
         /// <param name="text"></param>
-        public TaskDialogVerificationCheckbox(string text)
+        public TaskDialogCheckBox(string text)
             : base()
         {
             this.text = text;
@@ -65,9 +65,10 @@ namespace KPreisser.UI
                 }
                 else
                 {
-                    // Click the checkbox which should then raise the event, where we
-                    // will update the checked state.
-                    this.boundTaskDialogContents.BoundTaskDialog.ClickVerification(
+                    // Click the checkbox which should cause a call to
+                    // HandleCheckBoxClicked(), where we will update the checked
+                    // state.
+                    this.boundTaskDialogContents.BoundTaskDialog.ClickCheckBox(
                             value);
                 }
             }
@@ -80,7 +81,7 @@ namespace KPreisser.UI
         public void Focus()
         {
             this.DenyIfNotBound();
-            this.boundTaskDialogContents.BoundTaskDialog.ClickVerification(
+            this.boundTaskDialogContents.BoundTaskDialog.ClickCheckBox(
                     this.@checked,
                     true);
         }
@@ -95,7 +96,7 @@ namespace KPreisser.UI
         }
 
 
-        internal void HandleCheckboxClicked(bool @checked)
+        internal void HandleCheckBoxClicked(bool @checked)
         {
             // Only raise the event if the state actually changed.
             if (@checked != this.@checked)

@@ -185,7 +185,7 @@ namespace TaskDialogExample
                         Icon = TaskDialogIcon.SecurityShieldBlueBar,
                         SizeToContent = true,
 
-                        VerificationCheckbox = new TaskDialogVerificationCheckbox()
+                        CheckBox = new TaskDialogCheckBox()
                         {
                             Text = "I think I agree…"
                         },
@@ -222,11 +222,11 @@ namespace TaskDialogExample
                     radioButton1.CheckedChanged += (s2, e2) => Console.WriteLine("Radio Button 1 CheckedChanged: " + radioButton1.Checked);
                     radioButton2.CheckedChanged += (s2, e2) => Console.WriteLine("Radio Button 2 CheckedChanged: " + radioButton2.Checked);
 
-                    newContents.VerificationCheckbox.CheckedChanged += (s2, e2) =>
+                    newContents.CheckBox.CheckedChanged += (s2, e2) =>
                     {
-                        Console.WriteLine("Verification CheckedChanged: " + newContents.VerificationCheckbox.Checked);
+                        Console.WriteLine("Checkbox CheckedChanged: " + newContents.CheckBox.Checked);
 
-                        buttonCancel.Enabled = newContents.VerificationCheckbox.Checked;
+                        buttonCancel.Enabled = newContents.CheckBox.Checked;
                     };
 
                     // Now navigate the dialog.
