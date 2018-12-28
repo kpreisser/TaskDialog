@@ -1121,6 +1121,10 @@ namespace KPreisser.UI
                 // Buttons array
                 if (contents.CustomButtons.Count > 0)
                 {
+                    // Note: Theoretically we would not need to align the pointer here
+                    // since the packing of the structure is set to 1. Note that this
+                    // can cause an unaligned write when assigning the structure (the
+                    // same happens with TaskDialogConfig).
                     Align(ref sizeToAllocate);
                     sizeToAllocate += sizeof(TaskDialogButtonStruct) * contents.CustomButtons.Count;
 
@@ -1133,6 +1137,7 @@ namespace KPreisser.UI
                 // Radio buttons array
                 if (contents.RadioButtons.Count > 0)
                 {
+                    // See comment above regarding alignment.
                     Align(ref sizeToAllocate);
                     sizeToAllocate += sizeof(TaskDialogButtonStruct) * contents.RadioButtons.Count;
 
