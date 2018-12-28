@@ -432,7 +432,7 @@ namespace KPreisser.UI
                 IntPtr lParam,
                 IntPtr referenceData)
         {
-            // Get the instance from the GCHandle pointer.
+            // Get the instance from the GCHandle pointer and set the hWnd on it.
             var instance = (TaskDialog)GCHandle.FromIntPtr(referenceData).Target;
             instance.hwndDialog = hWnd;
 
