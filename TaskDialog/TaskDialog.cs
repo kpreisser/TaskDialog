@@ -975,7 +975,8 @@ namespace KPreisser.UI
             {
                 // We can now free the memory because SendMessage does not return until the
                 // message has been processed.
-                Marshal.FreeHGlobal(strPtr);
+                if (strPtr != IntPtr.Zero)
+                    Marshal.FreeHGlobal(strPtr);
             }
         }
 
