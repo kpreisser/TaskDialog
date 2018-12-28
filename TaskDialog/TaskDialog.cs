@@ -721,10 +721,11 @@ namespace KPreisser.UI
                     //// the application will crash with an AccessViolationException as soon as you close
                     //// the MessageBox.
 
-                    // Marshal.ThrowExceptionForHR will use the IErrorInfo on the current thread if it exists,
-                    // in which case it ignores the error code. Therefore we only call it if the HResult is not
-                    // OK to avoid incorrect exceptions being thrown.
-                    if (ret != HResultOk)
+                    // Marshal.ThrowExceptionForHR will use the IErrorInfo on the
+                    // current thread if it exists, in which case it ignores the
+                    // error code. Therefore we only call it if the HResult is not
+                    // a success code to avoid incorrect exceptions being thrown.
+                    if (ret < 0)
                         Marshal.ThrowExceptionForHR(ret);
 
                     TaskDialogButton resultingButton;
