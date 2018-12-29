@@ -509,19 +509,19 @@ namespace KPreisser.UI
                     }
 
                     // Note: When the event handler returns true but the dialog was
-                    // navigated within the handler, a the buttonID of the handler
+                    // navigated within the handler, the buttonID of the handler
                     // would be set as the dialog's result even if this ID is from
                     // the dialog contents before the dialog was navigated.
-                    // To fix this, in this case we cache the button instance and
-                    // its ID, so that when Show() returns, it can check if the
+                    // (To fix this, in this case we could cache the button instance
+                    // and its ID, so that when Show() returns, it can check if the
                     // button ID equals the last handled button, and use that
-                    // instance in that case.
-                    // Additionally, memory access problems like
-                    // AccessViolationExceptions may occur in this situation
+                    // instance in that case.)
+                    // However, also memory access problems like
+                    // AccessViolationExceptions seem to occur in this situation
                     // (especially if the dialog also had radio buttons before the
                     // navigation; these would also be set as result of the dialog),
                     // probably because this scenario isn't an expected usage of
-                    // the TaskDialog.
+                    // the native TaskDialog.
                     // To fix the memory access problems, we simply always return
                     // S_FALSE when the dialog was navigated within the ButtonClicked
                     // event handler. This also avoids the need to cache the last
@@ -965,7 +965,7 @@ namespace KPreisser.UI
             DenyIfDialogNotShownOrWaitingForNavigatedEvent();
 
             // Note: Instead of null, we must specify the empty string; otherwise
-            // the update is ignored.
+            // the update would be ignored.
             var strPtr = Marshal.StringToHGlobalUni(text ?? string.Empty);
             try
             {
