@@ -55,9 +55,13 @@
         /// </summary>
         SecuritySuccessGreenBar = ushort.MaxValue - 7,
 
-        // TODO: Check if these "NoSound" icons should be included - 
-        // note that the Question icon only seems to be available without
-        // a sound.
+        //// TODO: Check if these "NoSound" icons should be included - 
+        //// note that the Question icon only seems to be available without
+        //// a sound.
+        //// These icons are used from the system's resource module (imageres.dll)
+        //// as we always specify NULL in the TaskDialogConfig's hInstance field.
+        //// For more information, see:
+        //// https://docs.microsoft.com/en-us/windows/desktop/Controls/tdm-update-icon
 
         ///// <summary>
         ///// 
