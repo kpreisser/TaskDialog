@@ -964,7 +964,9 @@ namespace KPreisser.UI
         {
             DenyIfDialogNotShownOrWaitingForNavigatedEvent();
 
-            var strPtr = Marshal.StringToHGlobalUni(text);
+            // Note: Instead of null, we must specify the empty string; otherwise
+            // the update is ignored.
+            var strPtr = Marshal.StringToHGlobalUni(text ?? string.Empty);
             try
             {
                 // Note: SetElementText will resize the dialog while UpdateElementText will
@@ -975,8 +977,7 @@ namespace KPreisser.UI
             {
                 // We can now free the memory because SendMessage does not return until the
                 // message has been processed.
-                if (strPtr != IntPtr.Zero)
-                    Marshal.FreeHGlobal(strPtr);
+                Marshal.FreeHGlobal(strPtr);
             }
         }
 
