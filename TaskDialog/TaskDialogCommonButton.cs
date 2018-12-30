@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace KPreisser.UI
 {
@@ -46,7 +45,7 @@ namespace KPreisser.UI
 
             set
             {
-                this.boundTaskDialogContents?.DenyIfBound();
+                this.DenyIfBound();
 
                 if (!IsValidCommonButton(value))
                     throw new ArgumentException();
@@ -81,10 +80,16 @@ namespace KPreisser.UI
 
             set
             {
-                this.boundTaskDialogContents?.DenyIfBound();
+                this.DenyIfBound();
 
                 this.visible = value;
             }
+        }
+
+
+        internal override bool IsCreatable
+        {
+            get => base.IsCreatable && this.visible;
         }
 
 

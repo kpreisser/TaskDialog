@@ -34,12 +34,14 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// When overridden in a subclass, applies initialization after the task dialog
-        /// is displayed or navigated.
+        /// Returns a value that indicates if this control can be created in a
+        /// task dialog.
         /// </summary>
-        internal virtual void ApplyInitialization()
+        internal virtual bool IsCreatable
         {
+            get => true;
         }
+
 
         /// <summary>
         /// When overridden in a subclass, gets additional flags to be specified before
@@ -51,12 +53,31 @@ namespace KPreisser.UI
             return default;
         }
 
+        /// <summary>
+        /// When overridden in a subclass, applies initialization after the task dialog
+        /// is displayed or navigated.
+        /// </summary>
+        internal virtual void ApplyInitialization()
+        {
+        }
+
+
+        private protected void DenyIfBound()
+        {
+            this.boundTaskDialogContents?.DenyIfBound();
+        }
 
         private protected void DenyIfNotBound()
         {
             if (this.boundTaskDialogContents == null)
                 throw new InvalidOperationException(
                         "This control is not currently bound to a task dialog.");
+        }
+
+        private protected void DenyIfBoundAndNotCreatable()
+        {
+            if (this.boundTaskDialogContents != null && !this.IsCreatable)
+                throw new InvalidOperationException("The control has not been created.");
         }
     }
 }

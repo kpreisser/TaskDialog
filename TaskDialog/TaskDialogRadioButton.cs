@@ -53,10 +53,12 @@ namespace KPreisser.UI
 
             set
             {
-                this.enabled = value;
+                this.DenyIfBoundAndNotCreatable();
                 this.boundTaskDialogContents?.BoundTaskDialog.SetRadioButtonEnabled(
                         this.radioButtonID,
                         value);
+
+                this.enabled = value;
             }
         }
 
@@ -69,7 +71,7 @@ namespace KPreisser.UI
 
             set
             {
-                this.boundTaskDialogContents?.DenyIfBound();
+                this.DenyIfBound();
 
                 this.text = value;
             }
@@ -84,6 +86,8 @@ namespace KPreisser.UI
 
             set
             {
+                this.DenyIfBoundAndNotCreatable();
+
                 // Unchecking a radio button is not possible in the task dialog.
                 // TODO: Should we throw only if the new value is different than the
                 // old one?
@@ -127,6 +131,11 @@ namespace KPreisser.UI
         {
             get => this.collection;
             set => this.collection = value;
+        }
+
+        internal override bool IsCreatable
+        {
+            get => base.IsCreatable && !TaskDialogContents.IsNativeStringNullOrEmpty(this.text);
         }
 
 

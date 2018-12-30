@@ -102,6 +102,11 @@ namespace KPreisser.UI
         {
             // Set default flags/properties.
             this.startupLocation = TaskDialogStartupLocation.CenterParent;
+
+            // Create empty (hidden) controls.
+            this.expander = new TaskDialogExpander();
+            this.checkBox = new TaskDialogCheckBox();
+            this.progressBar = new TaskDialogProgressBar(TaskDialogProgressBarState.None);
         }
 
 
@@ -530,7 +535,7 @@ namespace KPreisser.UI
         }
 
 
-        private static bool IsNativeStringNullOrEmpty(string str)
+        internal static bool IsNativeStringNullOrEmpty(string str)
         {
             // From a native point of view, the string is empty if its first
             // character is a NUL char.
@@ -585,13 +590,16 @@ namespace KPreisser.UI
                 throw new InvalidOperationException(
                         "Too many custom buttons or radio buttons have been added.");
 
-            // Ensure that if we have a checkbox, its text is not null/empty.
-            // Otherwise we will get AccessViolationExceptions when sending a Click message.
-            if (this.checkBox != null &&
-                    IsNativeStringNullOrEmpty(this.checkBox.Text))
-                throw new InvalidOperationException(
-                    $"When a {nameof(this.CheckBox)} is set, its " +
-                    $"{nameof(this.CheckBox.Text)} must not be null or empty.");
+            //// Note: This is no longer needed, because we allow non-createable
+            //// controls to be added, and the control will check the state by
+            //// itself.
+            //// Ensure that if we have a checkbox, its text is not null/empty.
+            //// Otherwise we will get AccessViolationExceptions when sending a Click message.
+            //if (this.checkBox != null &&
+            //        IsNativeStringNullOrEmpty(this.checkBox.Text))
+            //    throw new InvalidOperationException(
+            //        $"When a {nameof(this.CheckBox)} is set, its " +
+            //        $"{nameof(this.CheckBox.Text)} must not be null or empty.");
 
             bool foundDefaultButton = false;
             foreach (var button in (this.CommonButtons as IEnumerable<TaskDialogButton>)
@@ -606,6 +614,9 @@ namespace KPreisser.UI
                 }
             }
 
+            // For custom and radio buttons, we need to ensure the strings are
+            // not null or empty, as otherwise an error would occur when
+            // showing/navigating the dialog.
             foreach (var button in this.customButtons)
             {
                 if (IsNativeStringNullOrEmpty(button.Text))

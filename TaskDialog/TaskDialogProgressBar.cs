@@ -25,6 +25,17 @@ namespace KPreisser.UI
         }
 
         /// <summary>
+        /// 
+        /// </summary>
+        public TaskDialogProgressBar(TaskDialogProgressBarState state)
+            : base()
+        {
+            // Use the setter which will validate the value.
+            this.State = state;
+        }
+
+
+        /// <summary>
         /// Gets or sets the state of the progress bar.
         /// </summary>
         public TaskDialogProgressBarState State
@@ -32,6 +43,12 @@ namespace KPreisser.UI
             get => this.state;
 
             set {
+                this.DenyIfBoundAndNotCreatable();
+
+                if (this.boundTaskDialogContents != null && value == TaskDialogProgressBarState.None)
+                    throw new InvalidOperationException(
+                            "Cannot remove the progress bar while the task dialog is shown.");
+
                 //// TODO: Verify the enum value is actually valid
 
                 var previousState = this.state;
@@ -103,6 +120,8 @@ namespace KPreisser.UI
 
             set
             {
+                this.DenyIfBoundAndNotCreatable();
+
                 if (value.min < 0 || value.min > ushort.MaxValue ||
                     value.max < 0 || value.max > ushort.MaxValue)
                     throw new ArgumentOutOfRangeException(nameof(value));
@@ -139,6 +158,8 @@ namespace KPreisser.UI
 
             set
             {
+                this.DenyIfBoundAndNotCreatable();
+
                 if (value < 0 || value > ushort.MaxValue)
                     throw new ArgumentOutOfRangeException(nameof(value));
 
@@ -170,6 +191,8 @@ namespace KPreisser.UI
 
             set
             {
+                this.DenyIfBoundAndNotCreatable();
+
                 int previousMarqueeSpeed = this.marqueeSpeed;
                 this.marqueeSpeed = value;
                 try
@@ -184,6 +207,12 @@ namespace KPreisser.UI
                     throw;
                 }
             }
+        }
+
+
+        internal override bool IsCreatable
+        {
+            get => base.IsCreatable && this.state != TaskDialogProgressBarState.None;
         }
 
 
@@ -221,16 +250,22 @@ namespace KPreisser.UI
         {
             var flags = base.GetFlags();
 
-            if (ProgressBarStateIsMarquee(this.state))
-                flags |= TaskDialogFlags.ShowMarqueeProgressBar;
-            else
-                flags |= TaskDialogFlags.ShowProgressBar;
+            if (this.IsCreatable)
+            {
+                if (ProgressBarStateIsMarquee(this.state))
+                    flags |= TaskDialogFlags.ShowMarqueeProgressBar;
+                else
+                    flags |= TaskDialogFlags.ShowProgressBar;
+            }
 
             return flags;
         }
 
         internal override void ApplyInitialization()
         {
+            if (!this.IsCreatable)
+                return;
+
             var taskDialog = this.boundTaskDialogContents.BoundTaskDialog;
 
             if (this.state == TaskDialogProgressBarState.Marquee)

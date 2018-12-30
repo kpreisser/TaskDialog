@@ -42,6 +42,7 @@ namespace KPreisser.UI
             this.text = text;
         }
 
+
         /// <summary>
         /// Gets or sets the text to be displayed in the dialog's expanded area.
         /// </summary>
@@ -71,7 +72,7 @@ namespace KPreisser.UI
 
             set
             {
-                this.boundTaskDialogContents?.DenyIfBound();
+                this.DenyIfBound();
 
                 this.expandedButtonText = value;
             }
@@ -86,7 +87,7 @@ namespace KPreisser.UI
 
             set
             {
-                this.boundTaskDialogContents?.DenyIfBound();
+                this.DenyIfBound();
 
                 this.collapsedButtonText = value;
             }
@@ -106,12 +107,11 @@ namespace KPreisser.UI
                 // be updated when we receive an ExpandoButtonClicked notification).
                 // TODO: Should we throw only if the new value is different than the
                 // old one?
-                this.boundTaskDialogContents?.DenyIfBound();
+                this.DenyIfBound();
 
                 this.expanded = value;
             }
         }
-
 
         /// <summary>
         /// 
@@ -122,10 +122,16 @@ namespace KPreisser.UI
 
             set
             {
-                this.boundTaskDialogContents?.DenyIfBound();
+                this.DenyIfBound();
 
                 this.expandFooterArea = value;
             }
+        }
+
+
+        internal override bool IsCreatable
+        {
+            get => base.IsCreatable && !TaskDialogContents.IsNativeStringNullOrEmpty(this.text);
         }
 
 
@@ -139,23 +145,26 @@ namespace KPreisser.UI
         }
 
 
+        internal override TaskDialogFlags GetFlags()
+        {
+            var flags = base.GetFlags();
+
+            if (this.IsCreatable)
+            {
+                if (this.expanded)
+                    flags |= TaskDialogFlags.ExpandedByDefault;
+                if (this.expandFooterArea)
+                    flags |= TaskDialogFlags.ExpandFooterArea;
+            }
+
+            return flags;
+        }
+
         internal void HandleExpandoButtonClicked(bool expanded)
         {
             this.expanded = expanded;
             this.OnExpandoButtonClicked(
                     new TaskDialogBooleanStatusEventArgs(expanded));
-        }
-
-        internal override TaskDialogFlags GetFlags()
-        {
-            var flags = base.GetFlags();
-
-            if (this.expanded)
-                flags |= TaskDialogFlags.ExpandedByDefault;
-            if (this.expandFooterArea)
-                flags |= TaskDialogFlags.ExpandFooterArea;
-
-            return flags;
         }
 
 

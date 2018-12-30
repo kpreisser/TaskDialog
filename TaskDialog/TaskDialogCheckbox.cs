@@ -45,7 +45,7 @@ namespace KPreisser.UI
             get => this.text;
 
             set {
-                this.boundTaskDialogContents?.DenyIfBound();
+                this.DenyIfBound();
 
                 this.text = value;
             }
@@ -60,6 +60,8 @@ namespace KPreisser.UI
 
             set
             {
+                this.DenyIfBoundAndNotCreatable();
+
                 if (this.boundTaskDialogContents == null)
                 {
                     this.@checked = value;
@@ -76,12 +78,20 @@ namespace KPreisser.UI
         }
 
 
+        internal override bool IsCreatable
+        {
+            get => base.IsCreatable && !TaskDialogContents.IsNativeStringNullOrEmpty(this.text);
+        }
+
+
         /// <summary>
         /// 
         /// </summary>
         public void Focus()
         {
             this.DenyIfNotBound();
+            this.DenyIfBoundAndNotCreatable();
+
             this.boundTaskDialogContents.BoundTaskDialog.ClickCheckBox(
                     this.@checked,
                     true);
@@ -97,6 +107,19 @@ namespace KPreisser.UI
         }
 
 
+        internal override TaskDialogFlags GetFlags()
+        {
+            var flags = base.GetFlags();
+
+            if (this.IsCreatable)
+            {
+                if (this.@checked)
+                    flags |= TaskDialogFlags.VerificationFlagChecked;
+            }
+
+            return flags;
+        }
+
         internal void HandleCheckBoxClicked(bool @checked)
         {
             // Only raise the event if the state actually changed.
@@ -105,16 +128,6 @@ namespace KPreisser.UI
                 this.@checked = @checked;
                 this.OnCheckedChanged(EventArgs.Empty);
             }
-        }
-
-        internal override TaskDialogFlags GetFlags()
-        {
-            var flags = base.GetFlags();
-
-            if (this.@checked)
-                flags |= TaskDialogFlags.VerificationFlagChecked;
-
-            return flags;
         }
 
 

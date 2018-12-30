@@ -13,21 +13,26 @@
         /// <summary>
         /// 
         /// </summary>
-        Paused = 1,
+        Paused,
 
         /// <summary>
         /// 
         /// </summary>
-        Error = 2,
+        Error,
 
         /// <summary>
         /// 
         /// </summary>
-        Marquee = 3,
+        Marquee,
 
         /// <summary>
         /// 
         /// </summary>
-        MarqueeDisabled = 4
+        MarqueeDisabled,
+
+        /// <summary>
+        /// The progress bar will not be displayed.
+        /// </summary>
+        None
     }
 }

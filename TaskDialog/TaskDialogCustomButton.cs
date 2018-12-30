@@ -40,7 +40,7 @@
             
             set
             {
-                this.boundTaskDialogContents?.DenyIfBound();
+                this.DenyIfBound();
 
                 this.text = value;
             }
@@ -59,7 +59,7 @@
 
             set
             {
-                this.boundTaskDialogContents?.DenyIfBound();
+                this.DenyIfBound();
 
                 this.descriptionText = value;
             }
@@ -70,6 +70,11 @@
         {
             get => this.buttonID;
             set => this.buttonID = value;
+        }
+        
+        internal override bool IsCreatable
+        {
+            get => base.IsCreatable && !TaskDialogContents.IsNativeStringNullOrEmpty(this.text);
         }
 
 
