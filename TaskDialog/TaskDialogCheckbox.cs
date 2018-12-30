@@ -36,6 +36,7 @@ namespace KPreisser.UI
             this.text = text;
         }
 
+
         /// <summary>
         /// 
         /// </summary>
@@ -44,9 +45,9 @@ namespace KPreisser.UI
             get => this.text;
 
             set {
-                this.text = value;
-
                 this.boundTaskDialogContents?.DenyIfBound();
+
+                this.text = value;
             }
         }
 
