@@ -58,8 +58,6 @@ namespace KPreisser.UI
         /// </summary>
         private IntPtr instanceHandlePtr;
 
-        private IntPtr? currentOwnerHwnd;
-
         private TaskDialogContents currentContents;
 
         private TaskDialogContents boundContents;
@@ -700,7 +698,6 @@ namespace KPreisser.UI
             try
             {
                 this.instanceHandlePtr = GCHandle.ToIntPtr(instanceHandle);
-                this.currentOwnerHwnd = hwndOwner;
 
                 // Clear the previous result properties.
                 //this.resultCheckBoxChecked = default;
@@ -710,6 +707,7 @@ namespace KPreisser.UI
 
                 // Bind the contents and allocate the memory.
                 BindAndAllocateConfig(
+                       hwndOwner,
                        out var ptrToFree,
                        out var ptrTaskDialogConfig);
                 try
@@ -766,8 +764,7 @@ namespace KPreisser.UI
                 }
                 finally
                 {
-                    // Clear the handles and free the memory.
-                    this.currentOwnerHwnd = null;
+                    // Free the memory.
                     FreeConfig(ptrToFree);
 
                     // Unbind the contents. The 'Destroying' event of the TaskDialogContent
@@ -775,6 +772,7 @@ namespace KPreisser.UI
                     this.boundContents.Unbind();
                     this.boundContents = null;
 
+                    // Ensure to clear the flag if a navigation did not complete.
                     this.waitingForNavigatedEvent = false;
 
                     // We need to ensure the callback delegate is not garbage-collected
@@ -1078,7 +1076,10 @@ namespace KPreisser.UI
             this.currentContents = contents;
             // Note: If this throws an OutOfMemoryException, we leave the previous
             // contents in the unbound state.
+            // Note: We don't need to specify the owner window handle again when
+            // navigating.
             BindAndAllocateConfig(
+                    IntPtr.Zero,
                     out var ptrToFree,
                     out var ptrTaskDialogConfig);
             try
@@ -1113,6 +1114,7 @@ namespace KPreisser.UI
         }
 
         private unsafe void BindAndAllocateConfig(
+                IntPtr hwndOwner,
                 out IntPtr ptrToFree,
                 out IntPtr ptrTaskDialogConfig)
         {
@@ -1200,7 +1202,7 @@ namespace KPreisser.UI
                         taskDialogConfig = new TaskDialogConfig()
                         {
                             cbSize = sizeof(TaskDialogConfig),
-                            hwndParent = this.currentOwnerHwnd.Value,
+                            hwndParent = hwndOwner,
                             dwFlags = flags,
                             dwCommonButtons = commonButtonFlags,
                             hMainIcon = contents.BoundMainIconIsFromHandle ?
