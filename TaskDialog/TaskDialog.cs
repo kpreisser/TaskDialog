@@ -108,8 +108,8 @@ namespace KPreisser.UI
         /// </remarks>
         public event EventHandler Navigated;
 
-        //// TODO: Maybe remove these events since they are also available in the TaskDialogContents,
-        //// and are specific to the contents (not to the dialog).
+        //// TODO: Maybe remove these events since they are also available in the
+        //// TaskDialogContents, and are specific to the contents (not to the dialog).
 
         ///// <summary>
         ///// Occurs when the user presses F1 while the dialog has focus, or when the
@@ -130,12 +130,14 @@ namespace KPreisser.UI
 
         static TaskDialog()
         {
-            // Create a delegate for the callback, and get a function pointer for it. Because
-            // this will allocate some memory required to store the native code for the function
-            // pointer, we only do this once by using a static function, and identify the actual
-            // TaskDialog instance by using a GCHandle in the reference data field.
+            // Create a delegate for the callback, and get a function pointer for it.
+            // Because this will allocate some memory required to store the native
+            // code for the function pointer, we only do this once by using a static
+            // function, and identify the actual TaskDialog instance by using a
+            // GCHandle in the reference data field.
             callbackProcDelegate = HandleTaskDialogCallback;
-            callbackProcDelegatePtr = Marshal.GetFunctionPointerForDelegate(callbackProcDelegate);
+            callbackProcDelegatePtr = Marshal.GetFunctionPointerForDelegate(
+                    callbackProcDelegate);
         }
 
 
@@ -145,18 +147,17 @@ namespace KPreisser.UI
         public TaskDialog()
             : base()
         {
+            // TaskDialog is only supported on Windows.
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                throw new PlatformNotSupportedException();
         }
 
         /// <summary>
         /// 
         /// </summary>
         public TaskDialog(TaskDialogContents contents)
-            : base()
+            : this()
         {
-            // TaskDialog is only supported on Windows.
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                throw new PlatformNotSupportedException();
-
             this.currentContents = contents ??
                     throw new ArgumentNullException(nameof(contents));
         }
