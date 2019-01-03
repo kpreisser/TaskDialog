@@ -159,6 +159,26 @@ namespace KPreisser.UI
         /// 
         /// </summary>
         [Category("Controls")]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+        public TaskDialogCheckBox CheckBox
+        {
+            get => this.checkBox;
+
+            set
+            {
+                // We must deny this if we are bound because we need to be able to
+                // access the control from the task dialog's callback.
+                this.DenyIfBound();
+
+                this.checkBox = value;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        [Category("Controls")]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
         public TaskDialogExpander Expander
         {
             get => this.expander;
@@ -177,6 +197,7 @@ namespace KPreisser.UI
         /// 
         /// </summary>
         [Category("Controls")]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
         public TaskDialogProgressBar ProgressBar
         {
             get => this.progressBar;
@@ -188,24 +209,6 @@ namespace KPreisser.UI
                 this.DenyIfBound();
 
                 this.progressBar = value;
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        [Category("Controls")]
-        public TaskDialogCheckBox CheckBox
-        {
-            get => this.checkBox;
-
-            set
-            {
-                // We must deny this if we are bound because we need to be able to
-                // access the control from the task dialog's callback.
-                this.DenyIfBound();
-
-                this.checkBox = value;
             }
         }
 
@@ -315,6 +318,7 @@ namespace KPreisser.UI
         /// <remarks>
         /// This icon can be changed while the dialog is shown.
         /// </remarks>
+        [Browsable(false)]
         public IntPtr IconHandle
         {
             get => this.iconHandle;
@@ -365,6 +369,7 @@ namespace KPreisser.UI
         /// <remarks>
         /// This icon can be changed while the dialog is shown.
         /// </remarks>
+        [Browsable(false)]
         public IntPtr FooterIconHandle
         {
             get => this.footerIconHandle;

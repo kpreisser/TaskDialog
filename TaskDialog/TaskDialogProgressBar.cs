@@ -1,15 +1,17 @@
 ﻿using System;
+using System.ComponentModel;
 
 namespace KPreisser.UI
 {
     /// <summary>
     /// 
     /// </summary>
+    [TypeConverter(typeof(ExpandableObjectConverter))]
     public sealed class TaskDialogProgressBar : TaskDialogControl
     {
         private TaskDialogProgressBarState state;
 
-        private (int min, int max) range = (0, 100);
+        private TaskDialogProgressBarRange range = (0, 100);
 
         private int position;
 
@@ -114,7 +116,8 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
-        public (int min, int max) Range
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+        public TaskDialogProgressBarRange Range
         {
             get => this.range;
 
@@ -122,11 +125,11 @@ namespace KPreisser.UI
             {
                 this.DenyIfBoundAndNotCreatable();
 
-                if (value.min < 0 || value.min > ushort.MaxValue ||
-                    value.max < 0 || value.max > ushort.MaxValue)
+                if (value.Minimum < 0 || value.Minimum > ushort.MaxValue ||
+                    value.Maximum < 0 || value.Maximum > ushort.MaxValue)
                     throw new ArgumentOutOfRangeException(nameof(value));
 
-                if (value.min > value.max)
+                if (value.Minimum > value.Maximum)
                     throw new ArgumentException();
 
                 var previousRange = this.range;
@@ -137,8 +140,8 @@ namespace KPreisser.UI
                     if (this.boundTaskDialogContents != null && !ProgressBarStateIsMarquee(this.state))
                     {
                         this.boundTaskDialogContents.BoundTaskDialog.SetProgressBarRange(
-                                this.range.min,
-                                this.range.max);
+                                this.range.Minimum,
+                                this.range.Maximum);
                     }
                 }
                 catch

@@ -1,10 +1,12 @@
 ﻿using System;
+using System.ComponentModel;
 
 namespace KPreisser.UI
 {
     /// <summary>
     /// 
     /// </summary>
+    [TypeConverter(typeof(ExpandableObjectConverter))]
     public class TaskDialogControl
     {
         private protected TaskDialogContents boundTaskDialogContents;
@@ -20,6 +22,7 @@ namespace KPreisser.UI
         /// <summary>
         /// Gets or sets the object that contains data about the control.
         /// </summary>
+        [TypeConverter(typeof(StringConverter))]
         public object Tag
         {
             get;

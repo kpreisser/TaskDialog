@@ -1,10 +1,12 @@
 ﻿using System;
+using System.ComponentModel;
 
 namespace KPreisser.UI
 {
     /// <summary>
     /// 
     /// </summary>
+    [TypeConverter(typeof(ExpandableObjectConverter))]
     public sealed class TaskDialogCheckBox : TaskDialogControl
     {
         private string text;
