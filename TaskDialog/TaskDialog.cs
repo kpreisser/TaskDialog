@@ -1277,14 +1277,17 @@ namespace KPreisser.UI
 
                             fixed (char* strPtr = str)
                             {
-                                // Copy the string and a NULL character.
+                                // Copy the string. The C# language specification guarantees
+                                // that a char* value produced by using the 'fixed'
+                                // statement on a string always points to a null-terminated
+                                // string, so we don't need to copy a NUL character
+                                // separately.
                                 long bytesToCopy = SizeOfString(str);
                                 Buffer.MemoryCopy(
                                         strPtr,
                                         currentPtr,
                                         bytesToCopy,
-                                        bytesToCopy - sizeof(char));
-                                ((char*)currentPtr)[str.Length] = '\0';
+                                        bytesToCopy);
 
                                 var ptrToReturn = currentPtr;
                                 currentPtr += bytesToCopy;
