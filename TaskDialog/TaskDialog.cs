@@ -77,8 +77,9 @@ namespace KPreisser.UI
         /// See the comment in
         /// <see cref="HandleTaskDialogCallback(IntPtr, TaskDialogNotification, IntPtr, IntPtr, IntPtr)"/>
         /// for more information.
-        /// Each entry in the list represents a ButtonClicked handler on the stack because
-        /// there can be multiple ButtonClicked handlers on the stack.
+        /// A stack/list is needed as there can be multiple ButtonClicked handlers on
+        /// the call stack, for example if a ButtonClicked handler runs the message
+        /// loop so that new click events can be processed.
         /// </remarks>
         private readonly List<bool> clickEventNavigatedStack = new List<bool>();
 
