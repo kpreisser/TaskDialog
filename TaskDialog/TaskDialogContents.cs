@@ -500,18 +500,24 @@ namespace KPreisser.UI
             set => SetFlag(TaskDialogFlags.CanBeMinimized, value);
         }
 
-        //// Note: This property is currently commented-out because it doesn't seem to have
-        //// any effect.
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        //[DefaultValue(false)]
-        //public bool DoNotSetForeground
-        //{
-        //    get => GetFlag(TaskDialogFlags.NoSetForeground);
-        //    set => SetFlag(TaskDialogFlags.NoSetForeground, value);
-        //}
+        /// <summary>
+        /// Gets or sets a value that indicates if the task dialog should not set
+        /// itself as foreground window when showing it.
+        /// </summary>
+        /// <remarks>
+        /// When setting this property to <c>true</c> and then showing the dialog, it
+        /// causes the dialog to net set itself as foreground window if the current
+        /// foreground window does not belong to the application.
+        /// 
+        /// Note: This property does not have an effect when navigating the task dialog.
+        /// Note: This property only has an effect on Windows 8 and higher.
+        /// </remarks>
+        [DefaultValue(false)]
+        public bool DoNotSetForeground
+        {
+            get => GetFlag(TaskDialogFlags.NoSetForeground);
+            set => SetFlag(TaskDialogFlags.NoSetForeground, value);
+        }
 
         /// <summary>
         /// 

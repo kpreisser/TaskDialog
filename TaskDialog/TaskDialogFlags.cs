@@ -39,8 +39,10 @@ namespace KPreisser.UI
 
         CanBeMinimized = 0x8000,
 
+        // "Don't call SetForegroundWindow() when activating the dialog"
         NoSetForeground = 0x00010000,
 
+        // "used by ShellMessageBox to emulate MessageBox sizing behavior"
         SizeToContent = 0x01000000
     }
 }
