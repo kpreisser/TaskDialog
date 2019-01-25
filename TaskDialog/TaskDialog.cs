@@ -1131,25 +1131,12 @@ namespace KPreisser.UI
             try
             {
                 // Note: If the task dialog cannot be recreated with the new contents,
-                // the dialog will close and TaskDialogIndirect() returns with an error
-                // code.
+                // the dialog will close and TaskDialogIndirect() returns with an
+                // error code.
                 SendTaskDialogMessage(
                         TaskDialogMessage.NavigatePage,
                         0,
                         ptrTaskDialogConfig);
-
-                // Notify the ButtonClick event handlers currently on the stack that
-                // the dialog was navigated.
-                for (int i = 0; i < this.clickEventNavigatedStack.Count; i++)
-                    this.clickEventNavigatedStack[i] = true;
-
-                // Also, disallow updates until we received the Navigated event
-                // because that messages would be lost.
-                // TODO: We might cache the change so that the Navigated event handler
-                // can then make the outstanding update calls.
-                // However, this is probably not so simple e.g. for the "Checked"
-                // setter because the CheckedChanged event would be delayed.
-                this.waitingForNavigatedEvent = true;
             }
             finally
             {
@@ -1157,6 +1144,19 @@ namespace KPreisser.UI
                 // until the message has been processed.
                 FreeConfig(ptrToFree);
             }
+
+            // Notify the ButtonClick event handlers currently on the stack that
+            // the dialog was navigated.
+            for (int i = 0; i < this.clickEventNavigatedStack.Count; i++)
+                this.clickEventNavigatedStack[i] = true;
+
+            // Also, disallow updates until we received the Navigated event
+            // because that messages would be lost.
+            // TODO: We might cache the change so that the Navigated event handler
+            // can then make the outstanding update calls.
+            // However, this is probably not so simple e.g. for the "Checked"
+            // setter because the CheckedChanged event would be delayed.
+            this.waitingForNavigatedEvent = true;
         }
 
         private unsafe void BindAndAllocateConfig(
