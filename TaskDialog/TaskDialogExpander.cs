@@ -23,7 +23,7 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
-        public event EventHandler<TaskDialogBooleanStatusEventArgs> ExpandoButtonClicked;
+        public event EventHandler ExpandoButtonClicked;
 
 
         /// <summary>
@@ -165,13 +165,11 @@ namespace KPreisser.UI
         internal void HandleExpandoButtonClicked(bool expanded)
         {
             this.expanded = expanded;
-            this.OnExpandoButtonClicked(
-                    new TaskDialogBooleanStatusEventArgs(expanded));
+            this.OnExpandoButtonClicked(EventArgs.Empty);
         }
 
 
-        private void OnExpandoButtonClicked(
-                TaskDialogBooleanStatusEventArgs e)
+        private void OnExpandoButtonClicked(EventArgs e)
         {
             this.ExpandoButtonClicked?.Invoke(this, e);
         }
