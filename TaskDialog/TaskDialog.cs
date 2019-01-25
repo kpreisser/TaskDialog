@@ -32,6 +32,8 @@ namespace KPreisser.UI
 
         private const int HResultFalse = 0x1; // S_FALSE
 
+        private const int BcmSetNote = 0x1600 + 0x9;
+
 
         /// <summary>
         /// The delegate for the dialog callback. We must ensure to prevent this delegate
@@ -393,7 +395,7 @@ namespace KPreisser.UI
         /// <returns></returns>
         public static TaskDialogResult Show(
                 IntPtr hwndOwner,
-                string text, 
+                string text,
                 string instruction = null,
                 string title = null,
                 TaskDialogButtons buttons = TaskDialogButtons.OK,
@@ -966,18 +968,22 @@ namespace KPreisser.UI
 
             // Note: Instead of null, we must specify the empty string; otherwise
             // the update would be ignored.
-            var strPtr = Marshal.StringToHGlobalUni(text ?? string.Empty);
+            var textPtr = Marshal.StringToHGlobalUni(text ?? string.Empty);
             try
             {
-                // Note: SetElementText will resize the dialog while UpdateElementText will
-                // not (which would lead to clipped controls), so we use the former.
-                SendTaskDialogMessage(TaskDialogMessage.SetElementText, (int)element, strPtr);
+                // Note: SetElementText will resize the dialog while UpdateElementText
+                // will not (which would lead to clipped controls), so we use the
+                // former.
+                SendTaskDialogMessage(
+                        TaskDialogMessage.SetElementText,
+                        (int)element,
+                        textPtr);
             }
             finally
             {
-                // We can now free the memory because SendMessage does not return until the
-                // message has been processed.
-                Marshal.FreeHGlobal(strPtr);
+                // We can now free the memory because SendMessage does not return
+                // until the message has been processed.
+                Marshal.FreeHGlobal(textPtr);
             }
         }
 
@@ -990,10 +996,48 @@ namespace KPreisser.UI
 
         internal void UpdateTitle(string title)
         {
+            UpdateControlText(this.hwndDialog, title, updateLayout: false);
+        }
+
+        internal void UpdateControlText(
+                IntPtr hWnd,
+                string text,
+                bool updateLayout = true)
+        {
             DenyIfDialogNotShownOrWaitingForNavigatedEvent();
 
-            if (!NativeMethods.SetWindowText(this.hwndDialog, title))
+            if (!NativeMethods.SetWindowText(hWnd, text))
                 Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
+
+            // Because the new text might be longer (or shorter) than the
+            // previous one, update the layout.
+            if (updateLayout)
+                UpdateLayout();
+        }
+
+        internal void UpdateCommandLinkDescription(IntPtr hWnd, string text)
+        {
+            DenyIfDialogNotShownOrWaitingForNavigatedEvent();
+
+            var textPtr = Marshal.StringToHGlobalUni(text);
+            try
+            {
+                // TODO: Maybe check the return value (BOOL).
+                NativeMethods.SendMessage(
+                        hWnd,
+                        BcmSetNote,
+                        IntPtr.Zero,
+                        textPtr);
+            }
+            finally
+            {
+                if (textPtr != IntPtr.Zero)
+                    Marshal.FreeHGlobal(textPtr);
+            }
+
+            // Because the new text might be longer (or shorter) than the
+            // previous one, update the layout.
+            UpdateLayout();
         }
 
 
@@ -1358,6 +1402,18 @@ namespace KPreisser.UI
                     (int)message,
                     (IntPtr)wParam,
                     lParam);
+        }
+
+        private void UpdateLayout()
+        {
+            // Force the task dialog to update its layout by doing an arbitrary
+            // update of one of its text elements (as the TDM_SET_ELEMENT_TEXT
+            // causes the layout to be updated).
+            // We use the MainInstruction because it cannot contain hyperlinks
+            // (and therefore there is no risk that one of the links loses focus).
+            UpdateTextElement(
+                    TaskDialogTextElement.MainInstruction,
+                    this.boundContents.Instruction);
         }
     }
 }

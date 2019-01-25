@@ -12,6 +12,8 @@ namespace KPreisser.UI
 
         private int radioButtonID;
 
+        private IntPtr handle;
+
         private bool enabled = true;
 
         private bool @checked;
@@ -71,7 +73,17 @@ namespace KPreisser.UI
 
             set
             {
-                this.DenyIfBound();
+                // We can update the text if we are bound and have a handle.
+                // However, the dialog will not update the layout.
+                if (this.boundTaskDialogContents != null)
+                {
+                    if (this.handle == IntPtr.Zero)
+                        this.DenyIfBound();
+
+                    this.boundTaskDialogContents.BoundTaskDialog.UpdateControlText(
+                            this.handle,
+                            value);
+                }
 
                 this.text = value;
             }
@@ -125,6 +137,12 @@ namespace KPreisser.UI
         {
             get => this.radioButtonID;
             set => this.radioButtonID = value;
+        }
+
+        internal IntPtr Handle
+        {
+            get => this.handle;
+            set => this.handle = value;
         }
 
         internal TaskDialogRadioButtonCollection Collection

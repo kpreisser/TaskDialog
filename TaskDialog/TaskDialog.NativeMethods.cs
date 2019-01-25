@@ -5,10 +5,9 @@ namespace KPreisser.UI
 {
     public partial class TaskDialog
     {
-        private static class NativeMethods
+        internal static class NativeMethods
         {
             [DllImport("comctl32.dll",
-                    CharSet = CharSet.Unicode,
                     EntryPoint = "TaskDialogIndirect",
                     ExactSpelling = true,
                     SetLastError = true)]
@@ -19,7 +18,6 @@ namespace KPreisser.UI
                     [MarshalAs(UnmanagedType.Bool), Out] out bool pfVerificationFlagChecked);
 
             [DllImport("user32.dll",
-                    CharSet = CharSet.Unicode,
                     EntryPoint = "SendMessageW",
                     ExactSpelling = true, 
                     SetLastError = true)]
@@ -37,6 +35,15 @@ namespace KPreisser.UI
             public static extern bool SetWindowText(
                     IntPtr hWnd,
                     string lpString);
+
+            [DllImport("user32",
+                    EntryPoint = "GetClassNameW",
+                    ExactSpelling = true,
+                    SetLastError = true)]
+            public static extern int GetClassName(
+                    IntPtr hWnd,
+                    IntPtr lpClassName,
+                    int nMaxCount);
         }
     }
 }
