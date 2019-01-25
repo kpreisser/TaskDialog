@@ -1,6 +1,6 @@
 ﻿# Task Dialog for .NET (Windows)
 
-**Note:** This branch implements the proposed API for https://github.com/dotnet/winforms/issues/146.
+**Note:** This repository implements the proposed API for https://github.com/dotnet/winforms/issues/146.
 
 The Task Dialog is the successor of a MessageBox and available starting with Windows Vista. For more information,
 see [About Task Dialogs](https://docs.microsoft.com/en-us/windows/desktop/Controls/task-dialogs-overview).
@@ -8,9 +8,7 @@ see [About Task Dialogs](https://docs.microsoft.com/en-us/windows/desktop/Contro
 This project aims to provide a complete .NET implementation (C#) of the Task Dialog with all the features that
 are also available in the native APIs, with all the marshalling and memory management done under the hood.
 
-The project targets .NET Framework 4.7.2 and .NET Standard 2.0.<br>
-(For .NET Standard, there are not yet overloads of `Show()` that
-use a `Form` (WinForms) or `Window` (WPF) instance as that will have to wait until .NET Core 3.0.)
+The project targets .NET Framework 4.7.2 and .NET Standard 2.0.
 
 **Task Dialog Features:**
 * Supports all of the native Task Dialog elements (like custom buttons/command links, progress bar, radio buttons, checkbox, expanded area, footer)
@@ -91,8 +89,10 @@ Show a dialog with command links and a marquee progress bar:
     TaskDialogCommonButton buttonCancel = contents.CommonButtons.Add(TaskDialogResult.Cancel);
 
     // Show the dialog and check which button the user has clicked.
-    TaskDialog dialog = new TaskDialog(contents);
-    TaskDialogButton result = dialog.Show();
+    using (TaskDialog dialog = new TaskDialog(contents))
+    {
+        TaskDialogButton result = dialog.Show();
+    }
 ```
 
 Update the dialog's content when clicking one of its buttons:
@@ -122,8 +122,10 @@ Update the dialog's content when clicking one of its buttons:
         contents.Text = $"Current number: {number}";
     };
 
-    TaskDialog dialog = new TaskDialog(contents);
-    dialog.Show();
+    using (TaskDialog dialog = new TaskDialog(contents))
+    {
+        dialog.Show();
+    }
 ```
 
 For a more detailed example of a TaskDialog that uses progress bars, a timer,

@@ -803,7 +803,7 @@ namespace KPreisser.UI
         {
             //// Try to find and assign the control handlers for custom and radio
             //// buttons after the dialog was shown or navigated.
-            //// TODO: This is not yet implemented.
+            //// TODO: This is not yet enabled.
             //AssignControlHandles();
 
             foreach (var button in this.CommonButtons)
