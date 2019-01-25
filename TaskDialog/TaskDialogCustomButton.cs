@@ -51,7 +51,6 @@ namespace KPreisser.UI
             set
             {
                 // We can update the text if we are bound and have a handle.
-                // However, the dialog will not update the layout.
                 if (this.boundTaskDialogContents != null)
                 {
                     if (this.handle == IntPtr.Zero)
@@ -80,7 +79,6 @@ namespace KPreisser.UI
             set
             {
                 // We can update the text if we are bound and have a handle.
-                // However, the dialog will not update the layout.
                 if (this.boundTaskDialogContents != null)
                 {
                     if (this.handle == IntPtr.Zero)
