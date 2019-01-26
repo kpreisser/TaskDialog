@@ -47,11 +47,38 @@ namespace KPreisser.UI
 
 
         /// <summary>
+        /// Gets additional flags to be specified before the task dialog is
+        /// displayed or navigated.
+        /// </summary>
+        /// <returns></returns>
+        internal TaskDialogFlags GetFlags()
+        {
+            if (!this.IsCreatable)
+                return default;
+
+            return GetFlagsCore();
+        }
+
+        /// <summary>
+        /// Applies initialization after the task dialog is displayed or navigated.
+        /// </summary>
+        internal void ApplyInitialization()
+        {
+            // Only apply the initialization if the control is actually creatable.
+            if (this.IsCreatable)
+                this.ApplyInitializationCore();
+        }
+
+
+        /// <summary>
         /// When overridden in a subclass, gets additional flags to be specified before
         /// the task dialog is displayed or navigated.
         /// </summary>
+        /// <remarks>
+        /// This method will only be called if <see cref="IsCreatable"/> returns <c>true</c>.
+        /// </remarks>
         /// <returns></returns>
-        internal virtual TaskDialogFlags GetFlags()
+        private protected virtual TaskDialogFlags GetFlagsCore()
         {
             return default;
         }
@@ -60,10 +87,12 @@ namespace KPreisser.UI
         /// When overridden in a subclass, applies initialization after the task dialog
         /// is displayed or navigated.
         /// </summary>
-        internal virtual void ApplyInitialization()
+        /// <remarks>
+        /// This method will only be called if <see cref="IsCreatable"/> returns <c>true</c>.
+        /// </remarks>
+        private protected virtual void ApplyInitializationCore()
         {
         }
-
 
         private protected void DenyIfBound()
         {

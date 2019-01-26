@@ -101,9 +101,9 @@ namespace KPreisser.UI
 
                     // If we are part of a collection, set the checked value of
                     // all other buttons to False.
-                    // Note that this does not handle buttons that are added later to the
-                    // collection.
-                    if (value && this.collection != null)
+                    // Note that this does not handle buttons that are added later to
+                    // the collection.
+                    if (this.collection != null && value)
                     {
                         foreach (var radioButton in this.collection)
                             radioButton.@checked = radioButton == this;
@@ -170,7 +170,7 @@ namespace KPreisser.UI
             }           
         }
 
-        internal override void ApplyInitialization()
+        private protected override void ApplyInitializationCore()
         {
             // Re-set the properties so they will make the necessary calls.
             if (!this.enabled)

@@ -107,6 +107,9 @@ namespace KPreisser.UI
                 }
                 catch
                 {
+                    // Revert to the previous state. This could happen if the dialog's
+                    // DenyIfDialogNotShownOrWaitingForNavigatedEvent() (called by
+                    // one of the Set...() methods) throws.
                     this.state = previousState;
                     throw;
                 }
@@ -249,26 +252,20 @@ namespace KPreisser.UI
         }
 
 
-        internal override TaskDialogFlags GetFlags()
+        private protected override TaskDialogFlags GetFlagsCore()
         {
-            var flags = base.GetFlags();
+            var flags = base.GetFlagsCore();
 
-            if (this.IsCreatable)
-            {
-                if (ProgressBarStateIsMarquee(this.state))
-                    flags |= TaskDialogFlags.ShowMarqueeProgressBar;
-                else
-                    flags |= TaskDialogFlags.ShowProgressBar;
-            }
+            if (ProgressBarStateIsMarquee(this.state))
+                flags |= TaskDialogFlags.ShowMarqueeProgressBar;
+            else
+                flags |= TaskDialogFlags.ShowProgressBar;
 
             return flags;
         }
 
-        internal override void ApplyInitialization()
+        private protected override void ApplyInitializationCore()
         {
-            if (!this.IsCreatable)
-                return;
-
             var taskDialog = this.boundTaskDialogContents.BoundTaskDialog;
 
             if (this.state == TaskDialogProgressBarState.Marquee)

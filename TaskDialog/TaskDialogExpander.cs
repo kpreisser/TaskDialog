@@ -56,12 +56,12 @@ namespace KPreisser.UI
             get => this.text;
 
             set {
-                this.text = value;
-
                 // Update the text if we are bound.
                 this.boundTaskDialogContents?.BoundTaskDialog.UpdateTextElement(
                         TaskDialogTextElement.ExpandedInformation,
                         this.text);
+
+                this.text = value;
             }
         }
 
@@ -147,25 +147,23 @@ namespace KPreisser.UI
         }
 
 
-        internal override TaskDialogFlags GetFlags()
-        {
-            var flags = base.GetFlags();
-
-            if (this.IsCreatable)
-            {
-                if (this.expanded)
-                    flags |= TaskDialogFlags.ExpandedByDefault;
-                if (this.expandFooterArea)
-                    flags |= TaskDialogFlags.ExpandFooterArea;
-            }
-
-            return flags;
-        }
-
         internal void HandleExpandoButtonClicked(bool expanded)
         {
             this.expanded = expanded;
             this.OnExpandoButtonClicked(EventArgs.Empty);
+        }
+
+
+        private protected override TaskDialogFlags GetFlagsCore()
+        {
+            var flags = base.GetFlagsCore();
+
+            if (this.expanded)
+                flags |= TaskDialogFlags.ExpandedByDefault;
+            if (this.expandFooterArea)
+                flags |= TaskDialogFlags.ExpandFooterArea;
+
+            return flags;
         }
 
 

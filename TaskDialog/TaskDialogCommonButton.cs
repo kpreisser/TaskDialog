@@ -111,29 +111,9 @@ namespace KPreisser.UI
         }
 
 
-        internal override TaskDialogFlags GetFlags()
-        {
-            if (this.visible)
-                return base.GetFlags();
-            else
-                return default;
-        }
-
-        internal override void ApplyInitialization()
-        {
-            if (this.visible)
-                base.ApplyInitialization();
-        }
-
-
         private protected override int GetButtonID()
         {
             return (int)this.result;
-        }
-
-        private protected override bool CanUpdate()
-        {
-            return base.CanUpdate() && this.visible;
         }
     }
 }

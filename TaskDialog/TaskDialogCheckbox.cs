@@ -109,19 +109,6 @@ namespace KPreisser.UI
         }
 
 
-        internal override TaskDialogFlags GetFlags()
-        {
-            var flags = base.GetFlags();
-
-            if (this.IsCreatable)
-            {
-                if (this.@checked)
-                    flags |= TaskDialogFlags.VerificationFlagChecked;
-            }
-
-            return flags;
-        }
-
         internal void HandleCheckBoxClicked(bool @checked)
         {
             // Only raise the event if the state actually changed.
@@ -130,6 +117,17 @@ namespace KPreisser.UI
                 this.@checked = @checked;
                 this.OnCheckedChanged(EventArgs.Empty);
             }
+        }
+
+
+        private protected override TaskDialogFlags GetFlagsCore()
+        {
+            var flags = base.GetFlagsCore();
+
+            if (this.@checked)
+                flags |= TaskDialogFlags.VerificationFlagChecked;
+
+            return flags;
         }
 
 

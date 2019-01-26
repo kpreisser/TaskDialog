@@ -47,7 +47,7 @@ namespace KPreisser.UI
 
             set
             {
-                this.enabled = value;
+                DenyIfBoundAndNotCreatable();
 
                 // Check if we can update the button.
                 if (CanUpdate())
@@ -56,6 +56,8 @@ namespace KPreisser.UI
                             this.GetButtonID(),
                             value);
                 }
+
+                this.enabled = value;
             }
         }
 
@@ -68,7 +70,7 @@ namespace KPreisser.UI
 
             set
             {
-                this.elevationRequired = value;
+                DenyIfBoundAndNotCreatable();
 
                 if (CanUpdate())
                 {
@@ -76,6 +78,8 @@ namespace KPreisser.UI
                             this.GetButtonID(),
                             value);
                 }
+
+                this.elevationRequired = value;
             }
         }
 
@@ -91,12 +95,12 @@ namespace KPreisser.UI
             {
                 this.defaultButton = value;
 
-                if (this.collection != null)
+                // If we are part of a collection, set the defaultButton value of
+                // all other buttons to false.
+                // Note that this does not handle buttons that are added later to
+                // the collection.
+                if (this.collection != null && value)
                 {
-                    // When we are part of a collection, set the defaultButton value of
-                    // all other buttons to False.
-                    // Note that this does not handle buttons that are added later to
-                    // the collection.
                     foreach (var button in this.collection)
                         button.defaultButton = button == this;
                 }
@@ -129,7 +133,8 @@ namespace KPreisser.UI
             return !e.CancelClose;
         }
 
-        internal override void ApplyInitialization()
+
+        private protected override void ApplyInitializationCore()
         {
             // Re-set the properties so they will make the necessary calls.
             if (!this.enabled)
@@ -138,7 +143,6 @@ namespace KPreisser.UI
                 this.ElevationRequired = this.elevationRequired;
         }
 
-
         private protected void OnClick(TaskDialogButtonClickedEventArgs e)
         {
             this.Click?.Invoke(this, e);
@@ -146,14 +150,15 @@ namespace KPreisser.UI
 
         private protected abstract int GetButtonID();
 
-        private protected virtual bool CanUpdate()
+
+        private bool CanUpdate()
         {
             // Only update the button when bound to a task dialog and we are not
             // waiting for the Navigated event. In the latter case we don't throw
             // an exception however, because ApplyInitialization will be called in
             // the Navigated handler that does the necessary updates.
             return this.boundTaskDialogContents?.BoundTaskDialog
-                    .WaitingForNavigatedEvent == false;
+                        .WaitingForNavigatedEvent == false;
         }
     }
 }

@@ -633,14 +633,14 @@ namespace KPreisser.UI
             // showing/navigating the dialog.
             foreach (var button in this.customButtons)
             {
-                if (IsNativeStringNullOrEmpty(button.Text))
+                if (!button.IsCreatable)
                     throw new InvalidOperationException("The text of a custom button must not be null or empty.");
             }
 
             bool foundCheckedRadioButton = false;
             foreach (var button in this.radioButtons)
             {
-                if (IsNativeStringNullOrEmpty(button.Text))
+                if (!button.IsCreatable)
                     throw new InvalidOperationException("The text of a radio button must not be null or empty.");
 
                 if (button.Checked)
