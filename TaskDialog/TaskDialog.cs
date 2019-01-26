@@ -841,8 +841,8 @@ namespace KPreisser.UI
         /// </summary>
         /// <param name="enableMarquee"></param>
         /// <param name="animationSpeed">
-        /// The time in milliseconds between marquee animation updates. If <c>0</c>, the animation
-        /// will be updated every 30 milliseconds.
+        /// The time in milliseconds between marquee animation updates. If <c>0</c>, the
+        /// animation will be updated every 30 milliseconds.
         /// </param>
         internal void SetProgressBarMarquee(bool enableMarquee, int animationSpeed = 0)
         {
@@ -990,10 +990,10 @@ namespace KPreisser.UI
                 IntPtr icon)
         {
             // Note: Updating the icon doesn't cause the task dialog to update
-            // its layout. For example, if you initially didn't specify an icon
+            // its size. For example, if you initially didn't specify an icon
             // but later want to set one, the dialog contents might get clipped.
-            // To fix this, we might want to call UpdateLayout() that forces the
-            // task dialog to update its layout.
+            // To fix this, we might want to call UpdateSize() that forces the
+            // task dialog to update its size.
             SendTaskDialogMessage(TaskDialogMessage.UpdateIcon, (int)element, icon);
         }
 
@@ -1378,11 +1378,14 @@ namespace KPreisser.UI
                     lParam);
         }
 
-        private void UpdateLayout()
+        /// <summary>
+        /// Forces the task dialog to update its size according to its contents.
+        /// </summary>
+        private void UpdateSize()
         {
-            // Force the task dialog to update its layout by doing an arbitrary
+            // Force the task dialog to update its size by doing an arbitrary
             // update of one of its text elements (as the TDM_SET_ELEMENT_TEXT
-            // causes the layout to be updated).
+            // causes the size/layout to be updated).
             // We use the MainInstruction because it cannot contain hyperlinks
             // (and therefore there is no risk that one of the links loses focus).
             UpdateTextElement(
