@@ -227,6 +227,7 @@ namespace KPreisser.UI
                 // Note: We set the field values after calling the method to ensure
                 // it still has the previous value it the method throws.
                 this.boundTaskDialog?.UpdateTitle(value);
+
                 this.title = value;
             }
         }
@@ -246,6 +247,7 @@ namespace KPreisser.UI
                 this.boundTaskDialog?.UpdateTextElement(
                         TaskDialogTextElement.MainInstruction,
                         value);
+
                 this.instruction = value;
             }
         }
@@ -265,6 +267,7 @@ namespace KPreisser.UI
                 this.boundTaskDialog?.UpdateTextElement(
                         TaskDialogTextElement.Content,
                         value);
+
                 this.text = value;
             }
         }
@@ -284,6 +287,7 @@ namespace KPreisser.UI
                 this.boundTaskDialog?.UpdateTextElement(
                         TaskDialogTextElement.Footer,
                         value);
+
                 this.footerText = value;
             }
         }
@@ -309,6 +313,7 @@ namespace KPreisser.UI
                 this.boundTaskDialog?.UpdateIconElement(
                         TaskDialogIconElement.Main,
                         (IntPtr)value);
+
                 this.icon = value;
             }
         }
@@ -335,6 +340,7 @@ namespace KPreisser.UI
                 this.boundTaskDialog?.UpdateIconElement(
                         TaskDialogIconElement.Main,
                         value);
+
                 this.iconHandle = value;
             }
         }
@@ -360,6 +366,7 @@ namespace KPreisser.UI
                 this.boundTaskDialog?.UpdateIconElement(
                         TaskDialogIconElement.Footer,
                         (IntPtr)value);
+
                 this.footerIcon = value;
             }
         }
@@ -386,6 +393,7 @@ namespace KPreisser.UI
                 this.boundTaskDialog?.UpdateIconElement(
                         TaskDialogIconElement.Footer,
                         value);
+
                 this.footerIconHandle = value;
             }
         }
