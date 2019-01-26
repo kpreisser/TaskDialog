@@ -989,6 +989,11 @@ namespace KPreisser.UI
                 TaskDialogIconElement element,
                 IntPtr icon)
         {
+            // Note: Updating the icon doesn't cause the task dialog to update
+            // its layout. For example, if you initially didn't specify an icon
+            // but later want to set one, the dialog contents might get clipped.
+            // To fix this, we might want to call UpdateLayout() that forces the
+            // task dialog to update its layout.
             SendTaskDialogMessage(TaskDialogMessage.UpdateIcon, (int)element, icon);
         }
 
@@ -996,6 +1001,15 @@ namespace KPreisser.UI
         {
             DenyIfDialogNotShownOrWaitingForNavigatedEvent();
 
+            // Note: Because we use SetWindowText() directly (as there is no task
+            // dialog message for setting the title), there is a small discrepancy
+            // between specifying an empty title in the TASKDIALOGCONFIG structure
+            // and setting an empty title with this method: An empty string (or null)
+            // in the TASKDIALOGCONFIG struture causes the dialog title to be the
+            // executable name (e.g. "MyApplication.exe"), but using an empty string
+            // (or null) with this method causes the window title to be empty.
+            // We could replicate the Task Dialog behavior by also using the
+            // executable's name as title if the string is null or empty.
             if (!NativeMethods.SetWindowText(this.hwndDialog, title))
                 Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
         }
