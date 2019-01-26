@@ -355,6 +355,7 @@ namespace KPreisser.UI
         {
             return Show(GetWindowHandle(owner), text, instruction, title, buttons, icon);
         }
+#endif
 
         /// <summary>
         /// 
@@ -376,7 +377,6 @@ namespace KPreisser.UI
         {
             return Show(owner.Handle, text, instruction, title, buttons, icon);
         }
-#endif
 
         /// <summary>
         /// 
