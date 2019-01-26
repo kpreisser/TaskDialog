@@ -5,7 +5,7 @@ namespace KPreisser.UI
 {
     public partial class TaskDialog
     {
-        internal static class NativeMethods
+        private static class NativeMethods
         {
             [DllImport("comctl32.dll",
                     EntryPoint = "TaskDialogIndirect",
@@ -35,15 +35,6 @@ namespace KPreisser.UI
             public static extern bool SetWindowText(
                     IntPtr hWnd,
                     string lpString);
-
-            [DllImport("user32",
-                    EntryPoint = "GetClassNameW",
-                    ExactSpelling = true,
-                    SetLastError = true)]
-            public static extern int GetClassName(
-                    IntPtr hWnd,
-                    IntPtr lpClassName,
-                    int nMaxCount);
         }
     }
 }

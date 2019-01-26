@@ -215,6 +215,9 @@ namespace KPreisser.UI
         /// <summary>
         /// Gets or sets the title of the task dialog window.
         /// </summary>
+        /// <remarks>
+        /// This text can be changed while the dialog is shown.
+        /// </remarks>
         public string Title
         {
             get => this.title;
@@ -774,7 +777,6 @@ namespace KPreisser.UI
                 var customButton = customButtons[i];
                 customButton.BoundTaskDialogContents = null;
                 customButton.ButtonID = 0;
-                customButton.Handle = IntPtr.Zero;
             }
 
             for (int i = 0; i < radioButtons.Count; i++)
@@ -782,7 +784,6 @@ namespace KPreisser.UI
                 var radioButton = radioButtons[i];
                 radioButton.BoundTaskDialogContents = null;
                 radioButton.RadioButtonID = 0;
-                radioButton.Handle = IntPtr.Zero;
             }
 
             commonButtons.BoundTaskDialogContents = null;
@@ -801,11 +802,6 @@ namespace KPreisser.UI
 
         internal void ApplyInitialization()
         {
-            //// Try to find and assign the control handlers for custom and radio
-            //// buttons after the dialog was shown or navigated.
-            //// TODO: This is not yet enabled.
-            //AssignControlHandles();
-
             foreach (var button in this.CommonButtons)
                 button.ApplyInitialization();
 
@@ -866,56 +862,6 @@ namespace KPreisser.UI
             this.TimerTick?.Invoke(this, e);
         }
 
-
-        private unsafe void AssignControlHandles()
-        {
-            const string buttonClassName = "Button";
-
-            // Get all button handles by enumerating the child window handles and
-            // then checking if their class equals "Button".
-            var buttonHandles = new List<IntPtr>();
-
-            // Add one extra char for the \0 char and another one to check that the
-            // string is actually not longer than "Button".
-            int classNameBufferLength = buttonClassName.Length + 2;
-            char* classNameBuffer = stackalloc char[classNameBufferLength];
-            EnumerateWindowHelper.EnumerateChildWindows(
-                    this.boundTaskDialog.Handle,
-                    hWndChild =>
-                    {
-                        int result = TaskDialog.NativeMethods.GetClassName(
-                                hWndChild,
-                                (IntPtr)classNameBuffer,
-                                classNameBufferLength);
-                        // TODO: Use Span<char> to avoid string allocations
-                        if (result > 0 &&
-                                result == buttonClassName.Length &&
-                                new string(classNameBuffer, 0, result) == buttonClassName)
-                            buttonHandles.Add(hWndChild);
-
-                        return true;
-                    });
-
-            // Assign the button handles for custom and radio buttons.
-            if (buttonHandles.Count >=
-                    this.RadioButtons.Count + this.CustomButtons.Count)
-            {
-                bool hasCommandLinks =
-                        this.CommandLinkMode == TaskDialogCommandLinkMode.CommandLinks ||
-                        this.CommandLinkMode == TaskDialogCommandLinkMode.CommandLinksNoIcon;
-
-                var customButtons = this.CustomButtons;
-                var radioButtons = this.RadioButtons;
-
-                int customButtonOffset = hasCommandLinks ? 0 : radioButtons.Count;
-                int radioButtonOffset = hasCommandLinks ? customButtons.Count : 0;
-
-                for (int i = 0; i < customButtons.Count; i++)
-                    customButtons[i].Handle = buttonHandles[customButtonOffset + i];
-                for (int i = 0; i < radioButtons.Count; i++)
-                    radioButtons[i].Handle = buttonHandles[radioButtonOffset + i];
-            }
-        }
 
         private TaskDialogButtons GetCommonButtonFlags()
         {

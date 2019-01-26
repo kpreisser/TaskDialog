@@ -32,8 +32,6 @@ namespace KPreisser.UI
 
         private const int HResultFalse = 0x1; // S_FALSE
 
-        private const int BcmSetNote = 0x1600 + 0x9;
-
 
         /// <summary>
         /// The delegate for the dialog callback. We must ensure to prevent this delegate
@@ -996,48 +994,10 @@ namespace KPreisser.UI
 
         internal void UpdateTitle(string title)
         {
-            UpdateControlText(this.hwndDialog, title, updateLayout: false);
-        }
-
-        internal void UpdateControlText(
-                IntPtr hWnd,
-                string text,
-                bool updateLayout = true)
-        {
             DenyIfDialogNotShownOrWaitingForNavigatedEvent();
 
-            if (!NativeMethods.SetWindowText(hWnd, text))
+            if (!NativeMethods.SetWindowText(this.hwndDialog, title))
                 Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
-
-            // Because the new text might be longer (or shorter) than the
-            // previous one, update the layout.
-            if (updateLayout)
-                UpdateLayout();
-        }
-
-        internal void UpdateCommandLinkDescription(IntPtr hWnd, string text)
-        {
-            DenyIfDialogNotShownOrWaitingForNavigatedEvent();
-
-            var textPtr = Marshal.StringToHGlobalUni(text);
-            try
-            {
-                // TODO: Maybe check the return value (BOOL).
-                NativeMethods.SendMessage(
-                        hWnd,
-                        BcmSetNote,
-                        IntPtr.Zero,
-                        textPtr);
-            }
-            finally
-            {
-                if (textPtr != IntPtr.Zero)
-                    Marshal.FreeHGlobal(textPtr);
-            }
-
-            // Because the new text might be longer (or shorter) than the
-            // previous one, update the layout.
-            UpdateLayout();
         }
 
 

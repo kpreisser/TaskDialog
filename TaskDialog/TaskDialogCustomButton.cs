@@ -1,7 +1,4 @@
-﻿using System;
-using System.Runtime.InteropServices;
-
-namespace KPreisser.UI
+﻿namespace KPreisser.UI
 {
     /// <summary>
     /// 
@@ -13,8 +10,6 @@ namespace KPreisser.UI
         private string descriptionText;
 
         private int buttonID;
-
-        private IntPtr handle;
 
 
         /// <summary>
@@ -39,27 +34,13 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
-        /// <remarks>
-        /// When updating the text while the task dialog is shown, you should not
-        /// change the mnemonic in the text because the change will not be
-        /// reflected in the dialog.
-        /// </remarks>
         public string Text
         {
             get => this.text;
             
             set
             {
-                // We can update the text if we are bound and have a handle.
-                if (this.boundTaskDialogContents != null)
-                {
-                    if (this.handle == IntPtr.Zero)
-                        this.DenyIfBound();
-
-                    this.boundTaskDialogContents.BoundTaskDialog.UpdateControlText(
-                            this.handle,
-                            value);
-                }
+                this.DenyIfBound();
 
                 this.text = value;
             }
@@ -78,16 +59,7 @@ namespace KPreisser.UI
 
             set
             {
-                // We can update the text if we are bound and have a handle.
-                if (this.boundTaskDialogContents != null)
-                {
-                    if (this.handle == IntPtr.Zero)
-                        this.DenyIfBound();
-
-                    this.boundTaskDialogContents.BoundTaskDialog.UpdateCommandLinkDescription(
-                            this.handle,
-                            value);
-                }
+                this.DenyIfBound();
 
                 this.descriptionText = value;
             }
@@ -98,12 +70,6 @@ namespace KPreisser.UI
         {
             get => this.buttonID;
             set => this.buttonID = value;
-        }
-
-        internal IntPtr Handle
-        {
-            get => this.handle;
-            set => this.handle = value;
         }
 
         internal override bool IsCreatable
@@ -126,10 +92,11 @@ namespace KPreisser.UI
         {
             var contents = this.boundTaskDialogContents;
 
-            // Remove LFs from the text. Otherwise, the behavior would not
-            // be consistent because when calling the dialog, the first LF separates
-            // the normal control text from the description button text, but this is
-            // not the case when calling SetWindowText().
+            // Remove LFs from the text. Otherwise, the dialog would display the
+            // part of the text after the LF in the command link note, but for
+            // this we have the "DescriptionText" property, so we should ensure that
+            // there is not an discrepancy here and that the contents of the "Text"
+            // property are not displayed in the command link note.
             // Therefore, we replace a combined CR+LF with CR, and then also single
             // LFs with CR, because CR is treated as a line break.
             string text = this.text?.Replace("\r\n", "\r").Replace("\n", "\r");
