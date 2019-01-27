@@ -52,28 +52,31 @@ namespace KPreisser.UI
         internal static IEnumerable<TaskDialogResult> GetResultsForButtonFlags(
                 TaskDialogButtons buttons)
         {
+            // Note: The order in which we yield the results is the order in which
+            // the task dialog actually displays the buttons.
             if ((buttons & TaskDialogButtons.OK) == TaskDialogButtons.OK)
                 yield return TaskDialogResult.OK;
-            if ((buttons & TaskDialogButtons.Cancel) == TaskDialogButtons.Cancel)
-                yield return TaskDialogResult.Cancel;
-            if ((buttons & TaskDialogButtons.Abort) == TaskDialogButtons.Abort)
-                yield return TaskDialogResult.Abort;
-            if ((buttons & TaskDialogButtons.Retry) == TaskDialogButtons.Retry)
-                yield return TaskDialogResult.Retry;
-            if ((buttons & TaskDialogButtons.Ignore) == TaskDialogButtons.Ignore)
-                yield return TaskDialogResult.Ignore;
             if ((buttons & TaskDialogButtons.Yes) == TaskDialogButtons.Yes)
                 yield return TaskDialogResult.Yes;
             if ((buttons & TaskDialogButtons.No) == TaskDialogButtons.No)
                 yield return TaskDialogResult.No;
-            if ((buttons & TaskDialogButtons.Close) == TaskDialogButtons.Close)
-                yield return TaskDialogResult.Close;
-            if ((buttons & TaskDialogButtons.Help) == TaskDialogButtons.Help)
-                yield return TaskDialogResult.Help;
+            if ((buttons & TaskDialogButtons.Abort) == TaskDialogButtons.Abort)
+                yield return TaskDialogResult.Abort;
+            if ((buttons & TaskDialogButtons.Retry) == TaskDialogButtons.Retry)
+                yield return TaskDialogResult.Retry;
+            if ((buttons & TaskDialogButtons.Cancel) == TaskDialogButtons.Cancel)
+                yield return TaskDialogResult.Cancel;
+            if ((buttons & TaskDialogButtons.Ignore) == TaskDialogButtons.Ignore)
+                yield return TaskDialogResult.Ignore;
             if ((buttons & TaskDialogButtons.TryAgain) == TaskDialogButtons.TryAgain)
                 yield return TaskDialogResult.TryAgain;
             if ((buttons & TaskDialogButtons.Continue) == TaskDialogButtons.Continue)
                 yield return TaskDialogResult.Continue;
+            if ((buttons & TaskDialogButtons.Close) == TaskDialogButtons.Close)
+                yield return TaskDialogResult.Close;
+            if ((buttons & TaskDialogButtons.Help) == TaskDialogButtons.Help)
+                yield return TaskDialogResult.Help;
+            
         }
 
 
