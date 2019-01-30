@@ -62,7 +62,7 @@ namespace KPreisser.UI
 
             set
             {
-                this.DenyIfBoundAndNotCreatable();
+                this.DenyIfBoundAndNotCreated();
 
                 if (this.boundTaskDialogContents == null)
                 {
@@ -92,7 +92,7 @@ namespace KPreisser.UI
         public void Focus()
         {
             this.DenyIfNotBound();
-            this.DenyIfBoundAndNotCreatable();
+            this.DenyIfBoundAndNotCreated();
 
             this.boundTaskDialogContents.BoundTaskDialog.ClickCheckBox(
                     this.@checked,

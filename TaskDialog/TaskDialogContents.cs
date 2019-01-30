@@ -711,12 +711,10 @@ namespace KPreisser.UI
             // Note: The collections will be locked while this contents are bound, so we
             // don't need to copy them here.
             defaultButtonID = 0;
-            for (int i = 0; i < commonButtons.Count; i++)
+            foreach (var commonButton in commonButtons)
             {
-                var commonButton = commonButtons[i];
-                commonButton.BoundTaskDialogContents = this;
-                flags |= commonButton.GetFlags();
-
+                flags |= commonButton.Bind(this);
+                
                 if (commonButton.DefaultButton && defaultButtonID == 0)
                     defaultButtonID = (int)commonButton.Result;
             }
@@ -724,8 +722,7 @@ namespace KPreisser.UI
             for (int i = 0; i < customButtons.Count; i++)
             {
                 var customButton = customButtons[i];
-                customButton.BoundTaskDialogContents = this;
-                flags |= customButton.GetFlags();
+                flags |= customButton.Bind(this);
 
                 customButton.ButtonID = CustomButtonStartID + i;                
                 if (customButton.DefaultButton && defaultButtonID == 0)
@@ -736,8 +733,7 @@ namespace KPreisser.UI
             for (int i = 0; i < radioButtons.Count; i++)
             {
                 var radioButton = radioButtons[i];
-                radioButton.BoundTaskDialogContents = this;
-                flags |= radioButton.GetFlags();
+                flags |= radioButton.Bind(this);
 
                 radioButton.RadioButtonID = RadioButtonStartID + i;
                 if (radioButton.Checked && defaultRadioButtonID == 0)
@@ -750,22 +746,13 @@ namespace KPreisser.UI
                 flags |= TaskDialogFlags.NoDefaultRadioButton;
 
             if (this.expander != null)
-            {
-                this.expander.BoundTaskDialogContents = this;
-                flags |= this.expander.GetFlags();
-            }
+                flags |= this.expander.Bind(this);
 
             if (this.progressBar != null)
-            {
-                this.progressBar.BoundTaskDialogContents = this;
-                flags |= this.progressBar.GetFlags();
-            }
+                flags |= this.progressBar.Bind(this);
 
             if (this.checkBox != null)
-            {
-                this.checkBox.BoundTaskDialogContents = this;
-                flags |= this.checkBox.GetFlags();
-            }
+                flags |= this.checkBox.Bind(this);
         }
 
         internal void Unbind()
@@ -774,36 +761,22 @@ namespace KPreisser.UI
             var customButtons = this.CustomButtons;
             var radioButtons = this.RadioButtons;
 
-            for (int i = 0; i < commonButtons.Count; i++)
-            {
-                var commonButton = commonButtons[i];
-                commonButton.BoundTaskDialogContents = null;
-            }
-
-            for (int i = 0; i < customButtons.Count; i++)
-            {
-                var customButton = customButtons[i];
-                customButton.BoundTaskDialogContents = null;
-                customButton.ButtonID = 0;
-            }
-
-            for (int i = 0; i < radioButtons.Count; i++)
-            {
-                var radioButton = radioButtons[i];
-                radioButton.BoundTaskDialogContents = null;
-                radioButton.RadioButtonID = 0;
-            }
-
+            foreach (var commonButton in commonButtons)
+                commonButton.Unbind();
+            
+            foreach (var customButton in customButtons)
+                customButton.Unbind();
+            
+            foreach (var radioButton in radioButtons)
+                radioButton.Unbind();
+            
             commonButtons.BoundTaskDialogContents = null;
             customButtons.BoundTaskDialogContents = null;
             radioButtons.BoundTaskDialogContents = null;
 
-            if (this.expander != null)
-                this.expander.BoundTaskDialogContents = null;
-            if (this.progressBar != null)
-                this.progressBar.BoundTaskDialogContents = null;
-            if (this.checkBox != null)
-                this.checkBox.BoundTaskDialogContents = null;
+            this.expander?.Unbind();
+            this.progressBar?.Unbind();
+            this.checkBox?.Unbind();
 
             this.boundTaskDialog = null;
         }

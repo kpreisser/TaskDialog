@@ -53,7 +53,7 @@ namespace KPreisser.UI
 
             set
             {
-                this.DenyIfBoundAndNotCreatable();
+                this.DenyIfBoundAndNotCreated();
                 this.boundTaskDialogContents?.BoundTaskDialog.SetRadioButtonEnabled(
                         this.radioButtonID,
                         value);
@@ -86,7 +86,7 @@ namespace KPreisser.UI
 
             set
             {
-                this.DenyIfBoundAndNotCreatable();
+                this.DenyIfBoundAndNotCreated();
 
                 // Unchecking a radio button is not possible in the task dialog.
                 // TODO: Should we throw only if the new value is different than the
@@ -148,6 +148,12 @@ namespace KPreisser.UI
             return this.text ?? base.ToString();
         }
 
+
+        internal override void Unbind()
+        {
+            base.Unbind();
+            this.radioButtonID = 0;
+        }
 
         internal void HandleRadioButtonClicked()
         {

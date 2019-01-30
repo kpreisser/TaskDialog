@@ -47,7 +47,7 @@ namespace KPreisser.UI
 
             set
             {
-                DenyIfBoundAndNotCreatable();
+                DenyIfBoundAndNotCreated();
 
                 // Check if we can update the button.
                 if (CanUpdate())
@@ -70,7 +70,7 @@ namespace KPreisser.UI
 
             set
             {
-                DenyIfBoundAndNotCreatable();
+                DenyIfBoundAndNotCreated();
 
                 if (CanUpdate())
                 {

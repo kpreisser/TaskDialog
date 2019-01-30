@@ -45,7 +45,7 @@ namespace KPreisser.UI
             get => this.state;
 
             set {
-                this.DenyIfBoundAndNotCreatable();
+                this.DenyIfBoundAndNotCreated();
 
                 if (this.boundTaskDialogContents != null && value == TaskDialogProgressBarState.None)
                     throw new InvalidOperationException(
@@ -126,7 +126,7 @@ namespace KPreisser.UI
 
             set
             {
-                this.DenyIfBoundAndNotCreatable();
+                this.DenyIfBoundAndNotCreated();
 
                 if (value.Minimum < 0 || value.Minimum > ushort.MaxValue ||
                     value.Maximum < 0 || value.Maximum > ushort.MaxValue)
@@ -164,7 +164,7 @@ namespace KPreisser.UI
 
             set
             {
-                this.DenyIfBoundAndNotCreatable();
+                this.DenyIfBoundAndNotCreated();
 
                 if (value < 0 || value > ushort.MaxValue)
                     throw new ArgumentOutOfRangeException(nameof(value));
@@ -197,7 +197,7 @@ namespace KPreisser.UI
 
             set
             {
-                this.DenyIfBoundAndNotCreatable();
+                this.DenyIfBoundAndNotCreated();
 
                 int previousMarqueeSpeed = this.marqueeSpeed;
                 this.marqueeSpeed = value;

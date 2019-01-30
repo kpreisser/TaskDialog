@@ -88,6 +88,12 @@
         }
 
 
+        internal override void Unbind()
+        {
+            base.Unbind();
+            this.buttonID = 0;
+        }
+
         internal string GetResultingText()
         {
             var contents = this.boundTaskDialogContents;

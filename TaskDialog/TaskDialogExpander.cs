@@ -56,7 +56,7 @@ namespace KPreisser.UI
             get => this.text;
 
             set {
-                this.DenyIfBoundAndNotCreatable();
+                this.DenyIfBoundAndNotCreated();
 
                 // Update the text if we are bound.
                 this.boundTaskDialogContents?.BoundTaskDialog.UpdateTextElement(

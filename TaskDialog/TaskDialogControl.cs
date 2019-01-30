@@ -33,11 +33,10 @@ namespace KPreisser.UI
         internal TaskDialogContents BoundTaskDialogContents
         {
             get => this.boundTaskDialogContents;
-            set => this.boundTaskDialogContents = value;
         }
 
         /// <summary>
-        /// Returns a value that indicates if this control can be created in a
+        /// Gets a value that indicates if this control can be created in a
         /// task dialog.
         /// </summary>
         internal virtual bool IsCreatable
@@ -45,18 +44,34 @@ namespace KPreisser.UI
             get => true;
         }
 
-
         /// <summary>
-        /// Gets additional flags to be specified before the task dialog is
-        /// displayed or navigated.
+        /// Gets or sets a value that indicates if this control was created in
+        /// a task dialog.
         /// </summary>
-        /// <returns></returns>
-        internal TaskDialogFlags GetFlags()
+        internal bool IsCreated
         {
-            if (!this.IsCreatable)
-                return default;
+            get;
+            set;
+        }
 
-            return GetFlagsCore();
+
+        internal TaskDialogFlags Bind(TaskDialogContents contents)
+        {
+            this.boundTaskDialogContents = contents ??
+                    throw new ArgumentNullException(nameof(contents));
+
+            // Use the current value of IsCreatable to determine if the control is
+            // created. This is important because IsCreatable can change while the
+            // control is displayed (e.g. if it depends on the Text property).
+            this.IsCreated = this.IsCreatable;
+
+            return this.IsCreated ? this.GetFlagsCore() : default;
+        }
+
+        internal virtual void Unbind()
+        {
+            this.IsCreated = false;
+            this.boundTaskDialogContents = null;            
         }
 
         /// <summary>
@@ -64,8 +79,8 @@ namespace KPreisser.UI
         /// </summary>
         internal void ApplyInitialization()
         {
-            // Only apply the initialization if the control is actually creatable.
-            if (this.IsCreatable)
+            // Only apply the initialization if the control is actually created.
+            if (this.IsCreated)
                 this.ApplyInitializationCore();
         }
 
@@ -106,9 +121,9 @@ namespace KPreisser.UI
                         "This control is not currently bound to a task dialog.");
         }
 
-        private protected void DenyIfBoundAndNotCreatable()
+        private protected void DenyIfBoundAndNotCreated()
         {
-            if (this.boundTaskDialogContents != null && !this.IsCreatable)
+            if (this.boundTaskDialogContents != null && !this.IsCreated)
                 throw new InvalidOperationException("The control has not been created.");
         }
     }
