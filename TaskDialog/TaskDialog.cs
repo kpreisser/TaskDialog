@@ -65,6 +65,19 @@ namespace KPreisser.UI
         private bool waitingForNavigatedEvent;
 
         /// <summary>
+        /// Stores a value that indicates if the
+        /// <see cref="TaskDialogContents.Created"/> event has been called for the
+        /// current <see cref="TaskDialogContents"/>.
+        /// </summary>
+        /// <remarks>
+        /// This is used to prevent raising the 
+        /// <see cref="TaskDialogContents.Destroying"/> event without raising the
+        /// <see cref="TaskDialogContents.Created"/> event first (e.g. if navigation
+        /// fails).
+        /// </remarks>
+        private bool raisedContentsCreated;
+
+        /// <summary>
         /// A stack which tracks whether the dialog has been navigated while being in
         /// a <see cref="TaskDialogNotification.ButtonClicked"/> handler.
         /// </summary>
@@ -454,14 +467,23 @@ namespace KPreisser.UI
                     instance.boundContents.ApplyInitialization();
 
                     instance.OnOpened(EventArgs.Empty);
+
+                    instance.raisedContentsCreated = true;
                     instance.boundContents.OnCreated(EventArgs.Empty);
                     break;
 
                 case TaskDialogNotification.Destroyed:
-                    instance.boundContents.OnDestroying(EventArgs.Empty);
+                    // Only raise the 'Destroying' event if we previously raised the
+                    // 'Created' event.
+                    if (instance.raisedContentsCreated)
+                    {
+                        instance.raisedContentsCreated = false;
+                        instance.boundContents.OnDestroying(EventArgs.Empty);
+                    }
+
                     instance.OnClosing(EventArgs.Empty);
 
-                    // Clear the dialog handle, because according to the docs, we must not 
+                    // Clear the dialog handle, because according to the docs, we must not
                     // continue to send any notifications to the dialog after the callback
                     // function has returned from being called with the 'Destroyed'
                     // notification.
@@ -477,6 +499,8 @@ namespace KPreisser.UI
                     instance.boundContents.ApplyInitialization();
 
                     instance.OnNavigated(EventArgs.Empty);
+
+                    instance.raisedContentsCreated = true;
                     instance.boundContents.OnCreated(EventArgs.Empty);
                     break;
 
@@ -753,7 +777,7 @@ namespace KPreisser.UI
 
                         // Check we have a button with the result that was returned. This might
                         // not always be the case, e.g. when specifying AllowCancel but not
-                        // adding a "Cancel" button. If we don't have such button, we
+                        // adding a 'Cancel' button. If we don't have such button, we
                         // simply create a new one.
                         if (this.boundContents.CommonButtons.Contains(result))
                             resultingButton = this.boundContents.CommonButtons[result];
@@ -771,10 +795,12 @@ namespace KPreisser.UI
 
                     // Ensure to clear the flag if a navigation did not complete.
                     this.waitingForNavigatedEvent = false;
-                    // Also, ensure the window handle is cleared even if the
-                    // 'Destroyed' notification did not occur (although that should
-                    // only happen when there was an exception).
+                    // Also, ensure the window handle and the raisedContentsCreated
+                    // flag are is cleared even if the 'Destroyed' notification did
+                    // not occur (although that should only happen when there was an
+                    // exception).
                     this.hwndDialog = IntPtr.Zero;
+                    this.raisedContentsCreated = false;
 
                     // Unbind the contents. The 'Destroying' event of the TaskDialogContent
                     // will already have been called from the callback.
@@ -1075,12 +1101,12 @@ namespace KPreisser.UI
 
 
         /// <summary>
-        /// While the dialog is being shown, recreates the dialog from the current
-        /// properties.
+        /// While the dialog is being shown, recreates the dialog from the specified
+        /// <paramref name="contents"/>.
         /// </summary>
         /// <remarks>
-        /// Note that you should not call this method in the <see cref="Opened"/> event
-        /// because the task dialog is not yet displayed in that state.
+        /// Note that you should not call this method in the <see cref="Opened"/>
+        /// event because the task dialog is not yet displayed in that state.
         /// </remarks>
         private void Navigate(TaskDialogContents contents)
         {
@@ -1093,7 +1119,13 @@ namespace KPreisser.UI
             // bind the new one.
             // Need to raise the "Destroying" event for the current contents. The
             // "Created" event for the new contents will occur from the callback.
-            this.boundContents.OnDestroying(EventArgs.Empty);
+            // Note: "this.raisedContentsCreated" should always be true here.
+            if (this.raisedContentsCreated)
+            {
+                this.raisedContentsCreated = false;
+                this.boundContents.OnDestroying(EventArgs.Empty);
+            }
+
             this.boundContents.Unbind();
             this.boundContents = null;
 
