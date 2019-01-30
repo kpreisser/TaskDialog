@@ -769,13 +769,17 @@ namespace KPreisser.UI
                     // Free the memory.
                     FreeConfig(ptrToFree);
 
+                    // Ensure to clear the flag if a navigation did not complete.
+                    this.waitingForNavigatedEvent = false;
+                    // Also, ensure the window handle is cleared even if the
+                    // 'Destroyed' notification did not occur (although that should
+                    // only happen when there was an exception).
+                    this.hwndDialog = IntPtr.Zero;
+
                     // Unbind the contents. The 'Destroying' event of the TaskDialogContent
                     // will already have been called from the callback.
                     this.boundContents.Unbind();
                     this.boundContents = null;
-
-                    // Ensure to clear the flag if a navigation did not complete.
-                    this.waitingForNavigatedEvent = false;
 
                     // We need to ensure the callback delegate is not garbage-collected
                     // as long as TaskDialogIndirect doesn't return, by calling GC.KeepAlive().
