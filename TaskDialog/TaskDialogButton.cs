@@ -120,7 +120,7 @@ namespace KPreisser.UI
         /// </summary>
         public void PerformClick()
         {
-            // Note: We allow a click even if the button is not visible/creatable.
+            // Note: We allow a click even if the button is not visible/created.
             DenyIfNotBound();
             this.boundTaskDialogContents.BoundTaskDialog.ClickButton(this.GetButtonID());
         }
