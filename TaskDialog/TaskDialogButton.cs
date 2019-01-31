@@ -158,7 +158,7 @@ namespace KPreisser.UI
             // an exception however, because ApplyInitialization will be called in
             // the Navigated handler that does the necessary updates.
             return this.boundTaskDialogContents?.BoundTaskDialog
-                        .WaitingForNavigatedEvent == false;
+                    .WaitingForNavigatedEvent == false;
         }
     }
 }
