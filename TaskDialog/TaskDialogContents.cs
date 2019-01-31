@@ -121,6 +121,10 @@ namespace KPreisser.UI
 
             set
             {
+                // We must deny this if we are bound because we need to be able to
+                // access the controls from the task dialog's callback.
+                this.DenyIfBound();
+
                 this.commonButtons = value ?? throw new ArgumentNullException(nameof(value));
             }
         }
@@ -136,6 +140,10 @@ namespace KPreisser.UI
 
             set
             {
+                // We must deny this if we are bound because we need to be able to
+                // access the controls from the task dialog's callback.
+                this.DenyIfBound();
+
                 this.customButtons = value ?? throw new ArgumentNullException(nameof(value));
             }
         }
@@ -151,6 +159,10 @@ namespace KPreisser.UI
             
             set
             {
+                // We must deny this if we are bound because we need to be able to
+                // access the controls from the task dialog's callback.
+                this.DenyIfBound();
+
                 this.radioButtons = value ?? throw new ArgumentNullException(nameof(value));
             }
         }
