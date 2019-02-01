@@ -629,8 +629,6 @@ namespace KPreisser.UI
             // Note: Currently, this means that a NRE will occur in the callback after
             // TaskDialog.Show() returns due to an unhandled exception because the
             // TaskDialog is still displayed (see comment in Show()).
-            // We could solve this by not freeing the GCHandle if the dialog's
-            // window handle is set, and instead free it in the Destroyed event.
             return HResultOk;
         }
 
