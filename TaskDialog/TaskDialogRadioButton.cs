@@ -47,6 +47,9 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
+        /// <remarks>
+        /// This property can be changed while the dialog is shown.
+        /// </remarks>
         public bool Enabled
         {
             get => this.enabled;
@@ -80,6 +83,9 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
+        /// <remarks>
+        /// This property can be set to <c>true</c> while the dialog is shown.
+        /// </remarks>
         public bool Checked
         {
             get => this.@checked;

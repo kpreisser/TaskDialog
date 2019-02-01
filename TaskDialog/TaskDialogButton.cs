@@ -36,11 +36,14 @@ namespace KPreisser.UI
             : base()
         {
         }
-                
+
 
         /// <summary>
         /// 
         /// </summary>
+        /// <remarks>
+        /// This property can be changed while the dialog is shown.
+        /// </remarks>
         public bool Enabled
         {
             get => this.enabled;
@@ -64,6 +67,9 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
+        /// <remarks>
+        /// This property can be changed while the dialog is shown.
+        /// </remarks>
         public bool ElevationRequired
         {
             get => this.elevationRequired;

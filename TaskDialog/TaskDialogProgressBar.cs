@@ -40,6 +40,11 @@ namespace KPreisser.UI
         /// <summary>
         /// Gets or sets the state of the progress bar.
         /// </summary>
+        /// <remarks>
+        /// This property can be changed while the dialog is shown. However, it is
+        /// not possible to change the state from <see cref="TaskDialogProgressBarState.None"/>
+        /// to any other state, and vice versa.
+        /// </remarks>
         public TaskDialogProgressBarState State
         {
             get => this.state;
@@ -119,6 +124,9 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
+        /// <remarks>
+        /// This property can be changed while the dialog is shown.
+        /// </remarks>
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
         public TaskDialogProgressBarRange Range
         {
@@ -158,6 +166,9 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
+        /// <remarks>
+        /// This property can be changed while the dialog is shown.
+        /// </remarks>
         public int Position
         {
             get => this.position;
@@ -191,6 +202,9 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
+        /// <remarks>
+        /// This property can be changed while the dialog is shown.
+        /// </remarks>
         public int MarqueeSpeed
         {
             get => this.marqueeSpeed;
@@ -225,7 +239,7 @@ namespace KPreisser.UI
         private static bool ProgressBarStateIsMarquee(TaskDialogProgressBarState state)
         {
             return state == TaskDialogProgressBarState.Marquee ||
-                    state == TaskDialogProgressBarState.MarqueeDisabled;
+                    state == TaskDialogProgressBarState.MarqueePaused;
         }
 
         private static TaskDialogProgressBarNativeState GetNativeProgressBarState(
@@ -272,7 +286,7 @@ namespace KPreisser.UI
             {
                 this.State = this.state;
             }
-            else if (this.state != TaskDialogProgressBarState.MarqueeDisabled)
+            else if (this.state != TaskDialogProgressBarState.MarqueePaused)
             {
                 this.State = this.state;
                 this.Range = this.range;

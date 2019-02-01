@@ -37,7 +37,8 @@ namespace KPreisser.UI
 
 
         /// <summary>
-        /// 
+        /// Gets or sets the <see cref="TaskDialogResult"/> which is represented by this
+        /// <see cref="TaskDialogCommonButton"/>.
         /// </summary>
         public TaskDialogResult Result
         {

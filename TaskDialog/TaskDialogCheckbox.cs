@@ -56,6 +56,9 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
+        /// <remarks>
+        /// This property can be changed while the dialog is shown.
+        /// </remarks>
         public bool Checked
         {
             get => this.@checked;
