@@ -59,29 +59,31 @@
         //// note that the Question icon only seems to be available without
         //// a sound.
         //// These icons are used from the system's resource module (imageres.dll)
-        //// as we always specify NULL in the TaskDialogConfig's hInstance field.
+        //// and can be used when specifying NULL in the TaskDialogConfig's hInstance
+        //// field (which we currently always do).
         //// For more information, see:
         //// https://docs.microsoft.com/en-us/windows/desktop/Controls/tdm-update-icon
+        //// Note: The 32xxx values are taken from WinUser.h (prefix "OIC_").
 
         ///// <summary>
         ///// 
         ///// </summary>
-        //InformationNoSound = 81,
+        //InformationNoSound = 32516, // OIC_INFORMATION
 
         ///// <summary>
         ///// 
         ///// </summary>
-        //WarningNoSound = 84,
+        //WarningNoSound = 32515, // OIC_WARNING
 
         ///// <summary>
         ///// 
         ///// </summary>
-        //StopNoSound = 98,
+        //StopNoSound = 32513, // OIC_ERROR
 
         ///// <summary>
         ///// 
         ///// </summary>
-        //QuestionNoSound = 99,
+        //QuestionNoSound = 32514, // OIC_QUES
 
         ///// <summary>
         ///// 
