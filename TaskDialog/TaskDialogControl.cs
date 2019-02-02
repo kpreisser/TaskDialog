@@ -7,7 +7,7 @@ namespace KPreisser.UI
     /// 
     /// </summary>
     [TypeConverter(typeof(ExpandableObjectConverter))]
-    public class TaskDialogControl
+    public abstract class TaskDialogControl
     {
         private protected TaskDialogContents boundTaskDialogContents;
 
