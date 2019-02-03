@@ -322,7 +322,9 @@ namespace KPreisser.UI
                 // MAKEINTRESOURCEW macro, which casts the value to a WORD and
                 // then to a ULONG_PTR and LPWSTR, so its range is 16 bit (unsigned).
                 // Values outside of that range could cause an AccessViolationException
-                // since the native implementation would try to dereference it.
+                // since the native implementation would treat it as string pointer
+                // and dereference it in order to read the resource name from the
+                // string, but we don't support this.
                 if (value < ushort.MinValue || (int)value > ushort.MaxValue)
                     throw new ArgumentOutOfRangeException(nameof(value));
 
