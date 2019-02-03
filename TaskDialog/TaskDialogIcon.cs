@@ -3,7 +3,7 @@
     /// <summary>
     /// 
     /// </summary>
-    public enum TaskDialogIcon : int
+    public enum TaskDialogIcon : long
     {
         /// <summary>
         /// 
@@ -55,14 +55,14 @@
         /// </summary>
         SecuritySuccessGreenBar = ushort.MaxValue - 7,
 
-        //// TODO: Check if these "NoSound" icons should be included - 
-        //// note that the Question icon only seems to be available without
-        //// a sound.
+        //// TODO: Check if the following icons should be included.
         //// These icons are used from the system's resource module (imageres.dll)
         //// and can be used when specifying NULL in the TaskDialogConfig's hInstance
         //// field (which we currently always do).
         //// For more information, see:
         //// https://docs.microsoft.com/en-us/windows/desktop/Controls/tdm-update-icon
+        //// However, if we allow to specify the hInstance in the future, these enum
+        //// values would no longer be valid, so we probably shouldn't add them.
         //// Note: The 32xxx values are taken from WinUser.h (prefix "OIC_").
 
         ///// <summary>
