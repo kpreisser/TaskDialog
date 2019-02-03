@@ -318,6 +318,14 @@ namespace KPreisser.UI
 
             set
             {
+                // The value must be a integer resource passed through the
+                // MAKEINTRESOURCEW macro, which casts the value to a WORD and
+                // then to a ULONG_PTR and LPWSTR, so its range is 16 bit (unsigned).
+                // Values outside of that range could cause an AccessViolationException
+                // since the native implementation would try to dereference it.
+                if (value < ushort.MinValue || (int)value > ushort.MaxValue)
+                    throw new ArgumentOutOfRangeException(nameof(value));
+
                 if (this.boundTaskDialog != null &&
                         this.boundMainIconIsFromHandle)
                     throw new InvalidOperationException();
@@ -371,6 +379,10 @@ namespace KPreisser.UI
 
             set
             {
+                // See comments in property "Icon".
+                if (value < ushort.MinValue || (int)value > ushort.MaxValue)
+                    throw new ArgumentOutOfRangeException(nameof(value));
+
                 if (this.boundTaskDialog != null &&
                         this.boundFooterIconIsFromHandle == true)
                     throw new InvalidOperationException();

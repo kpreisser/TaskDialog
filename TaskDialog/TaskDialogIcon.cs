@@ -13,22 +13,22 @@
         /// <summary>
         /// 
         /// </summary>
-        Information = ushort.MaxValue - 2,
+        Information = ushort.MaxValue - 2, // TD_INFORMATION_ICON
 
         /// <summary>
         /// 
         /// </summary>
-        Warning = ushort.MaxValue,
+        Warning = ushort.MaxValue, // TD_WARNING_ICON
 
         /// <summary>
         /// 
         /// </summary>
-        Stop = ushort.MaxValue - 1,
+        Stop = ushort.MaxValue - 1, // TD_ERROR_ICON
 
         /// <summary>
         /// 
         /// </summary>
-        SecurityShield = ushort.MaxValue - 3,
+        SecurityShield = ushort.MaxValue - 3, // TD_SHIELD_ICON
 
         /// <summary>
         /// 
