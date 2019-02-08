@@ -11,7 +11,9 @@ namespace KPreisser.UI
     {
         private TaskDialogProgressBarState state;
 
-        private TaskDialogProgressBarRange range = (0, 100);
+        private int minimum = 0;
+
+        private int maximum = 100;
 
         private int position;
 
@@ -30,7 +32,7 @@ namespace KPreisser.UI
         /// 
         /// </summary>
         public TaskDialogProgressBar(TaskDialogProgressBarState state)
-            : base()
+            : this()
         {
             // Use the setter which will validate the value.
             this.State = state;
@@ -94,8 +96,11 @@ namespace KPreisser.UI
                             {
                                 // Also need to set the other properties after switching
                                 // the mode.
-                                this.Range = this.range;
-                                this.Position = this.position;
+                                taskDialog.SetProgressBarRange(
+                                        this.minimum,
+                                        this.maximum);
+                                taskDialog.SetProgressBarPos(
+                                        this.position);
 
                                 // We need to set the position a secondtime to work reliably if the
                                 // state is not "Normal".
@@ -105,7 +110,8 @@ namespace KPreisser.UI
                                 // second SendMessage is required if the state is non-Normal."
                                 // Apparently, this bug is still present in Win10 V1803.
                                 if (this.state != TaskDialogProgressBarState.Normal)
-                                    this.Position = this.position;
+                                    taskDialog.SetProgressBarPos(
+                                            this.position);
                             }
                         }
                     }
@@ -127,39 +133,55 @@ namespace KPreisser.UI
         /// <remarks>
         /// This property can be changed while the dialog is shown.
         /// </remarks>
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
-        public TaskDialogProgressBarRange Range
+        public int Minimum
         {
-            get => this.range;
+            get => this.minimum;
 
             set
             {
                 this.DenyIfBoundAndNotCreated();
 
-                if (value.Minimum < 0 || value.Minimum > ushort.MaxValue ||
-                    value.Maximum < 0 || value.Maximum > ushort.MaxValue)
+                if (value < 0 || value > ushort.MaxValue)
+                    throw new ArgumentOutOfRangeException(nameof(value));
+                
+                // We only update the TaskDialog if the current state is a non-marquee progress bar.
+                if (this.boundTaskDialogContents != null && !ProgressBarStateIsMarquee(this.state))
+                {
+                    this.boundTaskDialogContents.BoundTaskDialog.SetProgressBarRange(
+                            value,
+                            this.maximum);
+                }
+
+                this.minimum = value;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <remarks>
+        /// This property can be changed while the dialog is shown.
+        /// </remarks>
+        public int Maximum
+        {
+            get => this.maximum;
+
+            set
+            {
+                this.DenyIfBoundAndNotCreated();
+
+                if (value < 0 || value > ushort.MaxValue)
                     throw new ArgumentOutOfRangeException(nameof(value));
 
-                if (value.Minimum > value.Maximum)
-                    throw new ArgumentException();
+                // We only update the TaskDialog if the current state is a non-marquee progress bar.
+                if (this.boundTaskDialogContents != null && !ProgressBarStateIsMarquee(this.state))
+                {
+                    this.boundTaskDialogContents.BoundTaskDialog.SetProgressBarRange(
+                            this.minimum,
+                            value);
+                }
 
-                var previousRange = this.range;
-                this.range = value;
-                try
-                {
-                    // We only update the TaskDialog if the current state is a non-marquee progress bar.
-                    if (this.boundTaskDialogContents != null && !ProgressBarStateIsMarquee(this.state))
-                    {
-                        this.boundTaskDialogContents.BoundTaskDialog.SetProgressBarRange(
-                                this.range.Minimum,
-                                this.range.Maximum);
-                    }
-                }
-                catch
-                {
-                    this.range = previousRange;
-                    throw;
-                }
+                this.maximum = value;
             }
         }
 
@@ -179,23 +201,15 @@ namespace KPreisser.UI
 
                 if (value < 0 || value > ushort.MaxValue)
                     throw new ArgumentOutOfRangeException(nameof(value));
+               
+                // We only update the TaskDialog if the current state is a non-marquee progress bar.
+                if (this.boundTaskDialogContents != null && !ProgressBarStateIsMarquee(this.state))
+                {
+                    this.boundTaskDialogContents.BoundTaskDialog.SetProgressBarPos(
+                            value);
+                }
 
-                int previousPosition = this.position;
                 this.position = value;
-                try
-                {
-                    // We only update the TaskDialog if the current state is a non-marquee progress bar.
-                    if (this.boundTaskDialogContents != null && !ProgressBarStateIsMarquee(this.state))
-                    {
-                        this.boundTaskDialogContents.BoundTaskDialog.SetProgressBarPos(
-                                this.position);
-                    }
-                }
-                catch
-                {
-                    this.position = previousPosition;
-                    throw;
-                }
             }
         }
 
@@ -289,13 +303,17 @@ namespace KPreisser.UI
             else if (this.state != TaskDialogProgressBarState.MarqueePaused)
             {
                 this.State = this.state;
-                this.Range = this.range;
-                this.Position = this.position;
-                    
+                this.boundTaskDialogContents.BoundTaskDialog.SetProgressBarRange(
+                        this.minimum,
+                        this.maximum);
+                this.boundTaskDialogContents.BoundTaskDialog.SetProgressBarPos(
+                        this.position);
+
                 // See comment in property "State" for why we need to set
                 // the position it twice.
                 if (this.state != TaskDialogProgressBarState.Normal)
-                    this.Position = this.position;
+                    this.boundTaskDialogContents.BoundTaskDialog.SetProgressBarPos(
+                            this.position);
             }
         }
     }
