@@ -23,7 +23,7 @@
         /// <summary>
         /// 
         /// </summary>
-        Stop = ushort.MaxValue - 1, // TD_ERROR_ICON
+        Error = ushort.MaxValue - 1, // TD_ERROR_ICON
 
         /// <summary>
         /// 
