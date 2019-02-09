@@ -21,8 +21,7 @@ namespace KPreisser.UI
     [DefaultProperty(nameof(CurrentContents))]
     public partial class TaskDialog : Component
 #if !NET_STANDARD
-        ,
-        System.Windows.Forms.IWin32Window, System.Windows.Interop.IWin32Window
+        , System.Windows.Forms.IWin32Window
 #endif
     {
         // Offset for user message types.
@@ -317,48 +316,6 @@ namespace KPreisser.UI
         /// <param name="icon"></param>
         /// <returns></returns>
         public static TaskDialogResult Show(
-                System.Windows.Window owner,
-                string text,
-                string instruction = null,
-                string title = null,
-                TaskDialogButtons buttons = TaskDialogButtons.OK,
-                TaskDialogIcon icon = TaskDialogIcon.None)
-        {
-            return Show(GetWindowHandle(owner), text, instruction, title, buttons, icon);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="owner">The owner window, or <c>null</c> to show a modeless dialog.</param>
-        /// <param name="text"></param>
-        /// <param name="instruction"></param>
-        /// <param name="title"></param>
-        /// <param name="buttons"></param>
-        /// <param name="icon"></param>
-        /// <returns></returns>
-        public static TaskDialogResult Show(
-                System.Windows.Interop.IWin32Window owner,
-                string text,
-                string instruction = null,
-                string title = null,
-                TaskDialogButtons buttons = TaskDialogButtons.OK,
-                TaskDialogIcon icon = TaskDialogIcon.None)
-        {
-            return Show(GetWindowHandle(owner), text, instruction, title, buttons, icon);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="owner">The owner window, or <c>null</c> to show a modeless dialog.</param>
-        /// <param name="text"></param>
-        /// <param name="instruction"></param>
-        /// <param name="title"></param>
-        /// <param name="buttons"></param>
-        /// <param name="icon"></param>
-        /// <returns></returns>
-        public static TaskDialogResult Show(
                 System.Windows.Forms.IWin32Window owner,
                 string text,
                 string instruction = null,
@@ -369,27 +326,6 @@ namespace KPreisser.UI
             return Show(GetWindowHandle(owner), text, instruction, title, buttons, icon);
         }
 #endif
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="owner">The owner window, or <c>null</c> to show a modeless dialog.</param>
-        /// <param name="text"></param>
-        /// <param name="instruction"></param>
-        /// <param name="title"></param>
-        /// <param name="buttons"></param>
-        /// <param name="icon"></param>
-        /// <returns></returns>
-        public static TaskDialogResult Show(
-                TaskDialog owner,
-                string text,
-                string instruction = null,
-                string title = null,
-                TaskDialogButtons buttons = TaskDialogButtons.OK,
-                TaskDialogIcon icon = TaskDialogIcon.None)
-        {
-            return Show(owner.Handle, text, instruction, title, buttons, icon);
-        }
 
         /// <summary>
         /// 
@@ -434,16 +370,6 @@ namespace KPreisser.UI
         }
 
 #if !NET_STANDARD
-        private static IntPtr GetWindowHandle(System.Windows.Window window)
-        {
-            return new System.Windows.Interop.WindowInteropHelper(window).Handle;
-        }
-
-        private static IntPtr GetWindowHandle(System.Windows.Interop.IWin32Window window)
-        {
-            return window.Handle;
-        }
-
         private static IntPtr GetWindowHandle(System.Windows.Forms.IWin32Window window)
         {
             return window.Handle;
@@ -650,50 +576,11 @@ namespace KPreisser.UI
         /// controls until this method returns.
         /// </remarks>
         /// <param name="owner">The owner window, or <c>null</c> to show a modeless dialog.</param>
-        public TaskDialogButton Show(System.Windows.Window owner)
-        {
-            return Show(GetWindowHandle(owner));
-        }
-
-        /// <summary>
-        /// Shows the task dialog.
-        /// </summary>
-        /// <remarks>
-        /// Showing the dialog will bind the <see cref="CurrentContents"/> and their
-        /// controls until this method returns.
-        /// </remarks>
-        /// <param name="owner">The owner window, or <c>null</c> to show a modeless dialog.</param>
-        public TaskDialogButton Show(System.Windows.Interop.IWin32Window owner)
-        {
-            return Show(GetWindowHandle(owner));
-        }
-
-        /// <summary>
-        /// Shows the task dialog.
-        /// </summary>
-        /// <remarks>
-        /// Showing the dialog will bind the <see cref="CurrentContents"/> and their
-        /// controls until this method returns.
-        /// </remarks>
-        /// <param name="owner">The owner window, or <c>null</c> to show a modeless dialog.</param>
         public TaskDialogButton Show(System.Windows.Forms.IWin32Window owner)
         {
             return Show(GetWindowHandle(owner));
         }
 #endif
-
-        /// <summary>
-        /// Shows the task dialog.
-        /// </summary>
-        /// <remarks>
-        /// Showing the dialog will bind the <see cref="CurrentContents"/> and their
-        /// controls until this method returns.
-        /// </remarks>
-        /// <param name="owner">The owner window, or <c>null</c> to show a modeless dialog.</param>
-        public TaskDialogButton Show(TaskDialog owner)
-        {
-            return Show(owner.Handle);
-        }
 
         /// <summary>
         /// Shows the task dialog.
