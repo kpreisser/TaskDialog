@@ -796,7 +796,7 @@ namespace KPreisser.UI
         /// While the dialog is being shown, sets the progress bar position.
         /// </summary>
         /// <param name="pos"></param>
-        internal void SetProgressBarPos(int pos)
+        internal void SetProgressBarPosition(int pos)
         {
             if (pos < 0 || pos > ushort.MaxValue)
                 throw new ArgumentOutOfRangeException(nameof(pos));
