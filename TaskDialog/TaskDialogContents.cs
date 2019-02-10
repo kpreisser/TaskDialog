@@ -37,8 +37,6 @@ namespace KPreisser.UI
 
         private TaskDialogCheckBox checkBox;
 
-        private TaskDialog boundTaskDialog;
-
         private TaskDialogFlags flags;
         private string title;
         private string instruction;
@@ -51,6 +49,8 @@ namespace KPreisser.UI
         private int width;
         private TaskDialogCommandLinkMode commandLinkMode;
         private TaskDialogStartupLocation startupLocation;
+
+        private TaskDialog boundTaskDialog;
 
         private bool boundMainIconIsFromHandle;
 
