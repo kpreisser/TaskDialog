@@ -69,7 +69,6 @@
         internal int ButtonID
         {
             get => this.buttonID;
-            set => this.buttonID = value;
         }
 
         internal override bool IsCreatable
@@ -87,6 +86,14 @@
             return this.text ?? base.ToString();
         }
 
+
+        internal TaskDialogFlags Bind(TaskDialogContents contents, int buttonID)
+        {
+            var result = this.Bind(contents);
+            this.buttonID = buttonID;
+
+            return result;
+        }
 
         internal override void Unbind()
         {

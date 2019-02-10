@@ -748,9 +748,8 @@ namespace KPreisser.UI
             for (int i = 0; i < customButtons.Count; i++)
             {
                 var customButton = customButtons[i];
-                flags |= customButton.Bind(this);
+                flags |= customButton.Bind(this, CustomButtonStartID + i);
 
-                customButton.ButtonID = CustomButtonStartID + i;                
                 if (customButton.DefaultButton && defaultButtonID == 0)
                     defaultButtonID = customButton.ButtonID;
             }
@@ -759,9 +758,8 @@ namespace KPreisser.UI
             for (int i = 0; i < radioButtons.Count; i++)
             {
                 var radioButton = radioButtons[i];
-                flags |= radioButton.Bind(this);
+                flags |= radioButton.Bind(this, RadioButtonStartID + i);
 
-                radioButton.RadioButtonID = RadioButtonStartID + i;
                 if (radioButton.Checked && defaultRadioButtonID == 0)
                     defaultRadioButtonID = radioButton.RadioButtonID;
                 else if (radioButton.Checked)

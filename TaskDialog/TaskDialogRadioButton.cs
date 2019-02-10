@@ -130,7 +130,6 @@ namespace KPreisser.UI
         internal int RadioButtonID
         {
             get => this.radioButtonID;
-            set => this.radioButtonID = value;
         }
 
         internal TaskDialogRadioButtonCollection Collection
@@ -154,6 +153,14 @@ namespace KPreisser.UI
             return this.text ?? base.ToString();
         }
 
+
+        internal TaskDialogFlags Bind(TaskDialogContents contents, int radioButtonID)
+        {
+            var result = this.Bind(contents);
+            this.radioButtonID = radioButtonID;
+
+            return result;
+        }
 
         internal override void Unbind()
         {
