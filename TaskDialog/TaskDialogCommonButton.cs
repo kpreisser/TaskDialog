@@ -24,15 +24,15 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="button"></param>
+        /// <param name="result"></param>
         public TaskDialogCommonButton(
-                TaskDialogResult button)
+                TaskDialogResult result)
             : base()
         {
-            if (!IsValidCommonButton(button))
+            if (!IsValidCommonButton(result))
                 throw new ArgumentException();
 
-            this.result = button;
+            this.result = result;
         }
 
 
