@@ -916,7 +916,7 @@ namespace KPreisser.UI
         {
             DenyIfDialogNotShownOrWaitingForNavigatedEvent();
 
-            // Note: Because we use SetWindowText() directly (as there is no task
+            // TODO: Because we use SetWindowText() directly (as there is no task
             // dialog message for setting the title), there is a small discrepancy
             // between specifying an empty title in the TASKDIALOGCONFIG structure
             // and setting an empty title with this method: An empty string (or null)
@@ -1047,10 +1047,6 @@ namespace KPreisser.UI
 
             // Also, disallow updates until we received the Navigated event
             // because that messages would be lost.
-            // TODO: We might cache the change so that the Navigated event handler
-            // can then make the outstanding update calls.
-            // However, this is probably not so simple e.g. for the "Checked"
-            // setter because the CheckedChanged event would be delayed.
             this.waitingForNavigatedEvent = true;
         }
 
