@@ -386,7 +386,7 @@ namespace KPreisser.UI
                     throw new ArgumentOutOfRangeException(nameof(value));
 
                 if (this.boundTaskDialog != null &&
-                        this.boundFooterIconIsFromHandle == true)
+                        this.boundFooterIconIsFromHandle)
                     throw new InvalidOperationException();
 
                 this.boundTaskDialog?.UpdateIconElement(
@@ -413,7 +413,7 @@ namespace KPreisser.UI
             set
             {
                 if (this.boundTaskDialog != null &&
-                        !this.boundFooterIconIsFromHandle == false)
+                        !this.boundFooterIconIsFromHandle)
                     throw new InvalidOperationException();
 
                 this.boundTaskDialog?.UpdateIconElement(
