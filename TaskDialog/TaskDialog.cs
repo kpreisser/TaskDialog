@@ -1060,6 +1060,8 @@ namespace KPreisser.UI
                     this,
                     out var flags,
                     out var commonButtonFlags,
+                    out var iconValue,
+                    out var footerIconValue,
                     out int defaultButtonID,
                     out int defaultRadioButtonID);
             this.boundContents = contents;
@@ -1142,10 +1144,8 @@ namespace KPreisser.UI
                             hwndParent = hwndOwner,
                             dwFlags = flags,
                             dwCommonButtons = commonButtonFlags,
-                            hMainIcon = contents.BoundMainIconIsFromHandle ?
-                                    contents.IconHandle : (IntPtr)contents.Icon,
-                            hFooterIcon = contents.BoundFooterIconIsFromHandle ?
-                                    contents.FooterIconHandle : (IntPtr)contents.FooterIcon,
+                            mainIconUnion = iconValue,
+                            footerIconUnion = footerIconValue,
                             pszWindowTitle = MarshalString(contents.Title),
                             pszMainInstruction = MarshalString(contents.Instruction),
                             pszContent = MarshalString(contents.Text),

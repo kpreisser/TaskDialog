@@ -15,7 +15,7 @@ namespace KPreisser.UI
             public TaskDialogFlags dwFlags;
             public TaskDialogButtons dwCommonButtons;
             public IntPtr pszWindowTitle;
-            public IntPtr hMainIcon;
+            public IntPtr mainIconUnion;
             public IntPtr pszMainInstruction;
             public IntPtr pszContent;
             public int cButtons;
@@ -28,7 +28,7 @@ namespace KPreisser.UI
             public IntPtr pszExpandedInformation;
             public IntPtr pszExpandedControlText;
             public IntPtr pszCollapsedControlText;
-            public IntPtr hFooterIcon;
+            public IntPtr footerIconUnion;
             public IntPtr pszFooter;
             public IntPtr pfCallback;
             public IntPtr lpCallbackData;

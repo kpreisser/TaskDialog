@@ -52,7 +52,7 @@ namespace KPreisser.UI
 
         private TaskDialog boundTaskDialog;
 
-        private bool boundMainIconIsFromHandle;
+        private bool boundIconIsFromHandle;
 
         private bool boundFooterIconIsFromHandle;
 
@@ -329,7 +329,7 @@ namespace KPreisser.UI
                     throw new ArgumentOutOfRangeException(nameof(value));
 
                 if (this.boundTaskDialog != null &&
-                        this.boundMainIconIsFromHandle)
+                        this.boundIconIsFromHandle)
                     throw new InvalidOperationException();
 
                 this.boundTaskDialog?.UpdateIconElement(
@@ -356,7 +356,7 @@ namespace KPreisser.UI
             set
             {
                 if (this.boundTaskDialog != null &&
-                        !this.boundMainIconIsFromHandle)
+                        !this.boundIconIsFromHandle)
                     throw new InvalidOperationException();
 
                 this.boundTaskDialog?.UpdateIconElement(
@@ -572,16 +572,6 @@ namespace KPreisser.UI
             get => this.boundTaskDialog;
         }
 
-        internal bool BoundMainIconIsFromHandle
-        {
-            get => this.boundMainIconIsFromHandle;
-        }
-
-        internal bool BoundFooterIconIsFromHandle
-        {
-            get => this.boundFooterIconIsFromHandle;
-        }
-
 
         internal static bool IsNativeStringNullOrEmpty(string str)
         {
@@ -691,6 +681,8 @@ namespace KPreisser.UI
                 TaskDialog owner,
                 out TaskDialogFlags flags,
                 out TaskDialogButtons buttonFlags,
+                out IntPtr iconValue,
+                out IntPtr footerIconValue,
                 out int defaultButtonID,
                 out int defaultRadioButtonID)
         {
@@ -700,12 +692,27 @@ namespace KPreisser.UI
             flags = this.flags;
             buttonFlags = GetCommonButtonFlags();
 
-            this.boundMainIconIsFromHandle = this.IconHandle != IntPtr.Zero;
-            this.boundFooterIconIsFromHandle = this.FooterIconHandle != IntPtr.Zero;
-            if (this.boundMainIconIsFromHandle)
+            this.boundIconIsFromHandle = this.iconHandle != IntPtr.Zero;
+            if (this.boundIconIsFromHandle)
+            {
                 flags |= TaskDialogFlags.UseHIconMain;
+                iconValue = this.iconHandle;
+            }
+            else
+            {                
+                iconValue = (IntPtr)this.icon;
+            }
+
+            this.boundFooterIconIsFromHandle = this.footerIconHandle != IntPtr.Zero;
             if (this.boundFooterIconIsFromHandle)
+            {
                 flags |= TaskDialogFlags.UseHIconFooter;
+                footerIconValue = this.footerIconHandle;
+            }
+            else
+            {
+                footerIconValue = (IntPtr)this.footerIcon;
+            }
 
             if (this.startupLocation == TaskDialogStartupLocation.CenterParent)
                 flags |= TaskDialogFlags.PositionRelativeToWindow;
