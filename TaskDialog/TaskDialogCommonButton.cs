@@ -16,9 +16,10 @@ namespace KPreisser.UI
         /// 
         /// </summary>
         public TaskDialogCommonButton()
-            : base()
+            // Use 'OK' by default instead of 'None' (which would not be a valid
+            // common button).
+            : this(TaskDialogResult.OK)
         {
-            
         }
 
         /// <summary>
