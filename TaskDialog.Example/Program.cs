@@ -48,6 +48,11 @@ namespace TaskDialogExample
                 Console.WriteLine("Main Contents destroying!");
             };
 
+            dialogContents.Expander.ExpandoButtonClicked += (s, e) =>
+            {
+                Console.WriteLine("Expander Expanded Changed: " + dialogContents.Expander.Expanded);
+            };
+
             using (var dialog = new TaskDialog(dialogContents))
             {
                 dialog.Opened += (s, e) =>
