@@ -59,7 +59,7 @@ namespace TaskDialogExample
                     Console.WriteLine("Dialog closing!");
                 };
 
-                dialogContents.ProgressBar.Position = 1;
+                dialogContents.ProgressBar.Value = 1;
 
                 var buttonYes = dialogContents.CommonButtons.Add(TaskDialogResult.Yes);
                 buttonYes.Enabled = false;
@@ -81,7 +81,7 @@ namespace TaskDialogExample
                     // Update the progress bar if value <= 35.
                     if (timerCount <= 35)
                     {
-                        dialogContents.ProgressBar.Position = (int)timerCount;
+                        dialogContents.ProgressBar.Value = (int)timerCount;
                     }
                     else if (timerCount == 36)
                     {
