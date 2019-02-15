@@ -139,11 +139,11 @@ namespace KPreisser.UI
 
             set
             {
-                this.DenyIfBoundAndNotCreated();
-
                 if (value < 0 || value > ushort.MaxValue)
                     throw new ArgumentOutOfRangeException(nameof(value));
-                
+
+                this.DenyIfBoundAndNotCreated();
+
                 // We only update the TaskDialog if the current state is a non-marquee progress bar.
                 if (this.boundTaskDialogContents != null && !ProgressBarStateIsMarquee(this.state))
                 {
@@ -168,10 +168,10 @@ namespace KPreisser.UI
 
             set
             {
-                this.DenyIfBoundAndNotCreated();
-
                 if (value < 0 || value > ushort.MaxValue)
                     throw new ArgumentOutOfRangeException(nameof(value));
+
+                this.DenyIfBoundAndNotCreated();
 
                 // We only update the TaskDialog if the current state is a non-marquee progress bar.
                 if (this.boundTaskDialogContents != null && !ProgressBarStateIsMarquee(this.state))
@@ -197,11 +197,11 @@ namespace KPreisser.UI
 
             set
             {
-                this.DenyIfBoundAndNotCreated();
-
                 if (value < 0 || value > ushort.MaxValue)
                     throw new ArgumentOutOfRangeException(nameof(value));
-               
+
+                this.DenyIfBoundAndNotCreated();
+
                 // We only update the TaskDialog if the current state is a non-marquee progress bar.
                 if (this.boundTaskDialogContents != null && !ProgressBarStateIsMarquee(this.state))
                 {

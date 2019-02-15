@@ -30,7 +30,7 @@ namespace KPreisser.UI
                 TaskDialogResult result)
             : base()
         {
-            if (!IsValidCommonButton(result))
+            if (!IsValidCommonButtonResult(result))
                 throw new ArgumentException();
 
             this.result = result;
@@ -47,10 +47,10 @@ namespace KPreisser.UI
 
             set
             {
-                this.DenyIfBound();
-
-                if (!IsValidCommonButton(value))
+                if (!IsValidCommonButtonResult(value))
                     throw new ArgumentException();
+
+                this.DenyIfBound();
 
                 // If we are part of a CommonButtonCollection, we must now notify it
                 // that we changed our result.
@@ -95,11 +95,42 @@ namespace KPreisser.UI
         }
 
 
-        private static bool IsValidCommonButton(
-                TaskDialogResult button)
+        private static TaskDialogButtons GetButtonFlagForResult(
+                TaskDialogResult result)
         {
-            return button > 0 &&
-                    button <= TaskDialogResult.Continue;
+            switch (result)
+            {
+                case TaskDialogResult.OK:
+                    return TaskDialogButtons.OK;
+                case TaskDialogResult.Cancel:
+                    return TaskDialogButtons.Cancel;
+                case TaskDialogResult.Abort:
+                    return TaskDialogButtons.Abort;
+                case TaskDialogResult.Retry:
+                    return TaskDialogButtons.Retry;
+                case TaskDialogResult.Ignore:
+                    return TaskDialogButtons.Ignore;
+                case TaskDialogResult.Yes:
+                    return TaskDialogButtons.Yes;
+                case TaskDialogResult.No:
+                    return TaskDialogButtons.No;
+                case TaskDialogResult.Close:
+                    return TaskDialogButtons.Close;
+                case TaskDialogResult.Help:
+                    return TaskDialogButtons.Help;
+                case TaskDialogResult.TryAgain:
+                    return TaskDialogButtons.TryAgain;
+                case TaskDialogResult.Continue:
+                    return TaskDialogButtons.Continue;
+                default:
+                    return default;
+            }
+        }
+
+        private static bool IsValidCommonButtonResult(
+                TaskDialogResult result)
+        {
+            return GetButtonFlagForResult(result) != default;
         }
 
 
@@ -110,6 +141,16 @@ namespace KPreisser.UI
         public override string ToString()
         {
             return this.result.ToString();
+        }
+
+
+        internal TaskDialogButtons GetButtonFlag()
+        {
+            // Don't specify a flag if this button is hidden.
+            if (!this.visible)
+                return default;
+
+            return GetButtonFlagForResult(this.result);
         }
 
 

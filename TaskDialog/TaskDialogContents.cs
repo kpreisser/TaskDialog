@@ -690,7 +690,6 @@ namespace KPreisser.UI
 
             this.boundTaskDialog = owner;
             flags = this.flags;
-            buttonFlags = GetCommonButtonFlags();
 
             this.boundIconIsFromHandle = this.iconHandle != IntPtr.Zero;
             if (this.boundIconIsFromHandle)
@@ -744,11 +743,13 @@ namespace KPreisser.UI
             // Note: The collections will be locked while this contents are bound, so we
             // don't need to copy them here.
             defaultButtonID = 0;
+            buttonFlags = default;
             foreach (var commonButton in commonButtons)
             {
                 flags |= commonButton.Bind(this);
-                
-                if (commonButton.DefaultButton && defaultButtonID == 0)
+                buttonFlags |= commonButton.GetButtonFlag();
+
+                if (commonButton.Visible && commonButton.DefaultButton && defaultButtonID == 0)
                     defaultButtonID = (int)commonButton.Result;
             }
 
@@ -874,59 +875,6 @@ namespace KPreisser.UI
             this.TimerTick?.Invoke(this, e);
         }
 
-
-        private TaskDialogButtons GetCommonButtonFlags()
-        {
-            var flags = default(TaskDialogButtons);
-
-            foreach (var button in this.CommonButtons)
-            {
-                // Don't include hidden buttons.
-                if (!button.Visible)
-                    continue;
-
-                switch (button.Result)
-                {
-                    case TaskDialogResult.OK:
-                        flags |= TaskDialogButtons.OK;
-                        break;
-                    case TaskDialogResult.Cancel:
-                        flags |= TaskDialogButtons.Cancel;
-                        break;
-                    case TaskDialogResult.Abort:
-                        flags |= TaskDialogButtons.Abort;
-                        break;
-                    case TaskDialogResult.Retry:
-                        flags |= TaskDialogButtons.Retry;
-                        break;
-                    case TaskDialogResult.Ignore:
-                        flags |= TaskDialogButtons.Ignore;
-                        break;
-                    case TaskDialogResult.Yes:
-                        flags |= TaskDialogButtons.Yes;
-                        break;
-                    case TaskDialogResult.No:
-                        flags |= TaskDialogButtons.No;
-                        break;
-                    case TaskDialogResult.Close:
-                        flags |= TaskDialogButtons.Close;
-                        break;
-                    case TaskDialogResult.Help:
-                        flags |= TaskDialogButtons.Help;
-                        break;
-                    case TaskDialogResult.TryAgain:
-                        flags |= TaskDialogButtons.TryAgain;
-                        break;
-                    case TaskDialogResult.Continue:
-                        flags |= TaskDialogButtons.Continue;
-                        break;
-                    default:
-                        throw new InvalidOperationException(); // should not happen
-                }
-            }
-
-            return flags;
-        }
 
         private bool GetFlag(TaskDialogFlags flag)
         {
