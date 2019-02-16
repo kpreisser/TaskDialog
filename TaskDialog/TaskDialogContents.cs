@@ -475,8 +475,6 @@ namespace KPreisser.UI
             }
         }
 
-
-
         /// <summary>
         /// 
         /// </summary>
@@ -607,7 +605,7 @@ namespace KPreisser.UI
                         $"This {nameof(TaskDialogContents)} instance is already bound to " +
                         $"another {nameof(TaskDialog)} instance.");
 
-            // We also need to validate the controls since they could also be assinged to
+            // We also need to validate the controls since they could also be assigned to
             // another (bound) TaskDialogContents at the same time.
             // Access the collections using the property to ensure they exist.
             if (this.CommonButtons.BoundTaskDialogContents != null && this.CommonButtons.BoundTaskDialogContents != this ||
@@ -617,6 +615,7 @@ namespace KPreisser.UI
                     this.progressBar?.BoundTaskDialogContents != null && this.progressBar.BoundTaskDialogContents != this ||
                     this.checkBox?.BoundTaskDialogContents != null && this.checkBox.BoundTaskDialogContents != this)
                 throw new InvalidOperationException();
+
             foreach (var control in (this.CommonButtons as IEnumerable<TaskDialogControl>)
                     .Concat(this.CustomButtons)
                     .Concat(this.RadioButtons))
