@@ -114,15 +114,22 @@ namespace KPreisser.UI
         }
 
 
-        internal IReadOnlyList<TaskDialogButton> Collection
-        {
-            get => this.collection;
-            set => this.collection = value;
-        }
-
         internal abstract int ButtonID
         {
             get;
+        }
+
+
+        // Note: Instead of declaring an abstract Collection getter, we implement
+        // the field and the property here so that the subclass doesn't have to
+        // do the implementation, in order to avoid duplicating the logic
+        // (e.g. if we ever need to add actions in the setter, it normally would
+        // be the same for all subclasses). Instead, the subclass can declare
+        // a new (internal) Collection property which has a more specific type.
+        protected private IReadOnlyList<TaskDialogButton> Collection
+        {
+            get => this.collection;
+            set => this.collection = value;
         }
 
 

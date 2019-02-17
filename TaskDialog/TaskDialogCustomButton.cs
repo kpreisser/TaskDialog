@@ -76,6 +76,11 @@
             get => this.buttonID;
         }
 
+        internal new TaskDialogCustomButtonCollection Collection
+        {
+            get => (TaskDialogCustomButtonCollection)base.Collection;
+            set => base.Collection = value;
+        }
 
         /// <summary>
         /// 

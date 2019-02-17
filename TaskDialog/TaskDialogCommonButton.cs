@@ -54,7 +54,7 @@ namespace KPreisser.UI
 
                 // If we are part of a CommonButtonCollection, we must now notify it
                 // that we changed our result.
-                (this.Collection as TaskDialogCommonButtonCollection)?.HandleKeyChange(
+                this.Collection?.HandleKeyChange(
                         this,
                         value);
 
@@ -97,6 +97,12 @@ namespace KPreisser.UI
         internal override int ButtonID
         {
             get => (int)this.result;
+        }
+
+        internal new TaskDialogCommonButtonCollection Collection
+        {
+            get => (TaskDialogCommonButtonCollection)base.Collection;
+            set => base.Collection = value;
         }
 
 
