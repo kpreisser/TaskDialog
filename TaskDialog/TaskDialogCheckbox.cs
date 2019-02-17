@@ -67,7 +67,7 @@ namespace KPreisser.UI
             {
                 this.DenyIfBoundAndNotCreated();
 
-                if (this.boundTaskDialogContents == null)
+                if (this.BoundTaskDialogContents == null)
                 {
                     this.@checked = value;
                 }
@@ -76,7 +76,7 @@ namespace KPreisser.UI
                     // Click the checkbox which should cause a call to
                     // HandleCheckBoxClicked(), where we will update the checked
                     // state.
-                    this.boundTaskDialogContents.BoundTaskDialog.ClickCheckBox(
+                    this.BoundTaskDialogContents.BoundTaskDialog.ClickCheckBox(
                             value);
                 }
             }
@@ -97,7 +97,7 @@ namespace KPreisser.UI
             this.DenyIfNotBound();
             this.DenyIfBoundAndNotCreated();
 
-            this.boundTaskDialogContents.BoundTaskDialog.ClickCheckBox(
+            this.BoundTaskDialogContents.BoundTaskDialog.ClickCheckBox(
                     this.@checked,
                     true);
         }

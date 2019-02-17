@@ -55,7 +55,7 @@ namespace KPreisser.UI
                 // Check if we can update the button.
                 if (CanUpdate())
                 {
-                    this.boundTaskDialogContents?.BoundTaskDialog.SetButtonEnabled(
+                    this.BoundTaskDialogContents?.BoundTaskDialog.SetButtonEnabled(
                             this.ButtonID,
                             value);
                 }
@@ -80,7 +80,7 @@ namespace KPreisser.UI
 
                 if (CanUpdate())
                 {
-                    this.boundTaskDialogContents?.BoundTaskDialog.SetButtonElevationRequiredState(
+                    this.BoundTaskDialogContents?.BoundTaskDialog.SetButtonElevationRequiredState(
                             this.ButtonID,
                             value);
                 }
@@ -141,7 +141,7 @@ namespace KPreisser.UI
             // Note: We allow a click even if the button is not visible/created.
             DenyIfNotBound();            
 
-            this.boundTaskDialogContents.BoundTaskDialog.ClickButton(this.ButtonID);
+            this.BoundTaskDialogContents.BoundTaskDialog.ClickButton(this.ButtonID);
         }
 
 
@@ -175,7 +175,7 @@ namespace KPreisser.UI
             // waiting for the Navigated event. In the latter case we don't throw
             // an exception however, because ApplyInitialization will be called in
             // the Navigated handler that does the necessary updates.
-            return this.boundTaskDialogContents?.BoundTaskDialog
+            return this.BoundTaskDialogContents?.BoundTaskDialog
                     .WaitingForNavigatedEvent == false;
         }
     }

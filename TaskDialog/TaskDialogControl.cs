@@ -9,9 +9,6 @@ namespace KPreisser.UI
     [TypeConverter(typeof(ExpandableObjectConverter))]
     public abstract class TaskDialogControl
     {
-        private protected TaskDialogContents boundTaskDialogContents;
-
-
         // Disallow inheritance by specifying a private protected constructor.
         private protected TaskDialogControl()
             : base()
@@ -32,7 +29,8 @@ namespace KPreisser.UI
 
         internal TaskDialogContents BoundTaskDialogContents
         {
-            get => this.boundTaskDialogContents;
+            get;
+            private set;
         }
 
         /// <summary>
@@ -51,13 +49,13 @@ namespace KPreisser.UI
         internal bool IsCreated
         {
             get;
-            set;
+            private set;
         }
 
 
         internal TaskDialogFlags Bind(TaskDialogContents contents)
         {
-            this.boundTaskDialogContents = contents ??
+            this.BoundTaskDialogContents = contents ??
                     throw new ArgumentNullException(nameof(contents));
 
             // Use the current value of IsCreatable to determine if the control is
@@ -71,7 +69,7 @@ namespace KPreisser.UI
         internal virtual void Unbind()
         {
             this.IsCreated = false;
-            this.boundTaskDialogContents = null;            
+            this.BoundTaskDialogContents = null;
         }
 
         /// <summary>
@@ -111,19 +109,19 @@ namespace KPreisser.UI
 
         private protected void DenyIfBound()
         {
-            this.boundTaskDialogContents?.DenyIfBound();
+            this.BoundTaskDialogContents?.DenyIfBound();
         }
 
         private protected void DenyIfNotBound()
         {
-            if (this.boundTaskDialogContents == null)
+            if (this.BoundTaskDialogContents == null)
                 throw new InvalidOperationException(
                         "This control is not currently bound to a task dialog.");
         }
 
         private protected void DenyIfBoundAndNotCreated()
         {
-            if (this.boundTaskDialogContents != null && !this.IsCreated)
+            if (this.BoundTaskDialogContents != null && !this.IsCreated)
                 throw new InvalidOperationException("The control has not been created.");
         }
     }

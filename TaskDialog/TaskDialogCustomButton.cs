@@ -108,7 +108,7 @@
 
         internal string GetResultingText()
         {
-            var contents = this.boundTaskDialogContents;
+            var contents = this.BoundTaskDialogContents;
 
             // Remove LFs from the text. Otherwise, the dialog would display the
             // part of the text after the LF in the command link note, but for

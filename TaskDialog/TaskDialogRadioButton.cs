@@ -57,7 +57,7 @@ namespace KPreisser.UI
             set
             {
                 this.DenyIfBoundAndNotCreated();
-                this.boundTaskDialogContents?.BoundTaskDialog.SetRadioButtonEnabled(
+                this.BoundTaskDialogContents?.BoundTaskDialog.SetRadioButtonEnabled(
                         this.radioButtonID,
                         value);
 
@@ -97,11 +97,11 @@ namespace KPreisser.UI
                 // Unchecking a radio button is not possible in the task dialog.
                 // TODO: Should we throw only if the new value is different than the
                 // old one?
-                if (this.boundTaskDialogContents != null && !value)
+                if (this.BoundTaskDialogContents != null && !value)
                     throw new InvalidOperationException(
                             "Cannot uncheck a radio button while it is bound to a task dialog.");
 
-                if (this.boundTaskDialogContents == null)
+                if (this.BoundTaskDialogContents == null)
                 {
                     this.@checked = value;
 
@@ -120,7 +120,7 @@ namespace KPreisser.UI
                     // Click the radio button; this should raise the RadioButtonClicked
                     // notification where we will update the "checked" status of all
                     // radio buttons in the collection.
-                    this.boundTaskDialogContents.BoundTaskDialog.ClickRadioButton(
+                    this.BoundTaskDialogContents.BoundTaskDialog.ClickRadioButton(
                             this.radioButtonID);
                 }
             }
@@ -171,7 +171,7 @@ namespace KPreisser.UI
         internal void HandleRadioButtonClicked()
         {
             // First, uncheck the other radio buttons.
-            foreach (var radioButton in this.boundTaskDialogContents.RadioButtons
+            foreach (var radioButton in this.BoundTaskDialogContents.RadioButtons
                     .Where(e => e != this))
             {
                 if (radioButton.@checked)
