@@ -43,7 +43,7 @@ namespace KPreisser.UI
         /// Gets or sets the state of the progress bar.
         /// </summary>
         /// <remarks>
-        /// This property can be changed while the dialog is shown. However, it is
+        /// This property can be set while the dialog is shown. However, it is
         /// not possible to change the state from <see cref="TaskDialogProgressBarState.None"/>
         /// to any other state, and vice versa.
         /// </remarks>
@@ -131,7 +131,7 @@ namespace KPreisser.UI
         /// 
         /// </summary>
         /// <remarks>
-        /// This property can be changed while the dialog is shown.
+        /// This property can be set while the dialog is shown.
         /// </remarks>
         public int Minimum
         {
@@ -160,7 +160,7 @@ namespace KPreisser.UI
         /// 
         /// </summary>
         /// <remarks>
-        /// This property can be changed while the dialog is shown.
+        /// This property can be set while the dialog is shown.
         /// </remarks>
         public int Maximum
         {
@@ -189,7 +189,7 @@ namespace KPreisser.UI
         /// 
         /// </summary>
         /// <remarks>
-        /// This property can be changed while the dialog is shown.
+        /// This property can be set while the dialog is shown.
         /// </remarks>
         public int Value
         {
@@ -217,7 +217,7 @@ namespace KPreisser.UI
         /// 
         /// </summary>
         /// <remarks>
-        /// This property can be changed while the dialog is shown.
+        /// This property can be set while the dialog is shown.
         /// </remarks>
         public int MarqueeSpeed
         {

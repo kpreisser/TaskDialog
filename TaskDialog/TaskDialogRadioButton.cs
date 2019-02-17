@@ -48,7 +48,7 @@ namespace KPreisser.UI
         /// 
         /// </summary>
         /// <remarks>
-        /// This property can be changed while the dialog is shown.
+        /// This property can be set while the dialog is shown.
         /// </remarks>
         public bool Enabled
         {

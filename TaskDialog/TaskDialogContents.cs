@@ -228,7 +228,7 @@ namespace KPreisser.UI
         /// Gets or sets the title of the task dialog window.
         /// </summary>
         /// <remarks>
-        /// This text can be changed while the dialog is shown.
+        /// This property can be set while the dialog is shown.
         /// </remarks>
         public string Title
         {
@@ -248,7 +248,7 @@ namespace KPreisser.UI
         /// Gets or sets the main instruction text.
         /// </summary>
         /// <remarks>
-        /// This text can be changed while the dialog is shown.
+        /// This property can be set while the dialog is shown.
         /// </remarks>
         public string Instruction
         {
@@ -268,7 +268,7 @@ namespace KPreisser.UI
         /// Gets or sets the dialog's primary text content.
         /// </summary>
         /// <remarks>
-        /// This text can be changed while the dialog is shown.
+        /// This property can be set while the dialog is shown.
         /// </remarks>
         public string Text
         {
@@ -288,7 +288,7 @@ namespace KPreisser.UI
         /// Gets or sets the text to be displayed in the dialog's footer area.
         /// </summary>
         /// <remarks>
-        /// This text can be changed while the dialog is shown.
+        /// This property can be set while the dialog is shown.
         /// </remarks>
         public string FooterText
         {
@@ -309,7 +309,7 @@ namespace KPreisser.UI
         /// <see cref="IntPtr.Zero"/>.
         /// </summary>
         /// <remarks>
-        /// This icon can be changed while the dialog is shown.
+        /// This property can be set while the dialog is shown.
         /// </remarks>
         [DefaultValue(TaskDialogIcon.None)]
         public TaskDialogIcon Icon
@@ -346,7 +346,7 @@ namespace KPreisser.UI
         /// be ignored.
         /// </summary>
         /// <remarks>
-        /// This icon can be changed while the dialog is shown.
+        /// This property can be set while the dialog is shown.
         /// </remarks>
         [Browsable(false)]
         public IntPtr IconHandle
@@ -372,7 +372,7 @@ namespace KPreisser.UI
         /// <see cref="IntPtr.Zero"/>.
         /// </summary>
         /// <remarks>
-        /// This icon can be changed while the dialog is shown.
+        /// This property can be set while the dialog is shown.
         /// </remarks>
         [DefaultValue(TaskDialogIcon.None)]
         public TaskDialogIcon FooterIcon
@@ -403,7 +403,7 @@ namespace KPreisser.UI
         /// be ignored.
         /// </summary>
         /// <remarks>
-        /// This icon can be changed while the dialog is shown.
+        /// This property can be set while the dialog is shown.
         /// </remarks>
         [Browsable(false)]
         public IntPtr FooterIconHandle

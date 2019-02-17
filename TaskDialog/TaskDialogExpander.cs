@@ -49,7 +49,7 @@ namespace KPreisser.UI
         /// Gets or sets the text to be displayed in the dialog's expanded area.
         /// </summary>
         /// <remarks>
-        /// This text can be changed while the dialog is shown.
+        /// This property can be set while the dialog is shown.
         /// </remarks>
         public string Text
         {
