@@ -31,7 +31,7 @@ namespace KPreisser.UI
             : base()
         {
             if (!IsValidCommonButtonResult(result))
-                throw new ArgumentException();
+                throw new ArgumentOutOfRangeException(nameof(result));
 
             this.result = result;
         }
@@ -48,7 +48,7 @@ namespace KPreisser.UI
             set
             {
                 if (!IsValidCommonButtonResult(value))
-                    throw new ArgumentException();
+                    throw new ArgumentOutOfRangeException(nameof(value));
 
                 this.DenyIfBound();
 

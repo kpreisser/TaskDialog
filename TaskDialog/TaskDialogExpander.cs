@@ -39,7 +39,7 @@ namespace KPreisser.UI
         /// </summary>
         /// <param name="text"></param>
         public TaskDialogExpander(string text)
-            : base()
+            : this()
         {
             this.text = text;
         }

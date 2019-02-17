@@ -38,7 +38,7 @@ namespace KPreisser.UI
         /// 
         /// </summary>
         public TaskDialogRadioButton(string text)
-            : base()
+            : this()
         {
             this.text = text;
         }

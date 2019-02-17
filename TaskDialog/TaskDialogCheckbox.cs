@@ -33,7 +33,7 @@ namespace KPreisser.UI
         /// </summary>
         /// <param name="text"></param>
         public TaskDialogCheckBox(string text)
-            : base()
+            : this()
         {
             this.text = text;
         }

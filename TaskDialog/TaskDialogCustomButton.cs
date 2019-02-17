@@ -24,7 +24,7 @@
         /// 
         /// </summary>
         public TaskDialogCustomButton(string text, string descriptionText = null)
-            : base()
+            : this()
         {
             this.text = text;
             this.descriptionText = descriptionText;
