@@ -34,8 +34,8 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// Gets a value that indicates if this control can be created in a
-        /// task dialog.
+        /// Gets a value that indicates if the current state of this control
+        /// allows it to be created in a task dialog when binding it.
         /// </summary>
         internal virtual bool IsCreatable
         {
@@ -43,8 +43,8 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// Gets or sets a value that indicates if this control was created in
-        /// a task dialog.
+        /// Gets or sets a value that indicates if this control has been created
+        /// in a bound task dialog.
         /// </summary>
         internal bool IsCreated
         {
