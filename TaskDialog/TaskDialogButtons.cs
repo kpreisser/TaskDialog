@@ -41,6 +41,12 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
+        /// <remarks>
+        /// Note: Adding a Cancel button will automatically add a close button
+        /// to the task dialog's title bar and will allow to close the dialog by
+        /// pressing ESC or Alt+F4 (just as if you enabled
+        /// <see cref="TaskDialogContents.AllowCancel"/>).
+        /// </remarks>
         Close = 1 << 5,
 
         /// <summary>
