@@ -94,6 +94,11 @@ namespace KPreisser.UI
             get => base.IsCreatable && this.visible;
         }
 
+        internal override int ButtonID
+        {
+            get => (int)this.result;
+        }
+
 
         private static TaskDialogButtons GetButtonFlagForResult(
                 TaskDialogResult result)
@@ -151,12 +156,6 @@ namespace KPreisser.UI
                 return default;
 
             return GetButtonFlagForResult(this.result);
-        }
-
-
-        private protected override int GetButtonID()
-        {
-            return (int)this.result;
         }
     }
 }

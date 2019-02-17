@@ -749,7 +749,7 @@ namespace KPreisser.UI
                 buttonFlags |= commonButton.GetButtonFlag();
 
                 if (commonButton.Visible && commonButton.DefaultButton && defaultButtonID == 0)
-                    defaultButtonID = (int)commonButton.Result;
+                    defaultButtonID = commonButton.ButtonID;
             }
 
             for (int i = 0; i < customButtons.Count; i++)

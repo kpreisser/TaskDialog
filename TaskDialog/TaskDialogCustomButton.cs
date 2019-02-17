@@ -66,14 +66,14 @@
         }
 
 
-        internal int ButtonID
-        {
-            get => this.buttonID;
-        }
-
         internal override bool IsCreatable
         {
             get => base.IsCreatable && !TaskDialogContents.IsNativeStringNullOrEmpty(this.text);
+        }
+
+        internal override int ButtonID
+        {
+            get => this.buttonID;
         }
 
 
@@ -120,12 +120,6 @@
                 text += '\n' + this.descriptionText;
 
             return text;
-        }
-
-
-        private protected override int GetButtonID()
-        {
-            return this.buttonID;
         }
     }
 }

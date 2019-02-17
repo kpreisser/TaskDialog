@@ -56,7 +56,7 @@ namespace KPreisser.UI
                 if (CanUpdate())
                 {
                     this.boundTaskDialogContents?.BoundTaskDialog.SetButtonEnabled(
-                            this.GetButtonID(),
+                            this.ButtonID,
                             value);
                 }
 
@@ -81,7 +81,7 @@ namespace KPreisser.UI
                 if (CanUpdate())
                 {
                     this.boundTaskDialogContents?.BoundTaskDialog.SetButtonElevationRequiredState(
-                            this.GetButtonID(),
+                            this.ButtonID,
                             value);
                 }
 
@@ -120,6 +120,11 @@ namespace KPreisser.UI
             set => this.collection = value;
         }
 
+        internal abstract int ButtonID
+        {
+            get;
+        }
+
 
         /// <summary>
         /// Simulates a click on this button.
@@ -127,8 +132,9 @@ namespace KPreisser.UI
         public void PerformClick()
         {
             // Note: We allow a click even if the button is not visible/created.
-            DenyIfNotBound();
-            this.boundTaskDialogContents.BoundTaskDialog.ClickButton(this.GetButtonID());
+            DenyIfNotBound();            
+
+            this.boundTaskDialogContents.BoundTaskDialog.ClickButton(this.ButtonID);
         }
 
 
@@ -136,6 +142,7 @@ namespace KPreisser.UI
         {
             var e = new TaskDialogButtonClickedEventArgs();
             this.OnClick(e);
+
             return !e.CancelClose;
         }
 
@@ -153,8 +160,6 @@ namespace KPreisser.UI
         {
             this.Click?.Invoke(this, e);
         }
-
-        private protected abstract int GetButtonID();
 
 
         private bool CanUpdate()
