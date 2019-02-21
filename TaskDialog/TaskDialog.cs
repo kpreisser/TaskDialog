@@ -33,15 +33,17 @@ namespace KPreisser.UI
 
 
         /// <summary>
-        /// The delegate for the dialog callback. We must ensure to prevent this delegate
-        /// from being garbage-collected as long as at least one dialog is being shown.
+        /// The delegate for <see cref="HandleTaskDialogCallback"/> from which the
+        /// native function pointer <see cref="callbackProcDelegatePtr"/> is created. 
         /// </summary>
+        /// <remarks>
+        /// We must store this delegate (and prevent it from being garbage-collected)
+        /// to ensure the function pointer doesn't become invalid.
+        /// </remarks>
         private static readonly TaskDialogCallbackProcDelegate callbackProcDelegate;
 
         /// <summary>
-        /// The function pointer created from the dialog callback delegate.
-        /// Note that the pointer will become invalid once the delegate is
-        /// garbage-collected.
+        /// The function pointer created from <see cref="callbackProcDelegate"/>.
         /// </summary>
         private static readonly IntPtr callbackProcDelegatePtr;
 
@@ -86,9 +88,10 @@ namespace KPreisser.UI
         /// raised the handler as dialog result. Otherwise, this can lead to memory access
         /// problems like <see cref="AccessViolationException"/>s, especially if the
         /// previous dialog contents had radio buttons (but the new ones do not).
-        /// See the comment in
-        /// <see cref="HandleTaskDialogCallback(IntPtr, TaskDialogNotification, IntPtr, IntPtr, IntPtr)"/>
-        /// for more information.
+        /// 
+        /// See the comment in <see cref="HandleTaskDialogCallback"/> for more
+        /// information.
+        /// 
         /// A stack/list is needed as there can be multiple ButtonClicked handlers on
         /// the call stack, for example if a ButtonClicked handler runs the message
         /// loop so that new click events can be processed.
@@ -103,6 +106,10 @@ namespace KPreisser.UI
         /// <summary>
         /// Occurs after the task dialog has been created but before it is displayed.
         /// </summary>
+        /// <remarks>
+        /// Note: The dialog will not show until this handler returns (even if the
+        /// handler would run the message loop).
+        /// </remarks>
         public event EventHandler Opened;
 
         /// <summary>
@@ -121,7 +128,7 @@ namespace KPreisser.UI
         /// </remarks>
         public event EventHandler Navigated;
 
-        //// TODO: Maybe remove these events since they are also available in the
+        //// These events were removed since they are also available in the
         //// TaskDialogContents, and are specific to the contents (not to the dialog).
 
         ///// <summary>
@@ -146,8 +153,8 @@ namespace KPreisser.UI
             // Create a delegate for the callback, and get a function pointer for it.
             // Because this will allocate some memory required to store the native
             // code for the function pointer, we only do this once by using a static
-            // function, and identify the actual TaskDialog instance by using a
-            // GCHandle in the reference data field.
+            // function, and then identify the actual TaskDialog instance by using a
+            // GCHandle in the reference data field (like an instance pointer).
             callbackProcDelegate = HandleTaskDialogCallback;
             callbackProcDelegatePtr = Marshal.GetFunctionPointerForDelegate(
                     callbackProcDelegate);
@@ -181,9 +188,9 @@ namespace KPreisser.UI
         /// if the dialog is currently not being shown.
         /// </summary>
         /// <remarks>
-        /// When showing the dialog, the handle will be available first in the
-        /// <see cref="Opened"/> event, and last in the
-        /// <see cref="Closing"/> after which you shouldn't use it any more.
+        /// When showing the dialog, the handle will be available first when the
+        /// <see cref="Opened"/> event occurs, and last when the
+        /// <see cref="Closing"/> event occurs after which you shouldn't use it any more.
         /// </remarks>
         [Browsable(false)]
         public IntPtr Handle
@@ -196,15 +203,14 @@ namespace KPreisser.UI
         /// the contents which this task dialog will display.
         /// </summary>
         /// <remarks>
-        /// By setting this property while the task dialog is displayed, it will completely
+        /// By setting this property while the task dialog is displayed, it will
         /// recreate its contents from the specified <see cref="TaskDialogContents"/>
         /// ("navigation"). After the dialog is navigated, the <see cref="Navigated"/>
         /// and the <see cref="TaskDialogContents.Created"/> events will occur.
         /// 
         /// Please note that you cannot update the task dialog or its controls
-        /// directly after navigating it (by setting this property). You will need
-        /// to wait for one of the mentioned events to occur before you can update
-        /// it.
+        /// directly after navigating it. You will need to wait for one of the mentioned
+        /// events to occur before you can update the dialog or its controls.
         /// </remarks>
         [Category("Contents")]
         [Description("Contains the current contents of the Task Dialog.")]
@@ -348,19 +354,17 @@ namespace KPreisser.UI
                 TaskDialogButtons buttons = TaskDialogButtons.OK,
                 TaskDialogIcon icon = TaskDialogIcon.None)
         {
-            var dialog = new TaskDialog()
+            using (var dialog = new TaskDialog(new TaskDialogContents()
             {
-                currentContents = new TaskDialogContents()
-                {
-                    Text = text,
-                    Instruction = instruction,
-                    Title = title,
-                    Icon = icon,
-                    CommonButtons = buttons
-                }
-            };
-
-            return ((TaskDialogCommonButton)dialog.Show(hwndOwner)).Result;
+                Text = text,
+                Instruction = instruction,
+                Title = title,
+                Icon = icon,
+                CommonButtons = buttons
+            }))
+            {
+                return ((TaskDialogCommonButton)dialog.Show(hwndOwner)).Result;
+            }
         }
 
 
@@ -550,8 +554,11 @@ namespace KPreisser.UI
             // location, and it is probably not desired that the Dialog is actually destroyed
             // because this would be inconsistent with the case when an unhandled exception
             // occurs in a different WndProc function not handled by the TaskDialog
-            // (e.g. a WinForms/WPF Timer Tick event). Therefore, we don't catch
-            // Exceptions any more.
+            // (e.g. a WinForms/WPF Timer Tick event). Additionally, if you had multiple
+            // (non-modal) dialogs showing and the exception would occur in the callback
+            // of an outer dialog, it would not be rethrown until the inner dialogs
+            // were also closed. Therefore, we don't catch exceptions (and return
+            // a error HResult) any more.
             // Note: Currently, this means that a NRE will occur in the callback after
             // TaskDialog.Show() returns due to an unhandled exception because the
             // TaskDialog is still displayed (see comment in Show()).
