@@ -126,7 +126,7 @@ namespace KPreisser.UI
         // (e.g. if we ever need to add actions in the setter, it normally would
         // be the same for all subclasses). Instead, the subclass can declare
         // a new (internal) Collection property which has a more specific type.
-        protected private IReadOnlyList<TaskDialogButton> Collection
+        private protected IReadOnlyList<TaskDialogButton> Collection
         {
             get => this.collection;
             set => this.collection = value;

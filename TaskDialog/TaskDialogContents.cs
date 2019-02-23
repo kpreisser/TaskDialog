@@ -12,16 +12,21 @@ namespace KPreisser.UI
     public class TaskDialogContents
     {
         /// <summary>
-        /// The start ID for custom buttons. We need to ensure we don't use a ID that
-        /// is already used for a common button (TaskDialogResult), so we start with
-        /// 100 to be safe.
+        /// The start ID for custom buttons.
         /// </summary>
+        /// <remarks>
+        /// We need to ensure we don't use a ID that is already used for a
+        /// common button (TaskDialogResult), so we start with 100 to be safe
+        /// (100 is also used as first ID in MSDN examples for the task dialog).
+        /// </remarks>
         internal const int CustomButtonStartID = 100;
 
         /// <summary>
-        /// The start ID for radio buttons. This must be at least 1 because 0 already
-        /// stands for "no button".
+        /// The start ID for radio buttons.
         /// </summary>
+        /// <remarks>
+        /// This must be at least 1 because 0 already stands for "no button".
+        /// </remarks>
         internal const int RadioButtonStartID = 1;
 
 
@@ -555,8 +560,12 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// 
+        /// Indicates that the width of the task dialog is determined by the width
+        /// of its content area (similar to Message Box sizing behavior).
         /// </summary>
+        /// <remarks>
+        /// This flag is ignored if <see cref="Width"/> is not set to <c>0</c>.
+        /// </remarks>
         [DefaultValue(false)]
         public bool SizeToContent
         {
@@ -623,7 +632,7 @@ namespace KPreisser.UI
                     throw new InvalidOperationException();
 
             if (this.CustomButtons.Count > int.MaxValue - CustomButtonStartID + 1 ||
-                    this.RadioButtons.Count > int.MaxValue - RadioButtonStartID + 1)
+                     this.RadioButtons.Count > int.MaxValue - RadioButtonStartID + 1)
                 throw new InvalidOperationException(
                         "Too many custom buttons or radio buttons have been added.");
 

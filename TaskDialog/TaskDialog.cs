@@ -154,7 +154,7 @@ namespace KPreisser.UI
             // Because this will allocate some memory required to store the native
             // code for the function pointer, we only do this once by using a static
             // function, and then identify the actual TaskDialog instance by using a
-            // GCHandle in the reference data field (like an instance pointer).
+            // GCHandle in the reference data field (like an object pointer).
             callbackProcDelegate = HandleTaskDialogCallback;
             callbackProcDelegatePtr = Marshal.GetFunctionPointerForDelegate(
                     callbackProcDelegate);
@@ -1298,6 +1298,10 @@ namespace KPreisser.UI
             NativeMethods.SendMessage(
                     this.hwndDialog,
                     (int)message,
+                    // Note: When a negative 32-bit integer is converted to a
+                    // 64-bit pointer, the high dword will be set to 0xFFFFFFFF.
+                    // This is consistent with the conversion from int to
+                    // WPARAM (in C) as shown in the Task Dialog documentation.
                     (IntPtr)wParam,
                     lParam);
         }

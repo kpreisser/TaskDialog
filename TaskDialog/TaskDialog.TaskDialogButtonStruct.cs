@@ -5,7 +5,7 @@ namespace KPreisser.UI
 {
     public partial class TaskDialog
     {
-        // Packing is defined as 1 in the C header file ("pack(1)").
+        // Packing is defined as 1 in CommCtrl.h ("pack(1)").
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         private struct TaskDialogButtonStruct
         {
