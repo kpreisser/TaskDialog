@@ -785,18 +785,23 @@ namespace KPreisser.UI
         /// <remarks>
         /// The default range is 0 to 100.
         /// </remarks>
-        internal void SetProgressBarRange(int min, int max)
+        internal unsafe void SetProgressBarRange(int min, int max)
         {
             if (min < 0 || min > ushort.MaxValue)
                 throw new ArgumentOutOfRangeException(nameof(min));
             if (max < 0 || max > ushort.MaxValue)
                 throw new ArgumentOutOfRangeException(nameof(max));
 
-            int param = min | (max << 0x10);
+            // Note: The MAKELPARAM macro converts the value to an unsigned int
+            // before converting it to a pointer, so we should do the same.
+            // However, this means we cannot convert the value directly to an
+            // IntPtr.
+            var param = (IntPtr)(void*)unchecked((uint)(min | (max << 0x10)));
+
             SendTaskDialogMessage(
                     TaskDialogMessage.SetProgressBarRange,
                     0,
-                    (IntPtr)param);
+                    param);
         }
 
         /// <summary>
