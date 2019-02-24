@@ -3,7 +3,7 @@
     /// <summary>
     /// 
     /// </summary>
-    public enum TaskDialogIcon : long
+    public enum TaskDialogIcon : int
     {
         /// <summary>
         /// 
