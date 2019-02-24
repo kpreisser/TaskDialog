@@ -290,6 +290,22 @@ namespace KPreisser.UI
             get => this.waitingForNavigatedEvent;
         }
 
+        /// <summary>
+        /// Gets or sets the current count of stack frames that are in the
+        /// <see cref="TaskDialogRadioButton.CheckedChanged"/> event for the
+        /// current task dialog, so that the
+        /// <see cref="TaskDialogRadioButton.Checked"/> setter can disallow the
+        /// change when the count is greater than zero.
+        /// </summary>
+        /// <remarks>
+        /// This property is only used by the <see cref="TaskDialogRadioButton"/>.
+        /// </remarks>
+        internal int DenyRadioButtonClickStackCount
+        {
+            get;
+            set;
+        }
+
 
         /// <summary>
         /// 
