@@ -56,10 +56,15 @@ namespace KPreisser.UI
 
             set
             {
-                this.DenyIfBoundAndNotCreated();
-                this.BoundTaskDialogContents?.BoundTaskDialog.SetRadioButtonEnabled(
-                        this.radioButtonID,
-                        value);
+                DenyIfBoundAndNotCreated();
+
+                // Check if we can update the button.
+                if (CanUpdate())
+                {
+                    this.BoundTaskDialogContents?.BoundTaskDialog.SetRadioButtonEnabled(
+                            this.radioButtonID,
+                            value);
+                }
 
                 this.enabled = value;
             }
@@ -196,7 +201,17 @@ namespace KPreisser.UI
                 this.Enabled = this.enabled;
         }
 
-        
+
+        private bool CanUpdate()
+        {
+            // Only update the button when bound to a task dialog and we are not
+            // waiting for the Navigated event. In the latter case we don't throw
+            // an exception however, because ApplyInitialization will be called in
+            // the Navigated handler that does the necessary updates.
+            return this.BoundTaskDialogContents?.BoundTaskDialog
+                    .WaitingForNavigatedEvent == false;
+        }
+
         private void OnCheckedChanged(EventArgs e)
         {
             this.CheckedChanged?.Invoke(this, e);
