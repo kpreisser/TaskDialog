@@ -239,43 +239,37 @@ namespace KPreisser.UI
             //// of RadioButtonClicked notifications even when we don't send any further
             //// messages to the dialog.
 
-            // Need to copy the dialog reference because it can become null if the
-            // dialog is navigated from the event handler.
-            var boundDialog = this.BoundTaskDialogContents.BoundTaskDialog;
-            boundDialog.DenyRadioButtonClickStackCount++;
-            try
+            if (!this.@checked)
             {
-                // Instead of calling the events directly, first set the checked field of
-                // every affected radio button, and then call the events (so that for any
-                // event exactly one radio button is selected), which is consistent with
-                // the behavior of WinForms radio buttons.
-                var radioButtonsToCallEvents = new List<TaskDialogRadioButton>();
-
-                // First, uncheck the other radio buttons.
-                foreach (var radioButton in this.BoundTaskDialogContents.RadioButtons
-                        .Where(e => e != this))
+                // Need to copy the dialog reference because it can become null if the
+                // dialog is navigated from the event handler.
+                var boundDialog = this.BoundTaskDialogContents.BoundTaskDialog;
+                checked
                 {
-                    if (radioButton.@checked)
-                    {
-                        radioButton.@checked = false;
-                        radioButtonsToCallEvents.Add(radioButton);
-                    }
+                    boundDialog.DenyRadioButtonClickStackCount++;
                 }
-
-                // Then, check the current radio button.
-                if (!this.@checked)
+                try
                 {
                     this.@checked = true;
-                    radioButtonsToCallEvents.Add(this);
-                }
 
-                // Now actually call the events.
-                foreach (var radioButton in radioButtonsToCallEvents)
-                    radioButton.OnCheckedChanged(EventArgs.Empty);
-            }
-            finally
-            {
-                boundDialog.DenyRadioButtonClickStackCount--;
+                    // Before raising the CheckedChanged event for the current button,
+                    // uncheck the other radio buttons and call their events.
+                    foreach (var radioButton in this.BoundTaskDialogContents.RadioButtons)
+                    {
+                        if (radioButton != this && radioButton.@checked)
+                        {
+                            radioButton.@checked = false;
+                            radioButton.OnCheckedChanged(EventArgs.Empty);
+                        }
+                    }
+
+                    // Finally, call the event for the current button.
+                    OnCheckedChanged(EventArgs.Empty);
+                }
+                finally
+                {
+                    boundDialog.DenyRadioButtonClickStackCount--;
+                }
             }
         }
 

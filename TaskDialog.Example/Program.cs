@@ -224,8 +224,10 @@ namespace TaskDialogExample
                     var radioButton2 = newContents.RadioButtons.Add("My Radio Button 2");
                     radioButton2.Checked = true;
 
-                    radioButton1.CheckedChanged += (s2, e2) => Console.WriteLine("Radio Button 1 CheckedChanged: " + radioButton1.Checked);
-                    radioButton2.CheckedChanged += (s2, e2) => Console.WriteLine("Radio Button 2 CheckedChanged: " + radioButton2.Checked);
+                    radioButton1.CheckedChanged += (s2, e2) => Console.WriteLine(
+                            $"Radio Button 1 CheckedChanged: RB1={radioButton1.Checked}, RB2={radioButton2.Checked}");
+                    radioButton2.CheckedChanged += (s2, e2) => Console.WriteLine(
+                            $"Radio Button 2 CheckedChanged: RB1={radioButton1.Checked}, RB2={radioButton2.Checked}");
 
                     newContents.CheckBox.CheckedChanged += (s2, e2) =>
                     {
