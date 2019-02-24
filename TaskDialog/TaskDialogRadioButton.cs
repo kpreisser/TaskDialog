@@ -135,7 +135,7 @@ namespace KPreisser.UI
                                 $"{nameof(TaskDialogRadioButton)}.{nameof(this.Checked)} " +
                                 $"property from within the " +
                                 $"{nameof(TaskDialogRadioButton)}.{nameof(this.CheckedChanged)} " +
-                                $"event.");
+                                $"event of one of the radio buttons of the current task dialog.");
 
                     // Click the radio button which will (recursively) raise the
                     // RadioButtonClicked notification. However, we ignore the
