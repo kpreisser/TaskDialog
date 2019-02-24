@@ -594,7 +594,7 @@ namespace KPreisser.UI
         /// </summary>
         /// <remarks>
         /// Showing the dialog will bind the <see cref="CurrentContents"/> and their
-        /// controls until this method returns.
+        /// controls until this method returns or the dialog is navigated.
         /// </remarks>
         /// <param name="hwndOwner">
         /// The window handle of the owner, or <see cref="IntPtr.Zero"/> to show a
@@ -645,7 +645,7 @@ namespace KPreisser.UI
                     //// we already freed the GCHandle, a NRE will occur.
 
                     //// This is OK because the same issue occurs when using a message box with WPF or WinForms:
-                    //// If do MessageBox.Show() wrapped in a try/catch on a button click, and before calling
+                    //// If you do MessageBox.Show() wrapped in a try/catch on a button click, and before calling
                     //// .Show() create and start a timer which stops and throws an exception on its Tick event,
                     //// the application will crash with an AccessViolationException as soon as you close
                     //// the MessageBox.
@@ -795,7 +795,9 @@ namespace KPreisser.UI
             // Note: The MAKELPARAM macro converts the value to an unsigned int
             // before converting it to a pointer, so we should do the same.
             // However, this means we cannot convert the value directly to an
-            // IntPtr.
+            // IntPtr; instead we need to first convert it to a pointer type
+            // which requires unsafe code.
+            // TODO: Use nuint instead of void* when it is available.
             var param = (IntPtr)(void*)unchecked((uint)(min | (max << 0x10)));
 
             SendTaskDialogMessage(
@@ -1028,7 +1030,8 @@ namespace KPreisser.UI
 
             this.currentContents = contents;
             // Note: If this throws an OutOfMemoryException, we leave the previous
-            // contents in the unbound state.
+            // contents in the unbound state. We could solve this by re-binding the
+            // previous contents in case of an exception.
             // Note: We don't need to specify the owner window handle again when
             // navigating.
             BindAndAllocateConfig(
