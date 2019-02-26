@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -33,8 +32,9 @@ namespace KPreisser.UI
 
 
         /// <summary>
-        /// The delegate for <see cref="HandleTaskDialogCallback"/> from which the
-        /// native function pointer <see cref="callbackProcDelegatePtr"/> is created. 
+        /// The delegate for the callback handler (that calls
+        /// <see cref="HandleTaskDialogCallback"/>) from which the native function
+        /// pointer <see cref="callbackProcDelegatePtr"/> is created. 
         /// </summary>
         /// <remarks>
         /// We must store this delegate (and prevent it from being garbage-collected)
@@ -79,8 +79,8 @@ namespace KPreisser.UI
         private bool raisedContentsCreated;
 
         /// <summary>
-        /// A stack which tracks whether the dialog has been navigated while being in
-        /// a <see cref="TaskDialogNotification.ButtonClicked"/> handler.
+        /// A counter which is used to determine whether the dialog has been navigated
+        /// while being in a <see cref="TaskDialogNotification.ButtonClicked"/> handler.
         /// </summary>
         /// <remarks>
         /// When the dialog navigates within a ButtonClicked handler, the handler should
@@ -92,11 +92,15 @@ namespace KPreisser.UI
         /// See the comment in <see cref="HandleTaskDialogCallback"/> for more
         /// information.
         /// 
-        /// A stack/list is needed as there can be multiple ButtonClicked handlers on
-        /// the call stack, for example if a ButtonClicked handler runs the message
-        /// loop so that new click events can be processed.
+        /// When the dialog navigates, it sets the <c>navigationIndex</c> to the current
+        /// <c>stackCount</c> value, so that the ButtonClicked handler can determine
+        /// if the dialog has been navigated after it was called.
+        /// Tracking the stack count and navigation index is necessary as there
+        /// can be multiple ButtonClicked handlers on the call stack, for example
+        /// if a ButtonClicked handler runs the message loop so that new click events
+        /// can be processed.
         /// </remarks>
-        private readonly List<bool> clickEventNavigatedStack = new List<bool>();
+        private (int stackCount, int navigationIndex) buttonClickNavigationCounter;
 
         //private bool resultCheckBoxChecked;
 
@@ -155,7 +159,10 @@ namespace KPreisser.UI
             // code for the function pointer, we only do this once by using a static
             // function, and then identify the actual TaskDialog instance by using a
             // GCHandle in the reference data field (like an object pointer).
-            callbackProcDelegate = HandleTaskDialogCallback;
+            callbackProcDelegate = (hWnd, notification, wParam, lParam, referenceData) =>
+                    ((TaskDialog)GCHandle.FromIntPtr(referenceData).Target)
+                    .HandleTaskDialogCallback(hWnd, notification, wParam, lParam);
+
             callbackProcDelegatePtr = Marshal.GetFunctionPointerForDelegate(
                     callbackProcDelegate);
         }
@@ -396,38 +403,36 @@ namespace KPreisser.UI
         }
 #endif
 
-        private static int HandleTaskDialogCallback(
+        private int HandleTaskDialogCallback(
                 IntPtr hWnd,
                 TaskDialogNotification notification,
                 IntPtr wParam,
-                IntPtr lParam,
-                IntPtr referenceData)
+                IntPtr lParam)
         {
-            // Get the instance from the GCHandle pointer and set the hWnd on it.
-            var instance = (TaskDialog)GCHandle.FromIntPtr(referenceData).Target;
-            instance.hwndDialog = hWnd;
+            // Set the hWnd as this may be the first time that we get it.
+            this.hwndDialog = hWnd;
 
             switch (notification)
             {
                 case TaskDialogNotification.Created:
-                    instance.boundContents.ApplyInitialization();
+                    this.boundContents.ApplyInitialization();
 
-                    instance.OnOpened(EventArgs.Empty);
+                    this.OnOpened(EventArgs.Empty);
 
-                    instance.raisedContentsCreated = true;
-                    instance.boundContents.OnCreated(EventArgs.Empty);
+                    this.raisedContentsCreated = true;
+                    this.boundContents.OnCreated(EventArgs.Empty);
                     break;
 
                 case TaskDialogNotification.Destroyed:
                     // Only raise the 'Destroying' event if we previously raised the
                     // 'Created' event.
-                    if (instance.raisedContentsCreated)
+                    if (this.raisedContentsCreated)
                     {
-                        instance.raisedContentsCreated = false;
-                        instance.boundContents.OnDestroying(EventArgs.Empty);
+                        this.raisedContentsCreated = false;
+                        this.boundContents.OnDestroying(EventArgs.Empty);
                     }
 
-                    instance.OnClosing(EventArgs.Empty);
+                    this.OnClosing(EventArgs.Empty);
 
                     // Clear the dialog handle, because according to the docs, we must not
                     // continue to send any notifications to the dialog after the callback
@@ -437,29 +442,29 @@ namespace KPreisser.UI
                     // times in the call stack) and a previously opened dialog is closed,
                     // the Destroyed notification for the closed dialog will only occur after
                     // the newer dialogs are also closed.
-                    instance.hwndDialog = IntPtr.Zero;
+                    this.hwndDialog = IntPtr.Zero;
                     break;
 
                 case TaskDialogNotification.Navigated:
-                    instance.waitingForNavigatedEvent = false;
-                    instance.boundContents.ApplyInitialization();
+                    this.waitingForNavigatedEvent = false;
+                    this.boundContents.ApplyInitialization();
 
-                    instance.OnNavigated(EventArgs.Empty);
+                    this.OnNavigated(EventArgs.Empty);
 
-                    instance.raisedContentsCreated = true;
-                    instance.boundContents.OnCreated(EventArgs.Empty);
+                    this.raisedContentsCreated = true;
+                    this.boundContents.OnCreated(EventArgs.Empty);
                     break;
 
                 case TaskDialogNotification.HyperlinkClicked:
                     string link = Marshal.PtrToStringUni(lParam);
 
                     var eventArgs = new TaskDialogHyperlinkClickedEventArgs(link);
-                    //instance.OnHyperlinkClicked(eventArgs);
-                    instance.boundContents.OnHyperlinkClicked(eventArgs);
+                    //this.OnHyperlinkClicked(eventArgs);
+                    this.boundContents.OnHyperlinkClicked(eventArgs);
                     break;
 
                 case TaskDialogNotification.ButtonClicked:
-                    if (instance.suppressButtonClickedEvent)
+                    if (this.suppressButtonClickedEvent)
                         return HResultOk;
 
                     int buttonID = wParam.ToInt32();
@@ -468,14 +473,14 @@ namespace KPreisser.UI
                     var button = null as TaskDialogButton;
                     if (buttonID >= TaskDialogContents.CustomButtonStartID)
                     {
-                        button = instance.boundContents.CustomButtons
+                        button = this.boundContents.CustomButtons
                                 [buttonID - TaskDialogContents.CustomButtonStartID];
                     }
                     else
                     {
                         var result = (TaskDialogResult)buttonID;
-                        if (instance.boundContents.CommonButtons.Contains(result))
-                            button = instance.boundContents.CommonButtons[result];
+                        if (this.boundContents.CommonButtons.Contains(result))
+                            button = this.boundContents.CommonButtons[result];
                     }
 
                     // Note: When the event handler returns true but the dialog was
@@ -499,7 +504,7 @@ namespace KPreisser.UI
                     // TaskDialogIndirect() returns a buttonID that is no longer
                     // present in the navigated TaskDialogContents.
                     bool handlerResult;
-                    instance.clickEventNavigatedStack.Add(false);
+                    this.buttonClickNavigationCounter.stackCount++;
                     try
                     {
                         handlerResult = button?.HandleButtonClicked() ?? true;
@@ -509,15 +514,17 @@ namespace KPreisser.UI
                         // case, we need to return S_FALSE to prevent the dialog from
                         // closing (and applying the previous ButtonID and RadioButtonID
                         // as results).
-                        bool wasNavigated = instance.clickEventNavigatedStack
-                                [instance.clickEventNavigatedStack.Count - 1];
+                        bool wasNavigated = this.buttonClickNavigationCounter.navigationIndex >=
+                                this.buttonClickNavigationCounter.stackCount;
                         if (wasNavigated)
                             handlerResult = false;
                     }
                     finally
                     {
-                        instance.clickEventNavigatedStack.RemoveAt(
-                                instance.clickEventNavigatedStack.Count - 1);
+                        this.buttonClickNavigationCounter.stackCount--;
+                        this.buttonClickNavigationCounter.navigationIndex = Math.Min(
+                                this.buttonClickNavigationCounter.navigationIndex,
+                                this.buttonClickNavigationCounter.stackCount);
                     }
 
                     return handlerResult ? HResultOk : HResultFalse;
@@ -525,25 +532,25 @@ namespace KPreisser.UI
                 case TaskDialogNotification.RadioButtonClicked:
                     int radioButtonID = wParam.ToInt32();
 
-                    var radioButton = instance.boundContents.RadioButtons
+                    var radioButton = this.boundContents.RadioButtons
                             [radioButtonID - TaskDialogContents.RadioButtonStartID];
 
                     radioButton.HandleRadioButtonClicked();
                     break;
 
                 case TaskDialogNotification.ExpandoButtonClicked:
-                    instance.boundContents.Expander.HandleExpandoButtonClicked(
+                    this.boundContents.Expander.HandleExpandoButtonClicked(
                             wParam != IntPtr.Zero);
                     break;
 
                 case TaskDialogNotification.VerificationClicked:
-                    instance.boundContents.CheckBox.HandleCheckBoxClicked(
+                    this.boundContents.CheckBox.HandleCheckBoxClicked(
                             wParam != IntPtr.Zero);
                     break;
 
                 case TaskDialogNotification.Help:
-                    //instance.OnHelp(EventArgs.Empty);
-                    instance.boundContents.OnHelp(EventArgs.Empty);
+                    //this.OnHelp(EventArgs.Empty);
+                    this.boundContents.OnHelp(EventArgs.Empty);
                     break;
 
                 case TaskDialogNotification.Timer:
@@ -557,8 +564,8 @@ namespace KPreisser.UI
                             wParam.ToInt32();
 
                     var tickEventArgs = new TaskDialogTimerTickEventArgs(ticks);
-                    //instance.OnTimerTick(tickEventArgs);
-                    instance.boundContents.OnTimerTick(tickEventArgs);
+                    //this.OnTimerTick(tickEventArgs);
+                    this.boundContents.OnTimerTick(tickEventArgs);
 
                     return tickEventArgs.ResetTickCount ? HResultFalse : HResultOk;
             }
@@ -647,10 +654,10 @@ namespace KPreisser.UI
                 try
                 {
                     int ret = NativeMethods.TaskDialogIndirect(
-                                ptrTaskDialogConfig,
-                                out int resultButtonID,
-                                out int resultRadioButtonID,
-                                out bool resultCheckBoxChecked);
+                            ptrTaskDialogConfig,
+                            out int resultButtonID,
+                            out int resultRadioButtonID,
+                            out bool resultCheckBoxChecked);
 
                     //// Note: If a exception occurs here when hwndDialog is not 0, it means the TaskDialogIndirect
                     //// run the event loop and called a WndProc e.g. from a window, whose event handler threw an
@@ -1071,10 +1078,10 @@ namespace KPreisser.UI
                 FreeConfig(ptrToFree);
             }
 
-            // Notify the ButtonClick event handlers currently on the stack that
+            // Indicate to the ButtonClicked handlers currently on the stack that
             // the dialog was navigated.
-            for (int i = 0; i < this.clickEventNavigatedStack.Count; i++)
-                this.clickEventNavigatedStack[i] = true;
+            this.buttonClickNavigationCounter.navigationIndex =
+                    this.buttonClickNavigationCounter.stackCount;
 
             // Also, disallow updates until we received the Navigated event
             // because that messages would be lost.
