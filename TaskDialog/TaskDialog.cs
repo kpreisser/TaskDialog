@@ -403,191 +403,6 @@ namespace KPreisser.UI
         }
 #endif
 
-        private int HandleTaskDialogCallback(
-                IntPtr hWnd,
-                TaskDialogNotification notification,
-                IntPtr wParam,
-                IntPtr lParam)
-        {
-            // Set the hWnd as this may be the first time that we get it.
-            this.hwndDialog = hWnd;
-
-            switch (notification)
-            {
-                case TaskDialogNotification.Created:
-                    this.boundContents.ApplyInitialization();
-
-                    this.OnOpened(EventArgs.Empty);
-
-                    this.raisedContentsCreated = true;
-                    this.boundContents.OnCreated(EventArgs.Empty);
-                    break;
-
-                case TaskDialogNotification.Destroyed:
-                    // Only raise the 'Destroying' event if we previously raised the
-                    // 'Created' event.
-                    if (this.raisedContentsCreated)
-                    {
-                        this.raisedContentsCreated = false;
-                        this.boundContents.OnDestroying(EventArgs.Empty);
-                    }
-
-                    this.OnClosing(EventArgs.Empty);
-
-                    // Clear the dialog handle, because according to the docs, we must not
-                    // continue to send any notifications to the dialog after the callback
-                    // function has returned from being called with the 'Destroyed'
-                    // notification.
-                    // Note: When multiple dialogs are shown (so Show() will occur multiple
-                    // times in the call stack) and a previously opened dialog is closed,
-                    // the Destroyed notification for the closed dialog will only occur after
-                    // the newer dialogs are also closed.
-                    this.hwndDialog = IntPtr.Zero;
-                    break;
-
-                case TaskDialogNotification.Navigated:
-                    this.waitingForNavigatedEvent = false;
-                    this.boundContents.ApplyInitialization();
-
-                    this.OnNavigated(EventArgs.Empty);
-
-                    this.raisedContentsCreated = true;
-                    this.boundContents.OnCreated(EventArgs.Empty);
-                    break;
-
-                case TaskDialogNotification.HyperlinkClicked:
-                    string link = Marshal.PtrToStringUni(lParam);
-
-                    var eventArgs = new TaskDialogHyperlinkClickedEventArgs(link);
-                    //this.OnHyperlinkClicked(eventArgs);
-                    this.boundContents.OnHyperlinkClicked(eventArgs);
-                    break;
-
-                case TaskDialogNotification.ButtonClicked:
-                    if (this.suppressButtonClickedEvent)
-                        return HResultOk;
-
-                    int buttonID = wParam.ToInt32();
-
-                    // Check if the button is part of the custom buttons.
-                    var button = null as TaskDialogButton;
-                    if (buttonID >= TaskDialogContents.CustomButtonStartID)
-                    {
-                        button = this.boundContents.CustomButtons
-                                [buttonID - TaskDialogContents.CustomButtonStartID];
-                    }
-                    else
-                    {
-                        var result = (TaskDialogResult)buttonID;
-                        if (this.boundContents.CommonButtons.Contains(result))
-                            button = this.boundContents.CommonButtons[result];
-                    }
-
-                    // Note: When the event handler returns true but the dialog was
-                    // navigated within the handler, the buttonID of the handler
-                    // would be set as the dialog's result even if this ID is from
-                    // the dialog contents before the dialog was navigated.
-                    // (To fix this, in this case we could cache the button instance
-                    // and its ID, so that when Show() returns, it can check if the
-                    // button ID equals the last handled button, and use that
-                    // instance in that case.)
-                    // However, also memory access problems like
-                    // AccessViolationExceptions seem to occur in this situation
-                    // (especially if the dialog also had radio buttons before the
-                    // navigation; these would also be set as result of the dialog),
-                    // probably because this scenario isn't an expected usage of
-                    // the native TaskDialog.
-                    // To fix the memory access problems, we simply always return
-                    // S_FALSE when the dialog was navigated within the ButtonClicked
-                    // event handler. This also avoids the need to cache the last
-                    // handled button instance because it can no longer happen that
-                    // TaskDialogIndirect() returns a buttonID that is no longer
-                    // present in the navigated TaskDialogContents.
-                    bool handlerResult;
-                    this.buttonClickNavigationCounter.stackCount++;
-                    try
-                    {
-                        handlerResult = button?.HandleButtonClicked() ?? true;
-
-                        // Check if our stack frame was set to true, which means the
-                        // dialog was navigated while we called the handler. In that
-                        // case, we need to return S_FALSE to prevent the dialog from
-                        // closing (and applying the previous ButtonID and RadioButtonID
-                        // as results).
-                        bool wasNavigated = this.buttonClickNavigationCounter.navigationIndex >=
-                                this.buttonClickNavigationCounter.stackCount;
-                        if (wasNavigated)
-                            handlerResult = false;
-                    }
-                    finally
-                    {
-                        this.buttonClickNavigationCounter.stackCount--;
-                        this.buttonClickNavigationCounter.navigationIndex = Math.Min(
-                                this.buttonClickNavigationCounter.navigationIndex,
-                                this.buttonClickNavigationCounter.stackCount);
-                    }
-
-                    return handlerResult ? HResultOk : HResultFalse;
-
-                case TaskDialogNotification.RadioButtonClicked:
-                    int radioButtonID = wParam.ToInt32();
-
-                    var radioButton = this.boundContents.RadioButtons
-                            [radioButtonID - TaskDialogContents.RadioButtonStartID];
-
-                    radioButton.HandleRadioButtonClicked();
-                    break;
-
-                case TaskDialogNotification.ExpandoButtonClicked:
-                    this.boundContents.Expander.HandleExpandoButtonClicked(
-                            wParam != IntPtr.Zero);
-                    break;
-
-                case TaskDialogNotification.VerificationClicked:
-                    this.boundContents.CheckBox.HandleCheckBoxClicked(
-                            wParam != IntPtr.Zero);
-                    break;
-
-                case TaskDialogNotification.Help:
-                    //this.OnHelp(EventArgs.Empty);
-                    this.boundContents.OnHelp(EventArgs.Empty);
-                    break;
-
-                case TaskDialogNotification.Timer:
-                    // Note: The documentation specifies that wParam contains a DWORD,
-                    // which might mean that on 64-bit platforms the highest bit (63)
-                    // will be zero even if the DWORD has its highest bit (31) set. In
-                    // that case, IntPtr.ToInt32() would throw an OverflowException.
-                    // Therefore, we use .ToInt64() and then convert it to an int.
-                    int ticks = IntPtr.Size == 8 ?
-                            unchecked((int)wParam.ToInt64()) :
-                            wParam.ToInt32();
-
-                    var tickEventArgs = new TaskDialogTimerTickEventArgs(ticks);
-                    //this.OnTimerTick(tickEventArgs);
-                    this.boundContents.OnTimerTick(tickEventArgs);
-
-                    return tickEventArgs.ResetTickCount ? HResultFalse : HResultOk;
-            }
-
-            // Note: Previously, the code caught exceptions and returned
-            // Marshal.GetHRForException(), so that the TaskDialog would be closed on an
-            // unhandled exception and we could rethrow it after TaskDialogIndirect() returns.
-            // However, this causes the debugger to not break at the original exception
-            // location, and it is probably not desired that the Dialog is actually destroyed
-            // because this would be inconsistent with the case when an unhandled exception
-            // occurs in a different WndProc function not handled by the TaskDialog
-            // (e.g. a WinForms/WPF Timer Tick event). Additionally, if you had multiple
-            // (non-modal) dialogs showing and the exception would occur in the callback
-            // of an outer dialog, it would not be rethrown until the inner dialogs
-            // were also closed. Therefore, we don't catch exceptions (and return
-            // a error HResult) any more.
-            // Note: Currently, this means that a NRE will occur in the callback after
-            // TaskDialog.Show() returns due to an unhandled exception because the
-            // TaskDialog is still displayed (see comment in Show()).
-            return HResultOk;
-        }
-
 
         /// <summary>
         /// Shows the task dialog.
@@ -1021,6 +836,191 @@ namespace KPreisser.UI
         //    this.TimerTick?.Invoke(this, e);
         //}
 
+
+        private int HandleTaskDialogCallback(
+                IntPtr hWnd,
+                TaskDialogNotification notification,
+                IntPtr wParam,
+                IntPtr lParam)
+        {
+            // Set the hWnd as this may be the first time that we get it.
+            this.hwndDialog = hWnd;
+
+            switch (notification)
+            {
+                case TaskDialogNotification.Created:
+                    this.boundContents.ApplyInitialization();
+
+                    this.OnOpened(EventArgs.Empty);
+
+                    this.raisedContentsCreated = true;
+                    this.boundContents.OnCreated(EventArgs.Empty);
+                    break;
+
+                case TaskDialogNotification.Destroyed:
+                    // Only raise the 'Destroying' event if we previously raised the
+                    // 'Created' event.
+                    if (this.raisedContentsCreated)
+                    {
+                        this.raisedContentsCreated = false;
+                        this.boundContents.OnDestroying(EventArgs.Empty);
+                    }
+
+                    this.OnClosing(EventArgs.Empty);
+
+                    // Clear the dialog handle, because according to the docs, we must not
+                    // continue to send any notifications to the dialog after the callback
+                    // function has returned from being called with the 'Destroyed'
+                    // notification.
+                    // Note: When multiple dialogs are shown (so Show() will occur multiple
+                    // times in the call stack) and a previously opened dialog is closed,
+                    // the Destroyed notification for the closed dialog will only occur after
+                    // the newer dialogs are also closed.
+                    this.hwndDialog = IntPtr.Zero;
+                    break;
+
+                case TaskDialogNotification.Navigated:
+                    this.waitingForNavigatedEvent = false;
+                    this.boundContents.ApplyInitialization();
+
+                    this.OnNavigated(EventArgs.Empty);
+
+                    this.raisedContentsCreated = true;
+                    this.boundContents.OnCreated(EventArgs.Empty);
+                    break;
+
+                case TaskDialogNotification.HyperlinkClicked:
+                    string link = Marshal.PtrToStringUni(lParam);
+
+                    var eventArgs = new TaskDialogHyperlinkClickedEventArgs(link);
+                    //this.OnHyperlinkClicked(eventArgs);
+                    this.boundContents.OnHyperlinkClicked(eventArgs);
+                    break;
+
+                case TaskDialogNotification.ButtonClicked:
+                    if (this.suppressButtonClickedEvent)
+                        return HResultOk;
+
+                    int buttonID = wParam.ToInt32();
+
+                    // Check if the button is part of the custom buttons.
+                    var button = null as TaskDialogButton;
+                    if (buttonID >= TaskDialogContents.CustomButtonStartID)
+                    {
+                        button = this.boundContents.CustomButtons
+                                [buttonID - TaskDialogContents.CustomButtonStartID];
+                    }
+                    else
+                    {
+                        var result = (TaskDialogResult)buttonID;
+                        if (this.boundContents.CommonButtons.Contains(result))
+                            button = this.boundContents.CommonButtons[result];
+                    }
+
+                    // Note: When the event handler returns true but the dialog was
+                    // navigated within the handler, the buttonID of the handler
+                    // would be set as the dialog's result even if this ID is from
+                    // the dialog contents before the dialog was navigated.
+                    // (To fix this, in this case we could cache the button instance
+                    // and its ID, so that when Show() returns, it can check if the
+                    // button ID equals the last handled button, and use that
+                    // instance in that case.)
+                    // However, also memory access problems like
+                    // AccessViolationExceptions seem to occur in this situation
+                    // (especially if the dialog also had radio buttons before the
+                    // navigation; these would also be set as result of the dialog),
+                    // probably because this scenario isn't an expected usage of
+                    // the native TaskDialog.
+                    // To fix the memory access problems, we simply always return
+                    // S_FALSE when the dialog was navigated within the ButtonClicked
+                    // event handler. This also avoids the need to cache the last
+                    // handled button instance because it can no longer happen that
+                    // TaskDialogIndirect() returns a buttonID that is no longer
+                    // present in the navigated TaskDialogContents.
+                    bool handlerResult;
+                    this.buttonClickNavigationCounter.stackCount++;
+                    try
+                    {
+                        handlerResult = button?.HandleButtonClicked() ?? true;
+
+                        // Check if our stack frame was set to true, which means the
+                        // dialog was navigated while we called the handler. In that
+                        // case, we need to return S_FALSE to prevent the dialog from
+                        // closing (and applying the previous ButtonID and RadioButtonID
+                        // as results).
+                        bool wasNavigated = this.buttonClickNavigationCounter.navigationIndex >=
+                                this.buttonClickNavigationCounter.stackCount;
+                        if (wasNavigated)
+                            handlerResult = false;
+                    }
+                    finally
+                    {
+                        this.buttonClickNavigationCounter.stackCount--;
+                        this.buttonClickNavigationCounter.navigationIndex = Math.Min(
+                                this.buttonClickNavigationCounter.navigationIndex,
+                                this.buttonClickNavigationCounter.stackCount);
+                    }
+
+                    return handlerResult ? HResultOk : HResultFalse;
+
+                case TaskDialogNotification.RadioButtonClicked:
+                    int radioButtonID = wParam.ToInt32();
+
+                    var radioButton = this.boundContents.RadioButtons
+                            [radioButtonID - TaskDialogContents.RadioButtonStartID];
+
+                    radioButton.HandleRadioButtonClicked();
+                    break;
+
+                case TaskDialogNotification.ExpandoButtonClicked:
+                    this.boundContents.Expander.HandleExpandoButtonClicked(
+                            wParam != IntPtr.Zero);
+                    break;
+
+                case TaskDialogNotification.VerificationClicked:
+                    this.boundContents.CheckBox.HandleCheckBoxClicked(
+                            wParam != IntPtr.Zero);
+                    break;
+
+                case TaskDialogNotification.Help:
+                    //this.OnHelp(EventArgs.Empty);
+                    this.boundContents.OnHelp(EventArgs.Empty);
+                    break;
+
+                case TaskDialogNotification.Timer:
+                    // Note: The documentation specifies that wParam contains a DWORD,
+                    // which might mean that on 64-bit platforms the highest bit (63)
+                    // will be zero even if the DWORD has its highest bit (31) set. In
+                    // that case, IntPtr.ToInt32() would throw an OverflowException.
+                    // Therefore, we use .ToInt64() and then convert it to an int.
+                    int ticks = IntPtr.Size == 8 ?
+                            unchecked((int)wParam.ToInt64()) :
+                            wParam.ToInt32();
+
+                    var tickEventArgs = new TaskDialogTimerTickEventArgs(ticks);
+                    //this.OnTimerTick(tickEventArgs);
+                    this.boundContents.OnTimerTick(tickEventArgs);
+
+                    return tickEventArgs.ResetTickCount ? HResultFalse : HResultOk;
+            }
+
+            // Note: Previously, the code caught exceptions and returned
+            // Marshal.GetHRForException(), so that the TaskDialog would be closed on an
+            // unhandled exception and we could rethrow it after TaskDialogIndirect() returns.
+            // However, this causes the debugger to not break at the original exception
+            // location, and it is probably not desired that the Dialog is actually destroyed
+            // because this would be inconsistent with the case when an unhandled exception
+            // occurs in a different WndProc function not handled by the TaskDialog
+            // (e.g. a WinForms/WPF Timer Tick event). Additionally, if you had multiple
+            // (non-modal) dialogs showing and the exception would occur in the callback
+            // of an outer dialog, it would not be rethrown until the inner dialogs
+            // were also closed. Therefore, we don't catch exceptions (and return
+            // a error HResult) any more.
+            // Note: Currently, this means that a NRE will occur in the callback after
+            // TaskDialog.Show() returns due to an unhandled exception because the
+            // TaskDialog is still displayed (see comment in Show()).
+            return HResultOk;
+        }
 
         /// <summary>
         /// While the dialog is being shown, recreates the dialog from the specified
