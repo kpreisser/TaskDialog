@@ -300,14 +300,15 @@ namespace KPreisser.UI
         /// <summary>
         /// Gets or sets the current count of stack frames that are in the
         /// <see cref="TaskDialogRadioButton.CheckedChanged"/> event for the
-        /// current task dialog, so that the
-        /// <see cref="TaskDialogRadioButton.Checked"/> setter can disallow the
-        /// change when the count is greater than zero.
+        /// current task dialog.
         /// </summary>
         /// <remarks>
-        /// This property is only used by the <see cref="TaskDialogRadioButton"/>.
+        /// This is used by the <see cref="TaskDialogRadioButton.Checked"/> setter
+        /// so that it can disallow the change when the count is greater than zero.
+        /// Additionally, it is used to deny navigation of the task dialog in that
+        /// case.
         /// </remarks>
-        internal int DenyRadioButtonClickStackCount
+        internal int RadioButtonClickedStackCount
         {
             get;
             set;
@@ -938,7 +939,9 @@ namespace KPreisser.UI
                     // TaskDialogIndirect() returns a buttonID that is no longer
                     // present in the navigated TaskDialogContents.
                     bool handlerResult;
-                    this.buttonClickNavigationCounter.stackCount++;
+                    checked {
+                        this.buttonClickNavigationCounter.stackCount++;
+                    }
                     try
                     {
                         handlerResult = button?.HandleButtonClicked() ?? true;
@@ -1034,6 +1037,17 @@ namespace KPreisser.UI
         {
             DenyIfDialogNotShownOrWaitingForNavigatedEvent();
 
+            // Don't allow to navigate the dialog when we are in a RadioButtonClicked
+            // notification, because the dialog doesn't seem to correctly handle this
+            // (e.g. when running the event loop after navigation, an
+            // AccessViolationException would occur after the handler returns).
+            // See: https://github.com/dotnet/winforms/issues/146#issuecomment-466784079
+            if (this.RadioButtonClickedStackCount > 0)
+                throw new InvalidOperationException(
+                        "Cannot navigate the dialog from within the " +
+                        $"{nameof(TaskDialogRadioButton)}.{nameof(TaskDialogRadioButton.CheckedChanged)} " +
+                        $"event of one of the radio buttons of the current task dialog.");
+
             // Validate the config.
             contents.Validate(this);
 
@@ -1052,6 +1066,7 @@ namespace KPreisser.UI
             this.boundContents = null;
 
             this.currentContents = contents;
+
             // Note: If this throws an OutOfMemoryException, we leave the previous
             // contents in the unbound state. We could solve this by re-binding the
             // previous contents in case of an exception.

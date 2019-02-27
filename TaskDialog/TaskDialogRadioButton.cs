@@ -129,7 +129,7 @@ namespace KPreisser.UI
                     // Don't allow to click the radio button if we are currently in the
                     // RadioButtonClicked notification handler - see comments in 
                     // HandleRadioButtonClicked().
-                    if (this.BoundTaskDialogContents.BoundTaskDialog.DenyRadioButtonClickStackCount > 0)
+                    if (this.BoundTaskDialogContents.BoundTaskDialog.RadioButtonClickedStackCount > 0)
                         throw new InvalidOperationException(
                                 $"Cannot set the " +
                                 $"{nameof(TaskDialogRadioButton)}.{nameof(this.Checked)} " +
@@ -246,7 +246,7 @@ namespace KPreisser.UI
                 var boundDialog = this.BoundTaskDialogContents.BoundTaskDialog;
                 checked
                 {
-                    boundDialog.DenyRadioButtonClickStackCount++;
+                    boundDialog.RadioButtonClickedStackCount++;
                 }
                 try
                 {
@@ -268,7 +268,7 @@ namespace KPreisser.UI
                 }
                 finally
                 {
-                    boundDialog.DenyRadioButtonClickStackCount--;
+                    boundDialog.RadioButtonClickedStackCount--;
                 }
             }
         }
