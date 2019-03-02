@@ -25,7 +25,7 @@ namespace TaskDialogExample
                 Icon = TaskDialogIcon.SecuritySuccessGreenBar,
                 FooterIcon = TaskDialogIcon.Warning,
 
-                Expander = new TaskDialogExpander()
+                Expander =
                 {
                     Text = "Expanded Information!",
                     ExpandFooterArea = true
@@ -190,11 +190,11 @@ namespace TaskDialogExample
                         Icon = TaskDialogIcon.SecurityShieldBlueBar,
                         SizeToContent = true,
 
-                        CheckBox = new TaskDialogCheckBox()
+                        CheckBox =
                         {
                             Text = "I think I agree…"
                         },
-                        ProgressBar = new TaskDialogProgressBar()
+                        ProgressBar =
                         {
                             State = TaskDialogProgressBarState.Marquee
                         }
