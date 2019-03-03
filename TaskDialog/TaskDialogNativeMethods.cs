@@ -5,6 +5,9 @@ namespace KPreisser.UI
 {
     internal static class TaskDialogNativeMethods
     {
+        //// Note: The TaskDialog declarations (including quoted comments)
+        //// were taken from CommCtrl.h.
+
         public const int WM_USER = 0x400;
 
         public const int S_OK = 0x0;
@@ -210,8 +213,14 @@ namespace KPreisser.UI
         public struct TASKDIALOGCONFIG
         {
             public uint cbSize;
-            public IntPtr hwndParent; // "incorrectly named, this is the owner window, not a parent."
-            public IntPtr hInstance; // "used for MAKEINTRESOURCE() strings"
+            /// <summary>
+            /// "incorrectly named, this is the owner window, not a parent."
+            /// </summary>
+            public IntPtr hwndParent;
+            /// <summary>
+            /// "used for MAKEINTRESOURCE() strings"
+            /// </summary>
+            public IntPtr hInstance;
             public TASKDIALOG_FLAGS dwFlags;
             public TaskDialogButtons dwCommonButtons;
             public IntPtr pszWindowTitle;
@@ -232,7 +241,11 @@ namespace KPreisser.UI
             public IntPtr pszFooter;
             public IntPtr pfCallback;
             public IntPtr lpCallbackData;
-            public uint cxWidth; // "width of the Task Dialog's client area in DLU's. If 0, Task Dialog will calculate the ideal width."
+            /// <summary>
+            /// "width of the Task Dialog's client area in DLU's. If 0, Task Dialog
+            /// will calculate the ideal width."
+            /// </summary>
+            public uint cxWidth;
         }
 
         // Packing is defined as 1 in CommCtrl.h ("pack(1)").

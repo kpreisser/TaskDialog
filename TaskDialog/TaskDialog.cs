@@ -360,7 +360,7 @@ namespace KPreisser.UI
         /// 
         /// </summary>
         /// <param name="hwndOwner">
-        /// The window handle of the owner, or <see cref="IntPtr.Zero"/> to show a
+        /// The handle of the owner window, or <see cref="IntPtr.Zero"/> to show a
         /// modeless dialog.
         /// </param>
         /// <param name="text"></param>
@@ -435,7 +435,7 @@ namespace KPreisser.UI
         /// controls until this method returns or the dialog is navigated.
         /// </remarks>
         /// <param name="hwndOwner">
-        /// The window handle of the owner, or <see cref="IntPtr.Zero"/> to show a
+        /// The handle of the owner window, or <see cref="IntPtr.Zero"/> to show a
         /// modeless dialog.
         /// </param>
         public TaskDialogButton Show(IntPtr hwndOwner)
@@ -1359,9 +1359,9 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// Forces the task dialog to update its size according to its contents.
+        /// Forces the task dialog to update its window size according to its contents.
         /// </summary>
-        private void UpdateSize()
+        private void UpdateWindowSize()
         {
             // Force the task dialog to update its size by doing an arbitrary
             // update of one of its text elements (as the TDM_SET_ELEMENT_TEXT
