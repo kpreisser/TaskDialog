@@ -40,21 +40,20 @@ namespace KPreisser.UI
 
         private TaskDialogRadioButtonCollection radioButtons;
 
+        private TaskDialogCheckBox checkBox;
+
         private TaskDialogExpander expander;
 
-        private TaskDialogProgressBar progressBar;
+        private TaskDialogFooter footer;
 
-        private TaskDialogCheckBox checkBox;
+        private TaskDialogProgressBar progressBar;
 
         private TaskDialogFlags flags;
         private string title;
         private string instruction;
         private string text;
-        private string footerText;
         private TaskDialogIcon icon;
         private IntPtr iconHandle;
-        private TaskDialogIcon footerIcon;
-        private IntPtr footerIconHandle;
         private int width;
         private TaskDialogCommandLinkMode commandLinkMode;
         private TaskDialogStartupLocation startupLocation;
@@ -62,8 +61,6 @@ namespace KPreisser.UI
         private TaskDialog boundTaskDialog;
 
         private bool boundIconIsFromHandle;
-
-        private bool boundFooterIconIsFromHandle;
 
 
         /// <summary>
@@ -113,8 +110,9 @@ namespace KPreisser.UI
             this.startupLocation = TaskDialogStartupLocation.CenterParent;
 
             // Create empty (hidden) controls.
-            this.expander = new TaskDialogExpander();
             this.checkBox = new TaskDialogCheckBox();
+            this.expander = new TaskDialogExpander();
+            this.footer = new TaskDialogFooter();
             this.progressBar = new TaskDialogProgressBar(TaskDialogProgressBarState.None);
         }
 
@@ -219,6 +217,25 @@ namespace KPreisser.UI
         /// </summary>
         [Category("Controls")]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+        public TaskDialogFooter Footer
+        {
+            get => this.footer;
+
+            set
+            {
+                // We must deny this if we are bound because we need to be able to
+                // access the control from the task dialog's callback.
+                this.DenyIfBound();
+
+                this.footer = value;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        [Category("Controls")]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
         public TaskDialogProgressBar ProgressBar
         {
             get => this.progressBar;
@@ -294,26 +311,6 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// Gets or sets the text to be displayed in the dialog's footer area.
-        /// </summary>
-        /// <remarks>
-        /// This property can be set while the dialog is shown.
-        /// </remarks>
-        public string FooterText
-        {
-            get => this.footerText;
-
-            set
-            {
-                this.boundTaskDialog?.UpdateTextElement(
-                        TaskDialogTextElement.TDE_FOOTER,
-                        value);
-
-                this.footerText = value;
-            }
-        }
-
-        /// <summary>
         /// Gets or sets the main icon, if <see cref="IconHandle"/> is
         /// <see cref="IntPtr.Zero"/>.
         /// </summary>
@@ -373,63 +370,6 @@ namespace KPreisser.UI
                         value);
 
                 this.iconHandle = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the footer icon, if <see cref="FooterIconHandle"/> is
-        /// <see cref="IntPtr.Zero"/>.
-        /// </summary>
-        /// <remarks>
-        /// This property can be set while the dialog is shown.
-        /// </remarks>
-        [DefaultValue(TaskDialogIcon.None)]
-        public TaskDialogIcon FooterIcon
-        {
-            get => this.footerIcon;
-
-            set
-            {
-                // See comments in property "Icon".
-                if (value < ushort.MinValue || (int)value > ushort.MaxValue)
-                    throw new ArgumentOutOfRangeException(nameof(value));
-
-                if (this.boundTaskDialog != null &&
-                        this.boundFooterIconIsFromHandle)
-                    throw new InvalidOperationException();
-
-                this.boundTaskDialog?.UpdateIconElement(
-                        TaskDialogIconElement.TDIE_ICON_FOOTER,
-                        (IntPtr)value);
-
-                this.footerIcon = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the handle to the footer icon. When this member is not
-        /// <see cref="IntPtr.Zero"/>, the <see cref="FooterIcon"/> property will
-        /// be ignored.
-        /// </summary>
-        /// <remarks>
-        /// This property can be set while the dialog is shown.
-        /// </remarks>
-        [Browsable(false)]
-        public IntPtr FooterIconHandle
-        {
-            get => this.footerIconHandle;
-
-            set
-            {
-                if (this.boundTaskDialog != null &&
-                        !this.boundFooterIconIsFromHandle)
-                    throw new InvalidOperationException();
-
-                this.boundTaskDialog?.UpdateIconElement(
-                        TaskDialogIconElement.TDIE_ICON_FOOTER,
-                        value);
-
-                this.footerIconHandle = value;
             }
         }
 
@@ -715,18 +655,7 @@ namespace KPreisser.UI
             else
             {                
                 iconValue = (IntPtr)this.icon;
-            }
-
-            this.boundFooterIconIsFromHandle = this.footerIconHandle != IntPtr.Zero;
-            if (this.boundFooterIconIsFromHandle)
-            {
-                flags |= TaskDialogFlags.TDF_USE_HICON_FOOTER;
-                footerIconValue = this.footerIconHandle;
-            }
-            else
-            {
-                footerIconValue = (IntPtr)this.footerIcon;
-            }
+            }            
 
             if (this.startupLocation == TaskDialogStartupLocation.CenterParent)
                 flags |= TaskDialogFlags.TDF_POSITION_RELATIVE_TO_WINDOW;
@@ -792,14 +721,19 @@ namespace KPreisser.UI
             if (defaultRadioButtonID == 0)
                 flags |= TaskDialogFlags.TDF_NO_DEFAULT_RADIO_BUTTON;
 
+            if (this.checkBox != null)
+                flags |= this.checkBox.Bind(this);
+
             if (this.expander != null)
                 flags |= this.expander.Bind(this);
 
+            if (this.footer != null)
+                flags |= this.footer.Bind(this, out footerIconValue);
+            else
+                footerIconValue = default;
+
             if (this.progressBar != null)
                 flags |= this.progressBar.Bind(this);
-
-            if (this.checkBox != null)
-                flags |= this.checkBox.Bind(this);
         }
 
         internal void Unbind()
@@ -821,10 +755,11 @@ namespace KPreisser.UI
             customButtons.BoundTaskDialogContents = null;
             radioButtons.BoundTaskDialogContents = null;
 
-            this.expander?.Unbind();
-            this.progressBar?.Unbind();
             this.checkBox?.Unbind();
-
+            this.expander?.Unbind();
+            this.footer?.Unbind();
+            this.progressBar?.Unbind();
+            
             this.boundTaskDialog = null;
         }
 

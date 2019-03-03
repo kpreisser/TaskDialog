@@ -20,10 +20,13 @@ namespace TaskDialogExample
                 Title = "Example 1",
                 Instruction = "Hello Task Dialog!   👍",
                 Text = "Hi, this is <A HREF=\"link1\">the Content</A>.\nBlah blah blah…",
-                FooterText = "This is the <A HREF=\"link2\">footer</A>.",
-
                 Icon = TaskDialogIcon.SecuritySuccessGreenBar,
-                FooterIcon = TaskDialogIcon.Warning,
+
+                Footer =
+                {
+                    Text = "This is the <A HREF=\"link2\">footer</A>.",
+                    Icon = TaskDialogIcon.Warning,
+                },
 
                 Expander =
                 {

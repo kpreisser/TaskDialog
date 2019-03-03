@@ -1141,11 +1141,11 @@ namespace KPreisser.UI
                     sizeToAllocate += SizeOfString(contents.Title);
                     sizeToAllocate += SizeOfString(contents.Instruction);
                     sizeToAllocate += SizeOfString(contents.Text);
-                    sizeToAllocate += SizeOfString(contents.FooterText);
+                    sizeToAllocate += SizeOfString(contents.CheckBox?.Text);
                     sizeToAllocate += SizeOfString(contents.Expander?.Text);
                     sizeToAllocate += SizeOfString(contents.Expander?.ExpandedButtonText);
                     sizeToAllocate += SizeOfString(contents.Expander?.CollapsedButtonText);
-                    sizeToAllocate += SizeOfString(contents.CheckBox?.Text);
+                    sizeToAllocate += SizeOfString(contents.Footer?.Text);
 
                     // Buttons array
                     if (contents.CustomButtons.Count > 0)
@@ -1208,11 +1208,11 @@ namespace KPreisser.UI
                             pszWindowTitle = MarshalString(contents.Title),
                             pszMainInstruction = MarshalString(contents.Instruction),
                             pszContent = MarshalString(contents.Text),
-                            pszFooter = MarshalString(contents.FooterText),
+                            pszVerificationText = MarshalString(contents.CheckBox?.Text),
                             pszExpandedInformation = MarshalString(contents.Expander?.Text),
                             pszExpandedControlText = MarshalString(contents.Expander?.ExpandedButtonText),
                             pszCollapsedControlText = MarshalString(contents.Expander?.CollapsedButtonText),
-                            pszVerificationText = MarshalString(contents.CheckBox?.Text),
+                            pszFooter = MarshalString(contents.Footer?.Text),
                             nDefaultButton = defaultButtonID,
                             nDefaultRadioButton = defaultRadioButtonID,
                             pfCallback = callbackProcDelegatePtr,
