@@ -1,6 +1,9 @@
 ﻿using System;
 using System.ComponentModel;
 
+using TaskDialogFlags = KPreisser.UI.TaskDialogNativeMethods.TASKDIALOG_FLAGS;
+using TaskDialogTextElement = KPreisser.UI.TaskDialogNativeMethods.TASKDIALOG_ELEMENTS;
+
 namespace KPreisser.UI
 {
     /// <summary>
@@ -60,7 +63,7 @@ namespace KPreisser.UI
 
                 // Update the text if we are bound.
                 this.BoundTaskDialogContents?.BoundTaskDialog.UpdateTextElement(
-                        TaskDialogTextElement.ExpandedInformation,
+                        TaskDialogTextElement.TDE_EXPANDED_INFORMATION,
                         value);
 
                 this.text = value;
@@ -161,9 +164,9 @@ namespace KPreisser.UI
             var flags = base.GetFlagsCore();
 
             if (this.expanded)
-                flags |= TaskDialogFlags.ExpandedByDefault;
+                flags |= TaskDialogFlags.TDF_EXPANDED_BY_DEFAULT;
             if (this.expandFooterArea)
-                flags |= TaskDialogFlags.ExpandFooterArea;
+                flags |= TaskDialogFlags.TDF_EXPAND_FOOTER_AREA;
 
             return flags;
         }

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.ComponentModel;
 
+using TaskDialogFlags = KPreisser.UI.TaskDialogNativeMethods.TASKDIALOG_FLAGS;
+
 namespace KPreisser.UI
 {
     /// <summary>
@@ -76,7 +78,7 @@ namespace KPreisser.UI
                             // When switching from non-marquee to marquee mode, we first need to
                             // set the state to "Normal"; otherwise the marquee will not show.
                             if (newStateIsMarquee && previousState != TaskDialogProgressBarState.Normal)
-                                taskDialog.SetProgressBarState(TaskDialogProgressBarNativeState.Normal);
+                                taskDialog.SetProgressBarState(TaskDialogNativeMethods.PBST_NORMAL);
 
                             taskDialog.SwitchProgressBarMode(newStateIsMarquee);
                         }
@@ -256,21 +258,21 @@ namespace KPreisser.UI
                     state == TaskDialogProgressBarState.MarqueePaused;
         }
 
-        private static TaskDialogProgressBarNativeState GetNativeProgressBarState(
+        private static int GetNativeProgressBarState(
                 TaskDialogProgressBarState state)
         {
-            var nativeState = default(TaskDialogProgressBarNativeState);
+            int nativeState;
 
             switch (state)
             {
                 case TaskDialogProgressBarState.Normal:
-                    nativeState = TaskDialogProgressBarNativeState.Normal;
+                    nativeState = TaskDialogNativeMethods.PBST_NORMAL;
                     break;
                 case TaskDialogProgressBarState.Paused:
-                    nativeState = TaskDialogProgressBarNativeState.Paused;
+                    nativeState = TaskDialogNativeMethods.PBST_PAUSED;
                     break;
                 case TaskDialogProgressBarState.Error:
-                    nativeState = TaskDialogProgressBarNativeState.Error;
+                    nativeState = TaskDialogNativeMethods.PBST_ERROR;
                     break;
                 default:
                     throw new InvalidOperationException();
@@ -285,9 +287,9 @@ namespace KPreisser.UI
             var flags = base.GetFlagsCore();
 
             if (ProgressBarStateIsMarquee(this.state))
-                flags |= TaskDialogFlags.ShowMarqueeProgressBar;
+                flags |= TaskDialogFlags.TDF_SHOW_MARQUEE_PROGRESS_BAR;
             else
-                flags |= TaskDialogFlags.ShowProgressBar;
+                flags |= TaskDialogFlags.TDF_SHOW_PROGRESS_BAR;
 
             return flags;
         }

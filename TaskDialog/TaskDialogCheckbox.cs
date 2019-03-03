@@ -1,6 +1,8 @@
 ﻿using System;
 using System.ComponentModel;
 
+using TaskDialogFlags = KPreisser.UI.TaskDialogNativeMethods.TASKDIALOG_FLAGS;
+
 namespace KPreisser.UI
 {
     /// <summary>
@@ -128,7 +130,7 @@ namespace KPreisser.UI
             var flags = base.GetFlagsCore();
 
             if (this.@checked)
-                flags |= TaskDialogFlags.VerificationFlagChecked;
+                flags |= TaskDialogFlags.TDF_VERIFICATION_FLAG_CHECKED;
 
             return flags;
         }

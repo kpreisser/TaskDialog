@@ -3,6 +3,13 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
+using TaskDialogNotification = KPreisser.UI.TaskDialogNativeMethods.TASKDIALOG_NOTIFICATIONS;
+using TaskDialogMessage = KPreisser.UI.TaskDialogNativeMethods.TASKDIALOG_MESSAGES;
+using TaskDialogConfig = KPreisser.UI.TaskDialogNativeMethods.TASKDIALOGCONFIG;
+using TaskDialogButtonStruct = KPreisser.UI.TaskDialogNativeMethods.TASKDIALOG_BUTTON;
+using TaskDialogTextElement = KPreisser.UI.TaskDialogNativeMethods.TASKDIALOG_ELEMENTS;
+using TaskDialogIconElement = KPreisser.UI.TaskDialogNativeMethods.TASKDIALOG_ICON_ELEMENTS;
+
 namespace KPreisser.UI
 {
     /// <summary>
@@ -22,15 +29,7 @@ namespace KPreisser.UI
 #if !NET_STANDARD
         , System.Windows.Forms.IWin32Window
 #endif
-    {
-        // Offset for user message types.
-        private const int UserMessageOffset = 0x400;
-
-        private const int HResultOk = 0x0; // S_OK
-
-        private const int HResultFalse = 0x1; // S_FALSE
-
-
+    {        
         /// <summary>
         /// The delegate for the callback handler (that calls
         /// <see cref="HandleTaskDialogCallback"/>) from which the native function
@@ -40,7 +39,7 @@ namespace KPreisser.UI
         /// We must store this delegate (and prevent it from being garbage-collected)
         /// to ensure the function pointer doesn't become invalid.
         /// </remarks>
-        private static readonly TaskDialogCallbackProcDelegate callbackProcDelegate;
+        private static readonly TaskDialogNativeMethods.PFTASKDIALOGCALLBACK callbackProcDelegate;
 
         /// <summary>
         /// The function pointer created from <see cref="callbackProcDelegate"/>.
@@ -80,7 +79,7 @@ namespace KPreisser.UI
 
         /// <summary>
         /// A counter which is used to determine whether the dialog has been navigated
-        /// while being in a <see cref="TaskDialogNotification.ButtonClicked"/> handler.
+        /// while being in a <see cref="TaskDialogNotification.TDN_BUTTON_CLICKED"/> handler.
         /// </summary>
         /// <remarks>
         /// When the dialog navigates within a ButtonClicked handler, the handler should
@@ -469,7 +468,7 @@ namespace KPreisser.UI
                        out var ptrTaskDialogConfig);
                 try
                 {
-                    int ret = NativeMethods.TaskDialogIndirect(
+                    int ret = TaskDialogNativeMethods.TaskDialogIndirect(
                             ptrTaskDialogConfig,
                             out int resultButtonID,
                             out int resultRadioButtonID,
@@ -591,7 +590,7 @@ namespace KPreisser.UI
         internal void SwitchProgressBarMode(bool marqueeProgressBar)
         {
             SendTaskDialogMessage(
-                    TaskDialogMessage.SetMarqueeProgressBar,
+                    TaskDialogMessage.TDM_SET_MARQUEE_PROGRESS_BAR,
                     marqueeProgressBar ? 1 : 0,
                     IntPtr.Zero);
         }
@@ -611,7 +610,7 @@ namespace KPreisser.UI
                 throw new ArgumentOutOfRangeException(nameof(animationSpeed));
 
             SendTaskDialogMessage(
-                    TaskDialogMessage.SetProgressBarMarquee,
+                    TaskDialogMessage.TDM_SET_PROGRESS_BAR_MARQUEE,
                     enableMarquee ? 1 : 0,
                     (IntPtr)animationSpeed);
         }
@@ -640,7 +639,7 @@ namespace KPreisser.UI
             var param = (IntPtr)(void*)unchecked((uint)(min | (max << 0x10)));
 
             SendTaskDialogMessage(
-                    TaskDialogMessage.SetProgressBarRange,
+                    TaskDialogMessage.TDM_SET_PROGRESS_BAR_RANGE,
                     0,
                     param);
         }
@@ -655,7 +654,7 @@ namespace KPreisser.UI
                 throw new ArgumentOutOfRangeException(nameof(pos));
 
             SendTaskDialogMessage(
-                    TaskDialogMessage.SetProgressBarPosition,
+                    TaskDialogMessage.TDM_SET_PROGRESS_BAR_POS,
                     pos,
                     IntPtr.Zero);
         }
@@ -664,11 +663,11 @@ namespace KPreisser.UI
         /// While the dialog is being shown, sets the progress bar state.
         /// </summary>
         /// <param name="state"></param>
-        internal void SetProgressBarState(TaskDialogProgressBarNativeState state)
+        internal void SetProgressBarState(int state)
         {
             SendTaskDialogMessage(
-                    TaskDialogMessage.SetProgressBarState,
-                    (int)state,
+                    TaskDialogMessage.TDM_SET_PROGRESS_BAR_STATE,
+                    state,
                     IntPtr.Zero);
         }
 
@@ -681,7 +680,7 @@ namespace KPreisser.UI
         internal void ClickCheckBox(bool isChecked, bool focus = false)
         {
             SendTaskDialogMessage(
-                    TaskDialogMessage.ClickVerification,
+                    TaskDialogMessage.TDM_CLICK_VERIFICATION,
                     isChecked ? 1 : 0,
                     (IntPtr)(focus ? 1 : 0));
         }
@@ -689,7 +688,7 @@ namespace KPreisser.UI
         internal void SetButtonElevationRequiredState(int buttonID, bool requiresElevation)
         {
             SendTaskDialogMessage(
-                    TaskDialogMessage.SetButtonElevationRequiredState,
+                    TaskDialogMessage.TDM_SET_BUTTON_ELEVATION_REQUIRED_STATE,
                     buttonID,
                     (IntPtr)(requiresElevation ? 1 : 0));
         }
@@ -697,7 +696,7 @@ namespace KPreisser.UI
         internal void SetButtonEnabled(int buttonID, bool enable)
         {
             SendTaskDialogMessage(
-                    TaskDialogMessage.EnableButton,
+                    TaskDialogMessage.TDM_ENABLE_BUTTON,
                     buttonID,
                     (IntPtr)(enable ? 1 : 0));
         }
@@ -705,7 +704,7 @@ namespace KPreisser.UI
         internal void SetRadioButtonEnabled(int radioButtonID, bool enable)
         {
             SendTaskDialogMessage(
-                    TaskDialogMessage.EnableRadioButton,
+                    TaskDialogMessage.TDM_ENABLE_RADIO_BUTTON,
                     radioButtonID,
                     (IntPtr)(enable ? 1 : 0));
         }
@@ -713,7 +712,7 @@ namespace KPreisser.UI
         internal void ClickButton(int buttonID)
         {
             SendTaskDialogMessage(
-                    TaskDialogMessage.ClickButton,
+                    TaskDialogMessage.TDM_CLICK_BUTTON,
                     buttonID,
                     IntPtr.Zero);
         }
@@ -721,7 +720,7 @@ namespace KPreisser.UI
         internal void ClickRadioButton(int radioButtonID)
         {
             SendTaskDialogMessage(
-                    TaskDialogMessage.ClickRadioButton,
+                    TaskDialogMessage.TDM_CLICK_RADIO_BUTTON,
                     radioButtonID,
                     IntPtr.Zero);
         }
@@ -741,7 +740,7 @@ namespace KPreisser.UI
                 // will not (which would lead to clipped controls), so we use the
                 // former.
                 SendTaskDialogMessage(
-                        TaskDialogMessage.SetElementText,
+                        TaskDialogMessage.TDM_SET_ELEMENT_TEXT,
                         (int)element,
                         textPtr);
             }
@@ -762,7 +761,10 @@ namespace KPreisser.UI
             // but later want to set one, the dialog contents might get clipped.
             // To fix this, we might want to call UpdateSize() that forces the
             // task dialog to update its size.
-            SendTaskDialogMessage(TaskDialogMessage.UpdateIcon, (int)element, icon);
+            SendTaskDialogMessage(
+                    TaskDialogMessage.TDM_UPDATE_ICON,
+                    (int)element,
+                    icon);
         }
 
         internal void UpdateTitle(string title)
@@ -778,7 +780,7 @@ namespace KPreisser.UI
             // (or null) with this method causes the window title to be empty.
             // We could replicate the Task Dialog behavior by also using the
             // executable's name as title if the string is null or empty.
-            if (!NativeMethods.SetWindowText(this.hwndDialog, title))
+            if (!TaskDialogNativeMethods.SetWindowText(this.hwndDialog, title))
                 Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
         }
 
@@ -849,7 +851,7 @@ namespace KPreisser.UI
 
             switch (notification)
             {
-                case TaskDialogNotification.Created:
+                case TaskDialogNotification.TDN_CREATED:
                     this.boundContents.ApplyInitialization();
 
                     this.OnOpened(EventArgs.Empty);
@@ -858,7 +860,7 @@ namespace KPreisser.UI
                     this.boundContents.OnCreated(EventArgs.Empty);
                     break;
 
-                case TaskDialogNotification.Destroyed:
+                case TaskDialogNotification.TDN_DESTROYED:
                     // Only raise the 'Destroying' event if we previously raised the
                     // 'Created' event.
                     if (this.raisedContentsCreated)
@@ -880,7 +882,7 @@ namespace KPreisser.UI
                     this.hwndDialog = IntPtr.Zero;
                     break;
 
-                case TaskDialogNotification.Navigated:
+                case TaskDialogNotification.TDN_NAVIGATED:
                     this.waitingForNavigatedEvent = false;
                     this.boundContents.ApplyInitialization();
 
@@ -890,7 +892,7 @@ namespace KPreisser.UI
                     this.boundContents.OnCreated(EventArgs.Empty);
                     break;
 
-                case TaskDialogNotification.HyperlinkClicked:
+                case TaskDialogNotification.TDN_HYPERLINK_CLICKED:
                     string link = Marshal.PtrToStringUni(lParam);
 
                     var eventArgs = new TaskDialogHyperlinkClickedEventArgs(link);
@@ -898,9 +900,9 @@ namespace KPreisser.UI
                     this.boundContents.OnHyperlinkClicked(eventArgs);
                     break;
 
-                case TaskDialogNotification.ButtonClicked:
+                case TaskDialogNotification.TDN_BUTTON_CLICKED:
                     if (this.suppressButtonClickedEvent)
-                        return HResultOk;
+                        return TaskDialogNativeMethods.S_OK;
 
                     int buttonID = wParam.ToInt32();
 
@@ -964,9 +966,11 @@ namespace KPreisser.UI
                                 this.buttonClickNavigationCounter.stackCount);
                     }
 
-                    return handlerResult ? HResultOk : HResultFalse;
+                    return handlerResult ?
+                            TaskDialogNativeMethods.S_OK :
+                            TaskDialogNativeMethods.S_FALSE;
 
-                case TaskDialogNotification.RadioButtonClicked:
+                case TaskDialogNotification.TDN_RADIO_BUTTON_CLICKED:
                     int radioButtonID = wParam.ToInt32();
 
                     var radioButton = this.boundContents.RadioButtons
@@ -975,22 +979,22 @@ namespace KPreisser.UI
                     radioButton.HandleRadioButtonClicked();
                     break;
 
-                case TaskDialogNotification.ExpandoButtonClicked:
+                case TaskDialogNotification.TDN_EXPANDO_BUTTON_CLICKED:
                     this.boundContents.Expander.HandleExpandoButtonClicked(
                             wParam != IntPtr.Zero);
                     break;
 
-                case TaskDialogNotification.VerificationClicked:
+                case TaskDialogNotification.TDN_VERIFICATION_CLICKED:
                     this.boundContents.CheckBox.HandleCheckBoxClicked(
                             wParam != IntPtr.Zero);
                     break;
 
-                case TaskDialogNotification.Help:
+                case TaskDialogNotification.TDN_HELP:
                     //this.OnHelp(EventArgs.Empty);
                     this.boundContents.OnHelp(EventArgs.Empty);
                     break;
 
-                case TaskDialogNotification.Timer:
+                case TaskDialogNotification.TDN_TIMER:
                     // Note: The documentation specifies that wParam contains a DWORD,
                     // which might mean that on 64-bit platforms the highest bit (63)
                     // will be zero even if the DWORD has its highest bit (31) set. In
@@ -1004,7 +1008,9 @@ namespace KPreisser.UI
                     //this.OnTimerTick(tickEventArgs);
                     this.boundContents.OnTimerTick(tickEventArgs);
 
-                    return tickEventArgs.ResetTickCount ? HResultFalse : HResultOk;
+                    return tickEventArgs.ResetTickCount ?
+                            TaskDialogNativeMethods.S_FALSE :
+                            TaskDialogNativeMethods.S_OK;
             }
 
             // Note: Previously, the code caught exceptions and returned
@@ -1022,7 +1028,7 @@ namespace KPreisser.UI
             // Note: Currently, this means that a NRE will occur in the callback after
             // TaskDialog.Show() returns due to an unhandled exception because the
             // TaskDialog is still displayed (see comment in Show()).
-            return HResultOk;
+            return TaskDialogNativeMethods.S_OK;
         }
 
         /// <summary>
@@ -1082,7 +1088,7 @@ namespace KPreisser.UI
                 // the dialog will close and TaskDialogIndirect() returns with an
                 // error code.
                 SendTaskDialogMessage(
-                        TaskDialogMessage.NavigatePage,
+                        TaskDialogMessage.TDM_NAVIGATE_PAGE,
                         0,
                         ptrTaskDialogConfig);
             }
@@ -1193,7 +1199,7 @@ namespace KPreisser.UI
                         Align(ref currentPtr, sizeof(char));
                         taskDialogConfig = new TaskDialogConfig()
                         {
-                            cbSize = sizeof(TaskDialogConfig),
+                            cbSize = (uint)sizeof(TaskDialogConfig),
                             hwndParent = hwndOwner,
                             dwFlags = flags,
                             dwCommonButtons = commonButtonFlags,
@@ -1211,7 +1217,7 @@ namespace KPreisser.UI
                             nDefaultRadioButton = defaultRadioButtonID,
                             pfCallback = callbackProcDelegatePtr,
                             lpCallbackData = this.instanceHandlePtr,
-                            cxWidth = contents.Width
+                            cxWidth = checked((uint)contents.Width)
                         };
 
                         // Buttons array
@@ -1220,7 +1226,7 @@ namespace KPreisser.UI
                             Align(ref currentPtr);
                             var customButtonStructs = (TaskDialogButtonStruct*)currentPtr;
                             taskDialogConfig.pButtons = (IntPtr)customButtonStructs;
-                            taskDialogConfig.cButtons = contents.CustomButtons.Count;
+                            taskDialogConfig.cButtons = (uint)contents.CustomButtons.Count;
                             currentPtr += sizeof(TaskDialogButtonStruct) * contents.CustomButtons.Count;
 
                             Align(ref currentPtr, sizeof(char));
@@ -1241,7 +1247,7 @@ namespace KPreisser.UI
                             Align(ref currentPtr);
                             var customRadioButtonStructs = (TaskDialogButtonStruct*)currentPtr;
                             taskDialogConfig.pRadioButtons = (IntPtr)customRadioButtonStructs;
-                            taskDialogConfig.cRadioButtons = contents.RadioButtons.Count;
+                            taskDialogConfig.cRadioButtons = (uint)contents.RadioButtons.Count;
                             currentPtr += sizeof(TaskDialogButtonStruct) * contents.RadioButtons.Count;
 
                             Align(ref currentPtr, sizeof(char));
@@ -1341,7 +1347,7 @@ namespace KPreisser.UI
         {
             DenyIfDialogNotShownOrWaitingForNavigatedEvent();
 
-            NativeMethods.SendMessage(
+            TaskDialogNativeMethods.SendMessage(
                     this.hwndDialog,
                     (int)message,
                     // Note: When a negative 32-bit integer is converted to a
@@ -1363,7 +1369,7 @@ namespace KPreisser.UI
             // We use the MainInstruction because it cannot contain hyperlinks
             // (and therefore there is no risk that one of the links loses focus).
             UpdateTextElement(
-                    TaskDialogTextElement.MainInstruction,
+                    TaskDialogTextElement.TDE_MAIN_INSTRUCTION,
                     this.boundContents.Instruction);
         }
     }

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.ComponentModel;
 
+using TaskDialogFlags = KPreisser.UI.TaskDialogNativeMethods.TASKDIALOG_FLAGS;
+
 namespace KPreisser.UI
 {
     /// <summary>

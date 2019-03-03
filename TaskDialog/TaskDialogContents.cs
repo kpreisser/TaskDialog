@@ -3,6 +3,10 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 
+using TaskDialogFlags = KPreisser.UI.TaskDialogNativeMethods.TASKDIALOG_FLAGS;
+using TaskDialogTextElement = KPreisser.UI.TaskDialogNativeMethods.TASKDIALOG_ELEMENTS;
+using TaskDialogIconElement = KPreisser.UI.TaskDialogNativeMethods.TASKDIALOG_ICON_ELEMENTS;
+
 namespace KPreisser.UI
 {
     /// <summary>
@@ -262,7 +266,7 @@ namespace KPreisser.UI
             set
             {
                 this.boundTaskDialog?.UpdateTextElement(
-                        TaskDialogTextElement.MainInstruction,
+                        TaskDialogTextElement.TDE_MAIN_INSTRUCTION,
                         value);
 
                 this.instruction = value;
@@ -282,7 +286,7 @@ namespace KPreisser.UI
             set
             {
                 this.boundTaskDialog?.UpdateTextElement(
-                        TaskDialogTextElement.Content,
+                        TaskDialogTextElement.TDE_CONTENT,
                         value);
 
                 this.text = value;
@@ -302,7 +306,7 @@ namespace KPreisser.UI
             set
             {
                 this.boundTaskDialog?.UpdateTextElement(
-                        TaskDialogTextElement.Footer,
+                        TaskDialogTextElement.TDE_FOOTER,
                         value);
 
                 this.footerText = value;
@@ -338,7 +342,7 @@ namespace KPreisser.UI
                     throw new InvalidOperationException();
 
                 this.boundTaskDialog?.UpdateIconElement(
-                        TaskDialogIconElement.Main,
+                        TaskDialogIconElement.TDIE_ICON_MAIN,
                         (IntPtr)value);
 
                 this.icon = value;
@@ -365,7 +369,7 @@ namespace KPreisser.UI
                     throw new InvalidOperationException();
 
                 this.boundTaskDialog?.UpdateIconElement(
-                        TaskDialogIconElement.Main,
+                        TaskDialogIconElement.TDIE_ICON_MAIN,
                         value);
 
                 this.iconHandle = value;
@@ -395,7 +399,7 @@ namespace KPreisser.UI
                     throw new InvalidOperationException();
 
                 this.boundTaskDialog?.UpdateIconElement(
-                        TaskDialogIconElement.Footer,
+                        TaskDialogIconElement.TDIE_ICON_FOOTER,
                         (IntPtr)value);
 
                 this.footerIcon = value;
@@ -422,7 +426,7 @@ namespace KPreisser.UI
                     throw new InvalidOperationException();
 
                 this.boundTaskDialog?.UpdateIconElement(
-                        TaskDialogIconElement.Footer,
+                        TaskDialogIconElement.TDIE_ICON_FOOTER,
                         value);
 
                 this.footerIconHandle = value;
@@ -441,6 +445,9 @@ namespace KPreisser.UI
 
             set
             {
+                if (value < 0)
+                    throw new ArgumentOutOfRangeException(nameof(value));
+
                 this.DenyIfBound();
 
                 this.width = value;
@@ -486,8 +493,8 @@ namespace KPreisser.UI
         [DefaultValue(false)]
         public bool EnableHyperlinks
         {
-            get => GetFlag(TaskDialogFlags.EnableHyperlinks);
-            set => SetFlag(TaskDialogFlags.EnableHyperlinks, value);
+            get => GetFlag(TaskDialogFlags.TDF_ENABLE_HYPERLINKS);
+            set => SetFlag(TaskDialogFlags.TDF_ENABLE_HYPERLINKS, value);
         }
 
         /// <summary>
@@ -505,8 +512,8 @@ namespace KPreisser.UI
         [DefaultValue(false)]
         public bool AllowCancel
         {
-            get => GetFlag(TaskDialogFlags.AllowDialogCancellation);
-            set => SetFlag(TaskDialogFlags.AllowDialogCancellation, value);
+            get => GetFlag(TaskDialogFlags.TDF_ALLOW_DIALOG_CANCELLATION);
+            set => SetFlag(TaskDialogFlags.TDF_ALLOW_DIALOG_CANCELLATION, value);
         }
 
         /// <summary>
@@ -521,8 +528,8 @@ namespace KPreisser.UI
         [DefaultValue(false)]
         public bool RightToLeftLayout
         {
-            get => GetFlag(TaskDialogFlags.RtlLayout);
-            set => SetFlag(TaskDialogFlags.RtlLayout, value);
+            get => GetFlag(TaskDialogFlags.TDF_RTL_LAYOUT);
+            set => SetFlag(TaskDialogFlags.TDF_RTL_LAYOUT, value);
         }
 
         /// <summary>
@@ -536,8 +543,8 @@ namespace KPreisser.UI
         [DefaultValue(false)]
         public bool CanBeMinimized
         {
-            get => GetFlag(TaskDialogFlags.CanBeMinimized);
-            set => SetFlag(TaskDialogFlags.CanBeMinimized, value);
+            get => GetFlag(TaskDialogFlags.TDF_CAN_BE_MINIMIZED);
+            set => SetFlag(TaskDialogFlags.TDF_CAN_BE_MINIMIZED, value);
         }
 
         /// <summary>
@@ -555,8 +562,8 @@ namespace KPreisser.UI
         [DefaultValue(false)]
         public bool DoNotSetForeground
         {
-            get => GetFlag(TaskDialogFlags.NoSetForeground);
-            set => SetFlag(TaskDialogFlags.NoSetForeground, value);
+            get => GetFlag(TaskDialogFlags.TDF_NO_SET_FOREGROUND);
+            set => SetFlag(TaskDialogFlags.TDF_NO_SET_FOREGROUND, value);
         }
 
         /// <summary>
@@ -569,8 +576,8 @@ namespace KPreisser.UI
         [DefaultValue(false)]
         public bool SizeToContent
         {
-            get => GetFlag(TaskDialogFlags.SizeToContent);
-            set => SetFlag(TaskDialogFlags.SizeToContent, value);
+            get => GetFlag(TaskDialogFlags.TDF_SIZE_TO_CONTENT);
+            set => SetFlag(TaskDialogFlags.TDF_SIZE_TO_CONTENT, value);
         }
 
 
@@ -702,7 +709,7 @@ namespace KPreisser.UI
             this.boundIconIsFromHandle = this.iconHandle != IntPtr.Zero;
             if (this.boundIconIsFromHandle)
             {
-                flags |= TaskDialogFlags.UseHIconMain;
+                flags |= TaskDialogFlags.TDF_USE_HICON_MAIN;
                 iconValue = this.iconHandle;
             }
             else
@@ -713,7 +720,7 @@ namespace KPreisser.UI
             this.boundFooterIconIsFromHandle = this.footerIconHandle != IntPtr.Zero;
             if (this.boundFooterIconIsFromHandle)
             {
-                flags |= TaskDialogFlags.UseHIconFooter;
+                flags |= TaskDialogFlags.TDF_USE_HICON_FOOTER;
                 footerIconValue = this.footerIconHandle;
             }
             else
@@ -722,21 +729,21 @@ namespace KPreisser.UI
             }
 
             if (this.startupLocation == TaskDialogStartupLocation.CenterParent)
-                flags |= TaskDialogFlags.PositionRelativeToWindow;
+                flags |= TaskDialogFlags.TDF_POSITION_RELATIVE_TO_WINDOW;
 
             // Specify the timer flag if an event handler has been added to the timer
             // tick event.
             if (this.TimerTick != null)
-                flags |= TaskDialogFlags.CallbackTimer;
+                flags |= TaskDialogFlags.TDF_CALLBACK_TIMER;
 
             // Only specify the command link flags if there actually are custom buttons;
             // otherwise the dialog will not work.
             if (this.customButtons.Count > 0)
             {
                 if (this.commandLinkMode == TaskDialogCommandLinkMode.CommandLinks)
-                    flags |= TaskDialogFlags.UseCommandLinks;
+                    flags |= TaskDialogFlags.TDF_USE_COMMAND_LINKS;
                 else if (this.commandLinkMode == TaskDialogCommandLinkMode.CommandLinksNoIcon)
-                    flags |= TaskDialogFlags.UseCommandLinksNoIcon;
+                    flags |= TaskDialogFlags.TDF_USE_COMMAND_LINKS_NO_ICON;
             }
 
             var commonButtons = this.CommonButtons;
@@ -783,7 +790,7 @@ namespace KPreisser.UI
             }
 
             if (defaultRadioButtonID == 0)
-                flags |= TaskDialogFlags.NoDefaultRadioButton;
+                flags |= TaskDialogFlags.TDF_NO_DEFAULT_RADIO_BUTTON;
 
             if (this.expander != null)
                 flags |= this.expander.Bind(this);
