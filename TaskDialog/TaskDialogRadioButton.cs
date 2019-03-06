@@ -196,12 +196,6 @@ namespace KPreisser.UI
             return result;
         }
 
-        internal override void Unbind()
-        {
-            base.Unbind();
-            this.radioButtonID = 0;
-        }
-
         internal void HandleRadioButtonClicked()
         {
             // Check if we need to ignore the notification when it is caused by sending
@@ -271,6 +265,14 @@ namespace KPreisser.UI
                     boundDialog.RadioButtonClickedStackCount--;
                 }
             }
+        }
+
+
+        private protected override void UnbindCore()
+        {
+            this.radioButtonID = 0;
+
+            base.UnbindCore();
         }
 
         private protected override void ApplyInitializationCore()

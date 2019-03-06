@@ -1302,9 +1302,11 @@ namespace KPreisser.UI
                         if (alignment <= 0)
                             throw new ArgumentOutOfRangeException(nameof(alignment));
 
-                        // Align the pointer to the next align size. If not specified, we will
-                        // use the pointer (register) size.
+                        // Align the pointer to the next align size. If not specified, we
+                        // will use the pointer (register) size.
                         uint add = (uint)(alignment ?? IntPtr.Size) - 1;
+                        // TODO: Use nint (IntN) once available to avoid the separate code
+                        // for 32-bit and 64-bit pointer sizes.
                         if (IntPtr.Size == 8)
                             // Note: The latter cast is not redundant, even if VS says so!
                             currentPtr = (byte*)(((ulong)currentPtr + add) & ~(ulong)add);

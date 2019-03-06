@@ -102,12 +102,6 @@ namespace KPreisser.UI
             return result;
         }
 
-        internal override void Unbind()
-        {
-            base.Unbind();
-            this.buttonID = 0;
-        }
-
         internal string GetResultingText()
         {
             var contents = this.BoundTaskDialogContents;
@@ -127,6 +121,14 @@ namespace KPreisser.UI
                 text += '\n' + this.descriptionText;
 
             return text;
+        }
+
+
+        private protected override void UnbindCore()
+        {
+            this.buttonID = 0;
+
+            base.UnbindCore();
         }
     }
 }

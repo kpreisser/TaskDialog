@@ -282,9 +282,9 @@ namespace KPreisser.UI
         }
 
 
-        private protected override TaskDialogFlags GetFlagsCore()
+        private protected override TaskDialogFlags BindCore()
         {
-            var flags = base.GetFlagsCore();
+            var flags = base.BindCore();
 
             if (ProgressBarStateIsMarquee(this.state))
                 flags |= TaskDialogFlags.TDF_SHOW_MARQUEE_PROGRESS_BAR;

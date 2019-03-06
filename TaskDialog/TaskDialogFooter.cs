@@ -145,21 +145,31 @@ namespace KPreisser.UI
         {
             var result = base.Bind(contents);
 
-            footerIconValue = this.boundFooterIconIsFromHandle ? this.iconHandle : (IntPtr)this.icon;
+            footerIconValue = this.boundFooterIconIsFromHandle ?
+                    this.iconHandle :
+                    (IntPtr)this.icon;
 
             return result;
         }
 
 
-        private protected override TaskDialogFlags GetFlagsCore()
+        private protected override TaskDialogFlags BindCore()
         {
-            var flags = base.GetFlagsCore();
+            var flags = base.BindCore();
 
             this.boundFooterIconIsFromHandle = this.iconHandle != IntPtr.Zero;
+
             if (this.boundFooterIconIsFromHandle)
                 flags |= TaskDialogFlags.TDF_USE_HICON_FOOTER;
 
             return flags;
+        }
+
+        private protected override void UnbindCore()
+        {
+            this.boundFooterIconIsFromHandle = false;
+
+            base.UnbindCore();
         }
     }
 }

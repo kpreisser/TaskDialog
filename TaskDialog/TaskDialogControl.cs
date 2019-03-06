@@ -65,11 +65,14 @@ namespace KPreisser.UI
             // control is displayed (e.g. if it depends on the Text property).
             this.IsCreated = this.IsCreatable;
 
-            return this.IsCreated ? this.GetFlagsCore() : default;
+            return this.IsCreated ? this.BindCore() : default;
         }
 
-        internal virtual void Unbind()
+        internal void Unbind()
         {
+            if (this.IsCreated)
+                this.UnbindCore();
+
             this.IsCreated = false;
             this.BoundTaskDialogContents = null;
         }
@@ -86,16 +89,26 @@ namespace KPreisser.UI
 
 
         /// <summary>
-        /// When overridden in a subclass, gets additional flags to be specified before
-        /// the task dialog is displayed or navigated.
+        /// When overridden in a subclass, runs additional binding logic and returns
+        /// flags to be specified before the task dialog is displayed or navigated.
         /// </summary>
         /// <remarks>
         /// This method will only be called if <see cref="IsCreatable"/> returns <c>true</c>.
         /// </remarks>
         /// <returns></returns>
-        private protected virtual TaskDialogFlags GetFlagsCore()
+        private protected virtual TaskDialogFlags BindCore()
         {
             return default;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <remarks>
+        /// This method will only be called if <see cref="BindCore"/> was called.
+        /// </remarks>
+        private protected virtual void UnbindCore()
+        {
         }
 
         /// <summary>

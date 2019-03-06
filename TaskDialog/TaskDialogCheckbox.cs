@@ -125,9 +125,9 @@ namespace KPreisser.UI
         }
 
 
-        private protected override TaskDialogFlags GetFlagsCore()
+        private protected override TaskDialogFlags BindCore()
         {
-            var flags = base.GetFlagsCore();
+            var flags = base.BindCore();
 
             if (this.@checked)
                 flags |= TaskDialogFlags.TDF_VERIFICATION_FLAG_CHECKED;
