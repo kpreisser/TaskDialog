@@ -71,7 +71,7 @@ namespace KPreisser.UI
         /// </summary>
         /// <remarks>
         /// This is used to prevent raising the 
-        /// <see cref="TaskDialogContents.Destroying"/> event without raising the
+        /// <see cref="TaskDialogContents.Destroyed"/> event without raising the
         /// <see cref="TaskDialogContents.Created"/> event first (e.g. if navigation
         /// fails).
         /// </remarks>
@@ -101,6 +101,26 @@ namespace KPreisser.UI
         /// </remarks>
         private (int stackCount, int navigationIndex) buttonClickNavigationCounter;
 
+        /// <summary>
+        /// The button designated as the dialog result by the handler for the
+        /// <see cref="TaskDialogNotification.TDN_BUTTON_CLICKED"/>
+        /// notification.
+        /// </summary>
+        /// <remarks>
+        /// This will be set the first time the
+        /// <see cref="TaskDialogNotification.TDN_BUTTON_CLICKED"/> handler returns
+        /// <see cref="TaskDialogNativeMethods.S_OK"/> to cache the button instance,
+        /// so that <see cref="Show(IntPtr)"/> can then return it.
+        /// 
+        /// Additionally, this is used to check if there was already a 
+        /// <see cref="TaskDialogNotification.TDN_BUTTON_CLICKED"/> handler that
+        /// returned <see cref="TaskDialogNativeMethods.S_OK"/>, so that further
+        /// handles will return <see cref="TaskDialogNativeMethods.S_FALSE"/> to
+        /// not override the previously set result.
+        /// 
+        /// </remarks>
+        private (TaskDialogButton button, int originalButtonID) resultButton;
+
         //private bool resultCheckBoxChecked;
 
         private bool suppressButtonClickedEvent;
@@ -110,26 +130,44 @@ namespace KPreisser.UI
         /// Occurs after the task dialog has been created but before it is displayed.
         /// </summary>
         /// <remarks>
+        /// You can use this event to allocate resources associated with the
+        /// task dialog window handle, as it is the first event where
+        /// <see cref="Handle"/> is available.
+        /// 
         /// Note: The dialog will not show until this handler returns (even if the
         /// handler would run the message loop).
         /// </remarks>
         public event EventHandler Opened;
 
         /// <summary>
-        /// Occurs when the task dialog is about to be destroyed.
-        /// </summary>
-        public event EventHandler Closing;
-
-        /// <summary>
-        /// Occurs after the task dialog has navigated.
+        /// Occurs when the task dialog closing.
         /// </summary>
         /// <remarks>
-        /// Instead of handling this event (which will be called for all navigations
-        /// of this dialog), you can also handle the
-        /// <see cref="TaskDialogContents.Created"/> event that will only occur after the
-        /// dialog navigated to that specific <see cref="TaskDialogContents"/> instance.
+        /// You can cancel the close by setting
+        /// <see cref="CancelEventArgs.Cancel"/> to <c>true</c>.
         /// </remarks>
-        public event EventHandler Navigated;
+        public event EventHandler<TaskDialogClosingEventArgs> Closing;
+
+        /// <summary>
+        /// Occurs when the task dialog is closed.
+        /// </summary>
+        /// <remarks>
+        /// You can use this event to free resources associated with the
+        /// task dialog window handle, as it is the last event where
+        /// <see cref="Handle"/> is available.
+        /// </remarks>
+        public event EventHandler Closed;
+
+        ///// <summary>
+        ///// Occurs after the task dialog has navigated.
+        ///// </summary>
+        ///// <remarks>
+        ///// Instead of handling this event (which will be called for all navigations
+        ///// of this dialog), you can also handle the
+        ///// <see cref="TaskDialogContents.Created"/> event that will only occur after the
+        ///// dialog navigated to that specific <see cref="TaskDialogContents"/> instance.
+        ///// </remarks>
+        //public event EventHandler Navigated;
 
         //// These events were removed since they are also available in the
         //// TaskDialogContents, and are specific to the contents (not to the dialog).
@@ -196,7 +234,7 @@ namespace KPreisser.UI
         /// <remarks>
         /// When showing the dialog, the handle will be available first when the
         /// <see cref="Opened"/> event occurs, and last when the
-        /// <see cref="Closing"/> event occurs after which you shouldn't use it any more.
+        /// <see cref="Closed"/> event occurs after which you shouldn't use it any more.
         /// </remarks>
         [Browsable(false)]
         public IntPtr Handle
@@ -211,12 +249,12 @@ namespace KPreisser.UI
         /// <remarks>
         /// By setting this property while the task dialog is displayed, it will
         /// recreate its contents from the specified <see cref="TaskDialogContents"/>
-        /// ("navigation"). After the dialog is navigated, the <see cref="Navigated"/>
-        /// and the <see cref="TaskDialogContents.Created"/> events will occur.
+        /// ("navigation"). After the dialog is navigated, the <!--<see cref="Navigated"/>
+        /// and the --> <see cref="TaskDialogContents.Created"/> event will occur.
         /// 
         /// Please note that you cannot update the task dialog or its controls
-        /// directly after navigating it. You will need to wait for one of the mentioned
-        /// events to occur before you can update the dialog or its controls.
+        /// directly after navigating it. You will need to wait for the mentioned
+        /// event to occur before you can update the dialog or its controls.
         /// </remarks>
         [Category("Contents")]
         [Description("Contains the current contents of the Task Dialog.")]
@@ -403,6 +441,17 @@ namespace KPreisser.UI
         }
 #endif
 
+        private static bool IsTaskDialogButtonCommitting(TaskDialogButton button)
+        {
+            // All custom button as well as all common buttons except for the
+            // "Help" button (if it is shown in the dialog) will close the
+            // dialog. If the "Help" button is not shown in the task dialog,
+            // "button" will be null so we return true as in that case it
+            // will actually close the dialog.
+            return !(button is TaskDialogCommonButton commonButton && 
+                commonButton.Result == TaskDialogResult.Help);
+        }
+
 
         /// <summary>
         /// Shows the task dialog.
@@ -444,7 +493,7 @@ namespace KPreisser.UI
             // represent a single native dialog.
             if (this.instanceHandlePtr != IntPtr.Zero)
                 throw new InvalidOperationException(
-                        $"This {nameof(TaskDialog)} instance is already showing a task dialog.");
+                        $"This {nameof(TaskDialog)} instance is already showing.");
 
             // Validate the config.
             this.CurrentContents.Validate(this);
@@ -495,8 +544,16 @@ namespace KPreisser.UI
                     if (ret < 0)
                         Marshal.ThrowExceptionForHR(ret);
 
+                    // Check if the button ID equals the cached result button ID.
+                    // Normally this should always be the case, but we still handle
+                    // the other cases.
                     TaskDialogButton resultingButton;
-                    if (resultButtonID >= TaskDialogContents.CustomButtonStartID)
+                    if (this.resultButton.button != null &&
+                            resultButtonID == this.resultButton.originalButtonID)
+                    {
+                        resultingButton = this.resultButton.button;
+                    }
+                    else if (resultButtonID >= TaskDialogContents.CustomButtonStartID)
                     {
                         resultingButton = this.boundContents.CustomButtons
                                 [resultButtonID - TaskDialogContents.CustomButtonStartID];
@@ -532,7 +589,10 @@ namespace KPreisser.UI
                     this.hwndDialog = IntPtr.Zero;
                     this.raisedContentsCreated = false;
 
-                    // Unbind the contents. The 'Destroying' event of the TaskDialogContent
+                    // Clear the cached objects.
+                    this.resultButton = default;
+
+                    // Unbind the contents. The 'Destroyed' event of the TaskDialogContent
                     // will already have been called from the callback.
                     this.boundContents.Unbind();
                     this.boundContents = null;
@@ -798,7 +858,7 @@ namespace KPreisser.UI
         /// 
         /// </summary>
         /// <param name="e"></param>
-        protected void OnClosing(EventArgs e)
+        protected void OnClosing(TaskDialogClosingEventArgs e)
         {
             this.Closing?.Invoke(this, e);
         }
@@ -807,10 +867,19 @@ namespace KPreisser.UI
         /// 
         /// </summary>
         /// <param name="e"></param>
-        protected void OnNavigated(EventArgs e)
+        protected void OnClosed(EventArgs e)
         {
-            this.Navigated?.Invoke(this, e);
+            this.Closed?.Invoke(this, e);
         }
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="e"></param>
+        //protected void OnNavigated(EventArgs e)
+        //{
+        //    this.Navigated?.Invoke(this, e);
+        //}
 
         ///// <summary>
         ///// 
@@ -861,15 +930,15 @@ namespace KPreisser.UI
                     break;
 
                 case TaskDialogNotification.TDN_DESTROYED:
-                    // Only raise the 'Destroying' event if we previously raised the
+                    // Only raise the 'Destroyed' event if we previously raised the
                     // 'Created' event.
                     if (this.raisedContentsCreated)
                     {
                         this.raisedContentsCreated = false;
-                        this.boundContents.OnDestroying(EventArgs.Empty);
+                        this.boundContents.OnDestroyed(EventArgs.Empty);
                     }
 
-                    this.OnClosing(EventArgs.Empty);
+                    this.OnClosed(EventArgs.Empty);
 
                     // Clear the dialog handle, because according to the docs, we must not
                     // continue to send any notifications to the dialog after the callback
@@ -886,7 +955,7 @@ namespace KPreisser.UI
                     this.waitingForNavigatedEvent = false;
                     this.boundContents.ApplyInitialization();
 
-                    this.OnNavigated(EventArgs.Empty);
+                    //this.OnNavigated(EventArgs.Empty);
 
                     this.raisedContentsCreated = true;
                     this.boundContents.OnCreated(EventArgs.Empty);
@@ -964,6 +1033,37 @@ namespace KPreisser.UI
                         this.buttonClickNavigationCounter.navigationIndex = Math.Min(
                                 this.buttonClickNavigationCounter.navigationIndex,
                                 this.buttonClickNavigationCounter.stackCount);
+                    }
+
+                    // If the button would close the dialog, raise the Closing event
+                    // so that the user can cancel the close.
+                    if (handlerResult && IsTaskDialogButtonCommitting(button))
+                    {
+                        // For consistency, we only raise the event (and allow the handler
+                        // to return S_OK) if it was not already raised for a previous
+                        // handler which already set a button result.
+                        if (this.resultButton.button != null)
+                        {
+                            handlerResult = false;
+                        }
+                        else
+                        {
+                            // The button would close the dialog, so raise the event.
+                            // If we didn't find the button, we need to create a new
+                            // instance and save it, so that we can return that instance
+                            // after TaskDialogIndirect() returns.
+                            if (button == null)
+                                button = new TaskDialogCommonButton((TaskDialogResult)buttonID);
+
+                            var closingEventArgs = new TaskDialogClosingEventArgs(button);
+                            this.OnClosing(closingEventArgs);
+
+                            handlerResult = !closingEventArgs.Cancel;
+
+                            // Cache the result button if we return S_OK.
+                            if (handlerResult)
+                                this.resultButton = (button, buttonID);
+                        }
                     }
 
                     return handlerResult ?
@@ -1059,13 +1159,13 @@ namespace KPreisser.UI
 
             // After validation passed, we can now unbind the current contents and
             // bind the new one.
-            // Need to raise the "Destroying" event for the current contents. The
+            // Need to raise the "Destroyed" event for the current contents. The
             // "Created" event for the new contents will occur from the callback.
             // Note: "this.raisedContentsCreated" should always be true here.
             if (this.raisedContentsCreated)
             {
                 this.raisedContentsCreated = false;
-                this.boundContents.OnDestroying(EventArgs.Empty);
+                this.boundContents.OnDestroyed(EventArgs.Empty);
             }
 
             this.boundContents.Unbind();
@@ -1339,8 +1439,9 @@ namespace KPreisser.UI
             if (this.waitingForNavigatedEvent)
                 throw new InvalidOperationException(
                         "Cannot update the task dialog directly after navigating it. " +
-                        $"Please wait for the {nameof(TaskDialog)}.{nameof(this.Navigated)} " +
-                        $"event or for the " +
+                        $"Please wait for the " +
+                        //$"{nameof(TaskDialog)}.{nameof(this.Navigated)} " +
+                        //$"event or for the " +
                         $"{nameof(TaskDialogContents)}.{nameof(TaskDialogContents.Created)} " +
                         $"event to occur.");
         }

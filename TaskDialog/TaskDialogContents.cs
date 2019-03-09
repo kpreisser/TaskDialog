@@ -79,9 +79,9 @@ namespace KPreisser.UI
         /// unbound from the task dialog.
         /// </summary>
         /// <remarks>
-        /// This will happen before closing or navigating the dialog.
+        /// This will happen when closing or navigating the dialog.
         /// </remarks>
-        public event EventHandler Destroying;
+        public event EventHandler Destroyed;
 
         /// <summary>
         /// Occurs when the user presses F1 while the task dialog has focus, or when the
@@ -793,9 +793,9 @@ namespace KPreisser.UI
         /// 
         /// </summary>
         /// <param name="e"></param>
-        internal protected void OnDestroying(EventArgs e)
+        internal protected void OnDestroyed(EventArgs e)
         {
-            this.Destroying?.Invoke(this, e);
+            this.Destroyed?.Invoke(this, e);
         }
 
         /// <summary>

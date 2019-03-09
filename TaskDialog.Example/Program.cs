@@ -46,9 +46,9 @@ namespace TaskDialogExample
             {
                 Console.WriteLine("Main Contents created!");
             };
-            dialogContents.Destroying += (s, e) =>
+            dialogContents.Destroyed += (s, e) =>
             {
-                Console.WriteLine("Main Contents destroying!");
+                Console.WriteLine("Main Contents destroyed!");
             };
 
             dialogContents.Expander.ExpandoButtonClicked += (s, e) =>
@@ -210,9 +210,9 @@ namespace TaskDialogExample
                         // yellow bar from the "SecurityWarningBar" icon with a different icon.
                         newContents.Icon = TaskDialogIcon.Warning;
                     };
-                    newContents.Destroying += (s2, e2) =>
+                    newContents.Destroyed += (s2, e2) =>
                     {
-                        Console.WriteLine("New Contents destroying!");
+                        Console.WriteLine("New Contents destroyed!");
                     };
 
                     var buttonCancel = newContents.CommonButtons.Add(TaskDialogResult.Cancel);
