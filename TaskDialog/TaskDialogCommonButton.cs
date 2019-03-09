@@ -157,10 +157,6 @@ namespace KPreisser.UI
 
         internal TaskDialogButtons GetButtonFlag()
         {
-            // Don't specify a flag if this button is hidden.
-            if (!this.visible)
-                return default;
-
             return GetButtonFlagForResult(this.result);
         }
     }

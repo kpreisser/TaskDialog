@@ -119,7 +119,7 @@ namespace KPreisser.UI
         /// not override the previously set result.
         /// 
         /// </remarks>
-        private (TaskDialogButton button, int originalButtonID) resultButton;
+        private (TaskDialogButton button, int buttonID) resultButton;
 
         //private bool resultCheckBoxChecked;
 
@@ -145,6 +145,9 @@ namespace KPreisser.UI
         /// <remarks>
         /// You can cancel the close by setting
         /// <see cref="CancelEventArgs.Cancel"/> to <c>true</c>.
+        /// 
+        /// Note: This event might not always be called, e.g. if navigation of the
+        /// dialog fails.
         /// </remarks>
         public event EventHandler<TaskDialogClosingEventArgs> Closing;
 
@@ -446,10 +449,12 @@ namespace KPreisser.UI
             // All custom button as well as all common buttons except for the
             // "Help" button (if it is shown in the dialog) will close the
             // dialog. If the "Help" button is not shown in the task dialog,
-            // "button" will be null so we return true as in that case it
-            // will actually close the dialog.
-            return !(button is TaskDialogCommonButton commonButton && 
-                commonButton.Result == TaskDialogResult.Help);
+            // "button" will be null or its "IsCreated" property returns false.
+            // In that case the "Help" button would close the dialog, so we
+            // return true.
+            return !(button is TaskDialogCommonButton commonButton &&
+                    commonButton.IsCreated &&
+                    commonButton.Result == TaskDialogResult.Help);
         }
 
 
@@ -544,36 +549,10 @@ namespace KPreisser.UI
                     if (ret < 0)
                         Marshal.ThrowExceptionForHR(ret);
 
-                    // Check if the button ID equals the cached result button ID.
-                    // Normally this should always be the case, but we still handle
-                    // the other cases.
-                    TaskDialogButton resultingButton;
-                    if (this.resultButton.button != null &&
-                            resultButtonID == this.resultButton.originalButtonID)
-                    {
-                        resultingButton = this.resultButton.button;
-                    }
-                    else if (resultButtonID >= TaskDialogContents.CustomButtonStartID)
-                    {
-                        resultingButton = this.boundContents.CustomButtons
-                                [resultButtonID - TaskDialogContents.CustomButtonStartID];
-                    }
-                    else
-                    {
-                        var result = (TaskDialogResult)resultButtonID;
-
-                        // Check we have a button with the result that was returned. This might
-                        // not always be the case, e.g. when specifying AllowCancel but not
-                        // adding a 'Cancel' button. If we don't have such button, we
-                        // simply create a new one.
-                        if (this.boundContents.CommonButtons.Contains(result))
-                            resultingButton = this.boundContents.CommonButtons[result];
-                        else
-                            resultingButton = new TaskDialogCommonButton(result);
-                    }
-
-                    // Return the button that was clicked.
-                    return resultingButton;
+                    // The returned button ID should always equal the cached result
+                    // button ID.
+                    Debug.Assert(resultButtonID == this.resultButton.buttonID);
+                    return this.resultButton.button;
                 }
                 finally
                 {
@@ -1041,20 +1020,36 @@ namespace KPreisser.UI
                     {
                         // For consistency, we only raise the event (and allow the handler
                         // to return S_OK) if it was not already raised for a previous
-                        // handler which already set a button result.
+                        // handler which already set a button result. Otherwise, we
+                        // would either raise the "Closing" event multiple times (which
+                        // wouldn't make sense) or we would allow a later handler to
+                        // override the previously set result, which would mean the
+                        // button returned from Show() would not match one specified
+                        // in the "Closing" event's args.
                         if (this.resultButton.button != null)
                         {
                             handlerResult = false;
                         }
                         else
                         {
-                            // The button would close the dialog, so raise the event.
-                            // If we didn't find the button, we need to create a new
-                            // instance and save it, so that we can return that instance
-                            // after TaskDialogIndirect() returns.
+                            // If we didn't find the button (e.g. when specifying
+                            // AllowCancel but not adding a "Cancel" button), we need
+                            // to create a new instance and save it, so that we can
+                            // return that instance after TaskDialogIndirect() returns.
                             if (button == null)
-                                button = new TaskDialogCommonButton((TaskDialogResult)buttonID);
+                            {
+                                // TODO: Maybe bind the button so that the user
+                                // cannot change the properties, like it is the
+                                // case with the regular buttons added to the
+                                // collections.
+                                button = new TaskDialogCommonButton(
+                                        (TaskDialogResult)buttonID)
+                                {
+                                    Visible = false
+                                };
+                            }
 
+                            // The button would close the dialog, so raise the event.
                             var closingEventArgs = new TaskDialogClosingEventArgs(button);
                             this.OnClosing(closingEventArgs);
 

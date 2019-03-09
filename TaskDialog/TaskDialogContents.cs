@@ -691,10 +691,14 @@ namespace KPreisser.UI
             foreach (var commonButton in commonButtons)
             {
                 flags |= commonButton.Bind(this);
-                buttonFlags |= commonButton.GetButtonFlag();
 
-                if (commonButton.Visible && commonButton.DefaultButton && defaultButtonID == 0)
-                    defaultButtonID = commonButton.ButtonID;
+                if (commonButton.IsCreated)
+                {
+                    buttonFlags |= commonButton.GetButtonFlag();
+
+                    if (commonButton.DefaultButton && defaultButtonID == 0)
+                        defaultButtonID = commonButton.ButtonID;
+                }
             }
 
             for (int i = 0; i < customButtons.Count; i++)
@@ -702,8 +706,11 @@ namespace KPreisser.UI
                 var customButton = customButtons[i];
                 flags |= customButton.Bind(this, CustomButtonStartID + i);
 
-                if (customButton.DefaultButton && defaultButtonID == 0)
-                    defaultButtonID = customButton.ButtonID;
+                if (customButton.IsCreated)
+                {
+                    if (customButton.DefaultButton && defaultButtonID == 0)
+                        defaultButtonID = customButton.ButtonID;
+                }
             }
 
             defaultRadioButtonID = 0;
@@ -712,10 +719,13 @@ namespace KPreisser.UI
                 var radioButton = radioButtons[i];
                 flags |= radioButton.Bind(this, RadioButtonStartID + i);
 
-                if (radioButton.Checked && defaultRadioButtonID == 0)
-                    defaultRadioButtonID = radioButton.RadioButtonID;
-                else if (radioButton.Checked)
-                    radioButton.Checked = false;
+                if (radioButton.IsCreated)
+                {
+                    if (radioButton.Checked && defaultRadioButtonID == 0)
+                        defaultRadioButtonID = radioButton.RadioButtonID;
+                    else if (radioButton.Checked)
+                        radioButton.Checked = false;
+                }
             }
 
             if (defaultRadioButtonID == 0)
