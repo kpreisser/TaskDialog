@@ -494,8 +494,8 @@ namespace KPreisser.UI
         /// <remarks>
         /// When setting this property to <c>true</c> and then showing the dialog, it
         /// causes the dialog to net set itself as foreground window. Normally, this
-        /// means that the taskbar for the window will not flash orange if the
-        /// application currently doesn't have focus.
+        /// means that the taskbar button for the window will not flash orange if
+        /// the application currently doesn't have focus.
         /// 
         /// Note: This property does not have an effect when navigating the task dialog.
         /// Note: This property only has an effect on Windows 8 and higher.
