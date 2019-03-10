@@ -23,7 +23,7 @@ namespace KPreisser.UI
         /// <remarks>
         /// By default, the dialog will be closed after the event handler returns 
         /// (except for the <see cref="TaskDialogResult.Help"/> button which instead
-        /// will raise the <see cref="TaskDialogContents.Help"/> event afterwards).
+        /// will raise the <see cref="TaskDialogPage.Help"/> event afterwards).
         /// To prevent the dialog from closing, set the
         /// <see cref="TaskDialogButtonClickedEventArgs.CancelClose"/> property to
         /// <c>true</c>.
@@ -55,7 +55,7 @@ namespace KPreisser.UI
                 // Check if we can update the button.
                 if (CanUpdate())
                 {
-                    this.BoundTaskDialogContents?.BoundTaskDialog.SetButtonEnabled(
+                    this.BoundPage?.BoundTaskDialog.SetButtonEnabled(
                             this.ButtonID,
                             value);
                 }
@@ -80,7 +80,7 @@ namespace KPreisser.UI
 
                 if (CanUpdate())
                 {
-                    this.BoundTaskDialogContents?.BoundTaskDialog.SetButtonElevationRequiredState(
+                    this.BoundPage?.BoundTaskDialog.SetButtonElevationRequiredState(
                             this.ButtonID,
                             value);
                 }
@@ -141,7 +141,7 @@ namespace KPreisser.UI
             // Note: We allow a click even if the button is not visible/created.
             DenyIfNotBound();            
 
-            this.BoundTaskDialogContents.BoundTaskDialog.ClickButton(this.ButtonID);
+            this.BoundPage.BoundTaskDialog.ClickButton(this.ButtonID);
         }
 
 
@@ -173,9 +173,9 @@ namespace KPreisser.UI
         {
             // Only update the button when bound to a task dialog and we are not
             // waiting for the Navigated event. In the latter case we don't throw
-            // an exception however, because ApplyInitialization will be called in
-            // the Navigated handler that does the necessary updates.
-            return this.BoundTaskDialogContents?.BoundTaskDialog
+            // an exception however, because ApplyInitialization() will be called
+            // in the Navigated handler that does the necessary updates.
+            return this.BoundPage?.BoundTaskDialog
                     .WaitingForNavigatedEvent == false;
         }
     }

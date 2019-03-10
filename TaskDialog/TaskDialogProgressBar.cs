@@ -56,7 +56,7 @@ namespace KPreisser.UI
             set {
                 this.DenyIfBoundAndNotCreated();
 
-                if (this.BoundTaskDialogContents != null && value == TaskDialogProgressBarState.None)
+                if (this.BoundPage != null && value == TaskDialogProgressBarState.None)
                     throw new InvalidOperationException(
                             "Cannot remove the progress bar while the task dialog is shown.");
 
@@ -66,9 +66,9 @@ namespace KPreisser.UI
                 this.state = value;
                 try
                 {
-                    if (this.BoundTaskDialogContents != null)
+                    if (this.BoundPage != null)
                     {
-                        var taskDialog = this.BoundTaskDialogContents.BoundTaskDialog;
+                        var taskDialog = this.BoundPage.BoundTaskDialog;
 
                         // Check if we need to switch between a marquee and a non-marquee bar.
                         bool newStateIsMarquee = ProgressBarStateIsMarquee(this.state);
@@ -147,9 +147,9 @@ namespace KPreisser.UI
                 this.DenyIfBoundAndNotCreated();
 
                 // We only update the TaskDialog if the current state is a non-marquee progress bar.
-                if (this.BoundTaskDialogContents != null && !ProgressBarStateIsMarquee(this.state))
+                if (this.BoundPage != null && !ProgressBarStateIsMarquee(this.state))
                 {
-                    this.BoundTaskDialogContents.BoundTaskDialog.SetProgressBarRange(
+                    this.BoundPage.BoundTaskDialog.SetProgressBarRange(
                             value,
                             this.maximum);
                 }
@@ -176,9 +176,9 @@ namespace KPreisser.UI
                 this.DenyIfBoundAndNotCreated();
 
                 // We only update the TaskDialog if the current state is a non-marquee progress bar.
-                if (this.BoundTaskDialogContents != null && !ProgressBarStateIsMarquee(this.state))
+                if (this.BoundPage != null && !ProgressBarStateIsMarquee(this.state))
                 {
-                    this.BoundTaskDialogContents.BoundTaskDialog.SetProgressBarRange(
+                    this.BoundPage.BoundTaskDialog.SetProgressBarRange(
                             this.minimum,
                             value);
                 }
@@ -205,9 +205,9 @@ namespace KPreisser.UI
                 this.DenyIfBoundAndNotCreated();
 
                 // We only update the TaskDialog if the current state is a non-marquee progress bar.
-                if (this.BoundTaskDialogContents != null && !ProgressBarStateIsMarquee(this.state))
+                if (this.BoundPage != null && !ProgressBarStateIsMarquee(this.state))
                 {
-                    this.BoundTaskDialogContents.BoundTaskDialog.SetProgressBarPosition(
+                    this.BoundPage.BoundTaskDialog.SetProgressBarPosition(
                             value);
                 }
 
@@ -234,7 +234,7 @@ namespace KPreisser.UI
                 try
                 {
                     // We only update the TaskDialog if the current state is a marquee progress bar.
-                    if (this.BoundTaskDialogContents != null && ProgressBarStateIsMarquee(this.state))
+                    if (this.BoundPage != null && ProgressBarStateIsMarquee(this.state))
                         this.State = this.state;
                 }
                 catch
@@ -296,7 +296,7 @@ namespace KPreisser.UI
 
         private protected override void ApplyInitializationCore()
         {
-            var taskDialog = this.BoundTaskDialogContents.BoundTaskDialog;
+            var taskDialog = this.BoundPage.BoundTaskDialog;
 
             if (this.state == TaskDialogProgressBarState.Marquee)
             {
@@ -305,16 +305,16 @@ namespace KPreisser.UI
             else if (this.state != TaskDialogProgressBarState.MarqueePaused)
             {
                 this.State = this.state;
-                this.BoundTaskDialogContents.BoundTaskDialog.SetProgressBarRange(
+                this.BoundPage.BoundTaskDialog.SetProgressBarRange(
                         this.minimum,
                         this.maximum);
-                this.BoundTaskDialogContents.BoundTaskDialog.SetProgressBarPosition(
+                this.BoundPage.BoundTaskDialog.SetProgressBarPosition(
                         this.value);
 
                 // See comment in property "State" for why we need to set
                 // the position it twice.
                 if (this.state != TaskDialogProgressBarState.Normal)
-                    this.BoundTaskDialogContents.BoundTaskDialog.SetProgressBarPosition(
+                    this.BoundPage.BoundTaskDialog.SetProgressBarPosition(
                             this.value);
             }
         }

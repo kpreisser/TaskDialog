@@ -13,7 +13,7 @@ namespace KPreisser.UI
     /// 
     /// </summary>
     [TypeConverter(typeof(ExpandableObjectConverter))]
-    public class TaskDialogContents
+    public class TaskDialogPage
     {
         /// <summary>
         /// The start ID for custom buttons.
@@ -66,7 +66,7 @@ namespace KPreisser.UI
         /// <summary>
         /// Occurs after this instance is bound to a task dialog and the task dialog
         /// has created the GUI elements represented by this
-        /// <see cref="TaskDialogContents"/> instance.
+        /// <see cref="TaskDialogPage"/> instance.
         /// </summary>
         /// <remarks>
         /// This will happen after showing or navigating the dialog.
@@ -75,7 +75,7 @@ namespace KPreisser.UI
 
         /// <summary>
         /// Occurs when the task dialog is about to destroy the GUI elements represented
-        /// by this <see cref="TaskDialogContents"/> instance and it is about to be
+        /// by this <see cref="TaskDialogPage"/> instance and it is about to be
         /// unbound from the task dialog.
         /// </summary>
         /// <remarks>
@@ -96,7 +96,7 @@ namespace KPreisser.UI
 
         /// <summary>
         /// Occurs approximately every 200 milliseconds while this
-        /// <see cref="TaskDialogContents"/> is bound.
+        /// <see cref="TaskDialogPage"/> is bound.
         /// </summary>
         public event EventHandler<TaskDialogTimerTickEventArgs> TimerTick;
 
@@ -104,7 +104,7 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
-        public TaskDialogContents()
+        public TaskDialogPage()
         {
             // Set default flags/properties.
             this.startupLocation = TaskDialogStartupLocation.CenterParent;
@@ -461,8 +461,8 @@ namespace KPreisser.UI
         /// </summary>
         /// <remarks>
         /// Note that once a task dialog has been opened with or has navigated to a
-        /// <see cref="TaskDialogContents"/> where this flag is set, it will keep on
-        /// subsequent navigations to a new <see cref="TaskDialogContents"/> even when
+        /// <see cref="TaskDialogPage"/> where this flag is set, it will keep on
+        /// subsequent navigations to a new <see cref="TaskDialogPage"/> even when
         /// it doesn't have this flag set.
         /// </remarks>
         [DefaultValue(false)]
@@ -541,7 +541,7 @@ namespace KPreisser.UI
             if (this.boundTaskDialog != null)
                 throw new InvalidOperationException(
                         "Cannot set this property or call this method while the " +
-                        "contents are bound to a task dialog.");
+                        "page is bound to a task dialog.");
         }
 
         internal void Validate(TaskDialog newOwner)
@@ -553,30 +553,30 @@ namespace KPreisser.UI
             //// do the check, then release the old buttons, then assign the new
             //// buttons.
 
-            // Check that this contents instance is not already bound to another
+            // Check that this page instance is not already bound to another
             // TaskDialog instance. We don't throw if it is already bound to the
             // same TaskDialog instane that wants to bind now, because that should
             // be OK.
             if (this.boundTaskDialog != null && this.boundTaskDialog != newOwner)
                 throw new InvalidOperationException(
-                        $"This {nameof(TaskDialogContents)} instance is already bound to " +
+                        $"This {nameof(TaskDialogPage)} instance is already bound to " +
                         $"another {nameof(TaskDialog)} instance.");
 
             // We also need to validate the controls since they could also be assigned to
-            // another (bound) TaskDialogContents at the same time.
+            // another (bound) TaskDialogPage at the same time.
             // Access the collections using the property to ensure they exist.
-            if (this.CommonButtons.BoundTaskDialogContents != null && this.CommonButtons.BoundTaskDialogContents != this ||
-                    this.CustomButtons.BoundTaskDialogContents != null && this.CustomButtons.BoundTaskDialogContents != this ||
-                    this.RadioButtons.BoundTaskDialogContents != null && this.RadioButtons.BoundTaskDialogContents != this ||
-                    this.expander?.BoundTaskDialogContents != null && this.expander.BoundTaskDialogContents != this ||
-                    this.progressBar?.BoundTaskDialogContents != null && this.progressBar.BoundTaskDialogContents != this ||
-                    this.checkBox?.BoundTaskDialogContents != null && this.checkBox.BoundTaskDialogContents != this)
+            if (this.CommonButtons.BoundPage != null && this.CommonButtons.BoundPage != this ||
+                    this.CustomButtons.BoundPage != null && this.CustomButtons.BoundPage != this ||
+                    this.RadioButtons.BoundPage != null && this.RadioButtons.BoundPage != this ||
+                    this.expander?.BoundPage != null && this.expander.BoundPage != this ||
+                    this.progressBar?.BoundPage != null && this.progressBar.BoundPage != this ||
+                    this.checkBox?.BoundPage != null && this.checkBox.BoundPage != this)
                 throw new InvalidOperationException();
 
             foreach (var control in (this.CommonButtons as IEnumerable<TaskDialogControl>)
                     .Concat(this.CustomButtons)
                     .Concat(this.RadioButtons))
-                if (control.BoundTaskDialogContents != null && control.BoundTaskDialogContents != this)
+                if (control.BoundPage != null && control.BoundPage != this)
                     throw new InvalidOperationException();
 
             if (this.CustomButtons.Count > int.MaxValue - CustomButtonStartID + 1 ||
@@ -680,12 +680,12 @@ namespace KPreisser.UI
             var customButtons = this.CustomButtons;
             var radioButtons = this.RadioButtons;
 
-            commonButtons.BoundTaskDialogContents = this;
-            customButtons.BoundTaskDialogContents = this;
-            radioButtons.BoundTaskDialogContents = this;
+            commonButtons.BoundPage = this;
+            customButtons.BoundPage = this;
+            radioButtons.BoundPage = this;
 
             // Assign IDs to the buttons based on their index.
-            // Note: The collections will be locked while this contents are bound, so we
+            // Note: The collections will be locked while this page is bound, so we
             // don't need to copy them here.
             defaultButtonID = 0;
             buttonFlags = default;
@@ -762,9 +762,9 @@ namespace KPreisser.UI
             foreach (var radioButton in radioButtons)
                 radioButton.Unbind();
             
-            commonButtons.BoundTaskDialogContents = null;
-            customButtons.BoundTaskDialogContents = null;
-            radioButtons.BoundTaskDialogContents = null;
+            commonButtons.BoundPage = null;
+            customButtons.BoundPage = null;
+            radioButtons.BoundPage = null;
 
             this.checkBox?.Unbind();
             this.expander?.Unbind();

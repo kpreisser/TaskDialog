@@ -51,7 +51,7 @@ namespace KPreisser.UI
         /// <summary>
         /// Gets or sets an additional description text that will be displayed in
         /// a separate line of the command link when
-        /// <see cref="TaskDialogContents.CommandLinkMode"/> is set to
+        /// <see cref="TaskDialogPage.CommandLinkMode"/> is set to
         /// <see cref="TaskDialogCommandLinkMode.CommandLinks"/> or
         /// <see cref="TaskDialogCommandLinkMode.CommandLinksNoIcon"/>.
         /// </summary>
@@ -70,7 +70,7 @@ namespace KPreisser.UI
 
         internal override bool IsCreatable
         {
-            get => base.IsCreatable && !TaskDialogContents.IsNativeStringNullOrEmpty(this.text);
+            get => base.IsCreatable && !TaskDialogPage.IsNativeStringNullOrEmpty(this.text);
         }
 
         internal override int ButtonID
@@ -94,9 +94,9 @@ namespace KPreisser.UI
         }
 
 
-        internal TaskDialogFlags Bind(TaskDialogContents contents, int buttonID)
+        internal TaskDialogFlags Bind(TaskDialogPage page, int buttonID)
         {
-            var result = this.Bind(contents);
+            var result = this.Bind(page);
             this.buttonID = buttonID;
 
             return result;
@@ -104,7 +104,7 @@ namespace KPreisser.UI
 
         internal string GetResultingText()
         {
-            var contents = this.BoundTaskDialogContents;
+            var page = this.BoundPage;
 
             // Remove LFs from the text. Otherwise, the dialog would display the
             // part of the text after the LF in the command link note, but for
@@ -115,8 +115,8 @@ namespace KPreisser.UI
             // LFs with CR, because CR is treated as a line break.
             string text = this.text?.Replace("\r\n", "\r").Replace("\n", "\r");
 
-            if ((contents?.CommandLinkMode == TaskDialogCommandLinkMode.CommandLinks ||
-                    contents?.CommandLinkMode == TaskDialogCommandLinkMode.CommandLinksNoIcon) && 
+            if ((page?.CommandLinkMode == TaskDialogCommandLinkMode.CommandLinks ||
+                    page?.CommandLinkMode == TaskDialogCommandLinkMode.CommandLinksNoIcon) && 
                     text != null && this.descriptionText != null)
                 text += '\n' + this.descriptionText;
 

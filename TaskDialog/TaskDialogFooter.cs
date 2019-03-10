@@ -55,7 +55,7 @@ namespace KPreisser.UI
                 this.DenyIfBoundAndNotCreated();
 
                 // Update the text if we are bound.
-                this.BoundTaskDialogContents?.BoundTaskDialog.UpdateTextElement(
+                this.BoundPage?.BoundTaskDialog.UpdateTextElement(
                         TaskDialogTextElement.TDE_FOOTER,
                         value);
 
@@ -77,17 +77,17 @@ namespace KPreisser.UI
 
             set
             {
-                // See comments in property "TaskDialogContents.Icon".
+                // See comments in property "TaskDialogPage.Icon".
                 if (value < ushort.MinValue || (int)value > ushort.MaxValue)
                     throw new ArgumentOutOfRangeException(nameof(value));
 
                 this.DenyIfBoundAndNotCreated();
 
-                if (this.BoundTaskDialogContents != null &&
+                if (this.BoundPage != null &&
                         this.boundFooterIconIsFromHandle)
                     throw new InvalidOperationException();
 
-                this.BoundTaskDialogContents?.BoundTaskDialog.UpdateIconElement(
+                this.BoundPage?.BoundTaskDialog.UpdateIconElement(
                         TaskDialogIconElement.TDIE_ICON_FOOTER,
                         (IntPtr)value);
 
@@ -112,11 +112,11 @@ namespace KPreisser.UI
             {
                 this.DenyIfBoundAndNotCreated();
 
-                if (this.BoundTaskDialogContents != null &&
+                if (this.BoundPage != null &&
                         !this.boundFooterIconIsFromHandle)
                     throw new InvalidOperationException();
 
-                this.BoundTaskDialogContents?.BoundTaskDialog.UpdateIconElement(
+                this.BoundPage?.BoundTaskDialog.UpdateIconElement(
                         TaskDialogIconElement.TDIE_ICON_FOOTER,
                         value);
 
@@ -127,7 +127,7 @@ namespace KPreisser.UI
 
         internal override bool IsCreatable
         {
-            get => base.IsCreatable && !TaskDialogContents.IsNativeStringNullOrEmpty(this.text);
+            get => base.IsCreatable && !TaskDialogPage.IsNativeStringNullOrEmpty(this.text);
         }
 
 
@@ -141,9 +141,9 @@ namespace KPreisser.UI
         }
 
 
-        internal TaskDialogFlags Bind(TaskDialogContents contents, out IntPtr footerIconValue)
+        internal TaskDialogFlags Bind(TaskDialogPage page, out IntPtr footerIconValue)
         {
-            var result = base.Bind(contents);
+            var result = base.Bind(page);
 
             footerIconValue = this.boundFooterIconIsFromHandle ?
                     this.iconHandle :

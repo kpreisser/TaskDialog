@@ -65,16 +65,17 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// Gets or sets a value that indicates if this <see cref="TaskDialogCommonButton"/>
-        /// should be shown when displaying the Task Dialog.
+        /// Gets or sets a value that indicates if this
+        /// <see cref="TaskDialogCommonButton"/> should be shown when displaying
+        /// the Task Dialog.
         /// </summary>
         /// <remarks>
         /// Setting this to <c>false</c> allows you to still receive the
         /// <see cref="TaskDialogButton.Click"/> event (e.g. for the
         /// <see cref="TaskDialogResult.Cancel"/> button when
-        /// <see cref="TaskDialogContents.AllowCancel"/> is set), or to call the
-        /// <see cref="TaskDialogButton.PerformClick"/> method even if the button is not
-        /// shown.
+        /// <see cref="TaskDialogPage.AllowCancel"/> is set), or to call the
+        /// <see cref="TaskDialogButton.PerformClick"/> method even if the button
+        /// is not shown.
         /// </remarks>
         public bool Visible
         {

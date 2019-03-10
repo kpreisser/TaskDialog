@@ -26,7 +26,7 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
-        public event EventHandler ExpandoButtonClicked;
+        public event EventHandler ExpandedChanged;
 
 
         /// <summary>
@@ -62,7 +62,7 @@ namespace KPreisser.UI
                 this.DenyIfBoundAndNotCreated();
 
                 // Update the text if we are bound.
-                this.BoundTaskDialogContents?.BoundTaskDialog.UpdateTextElement(
+                this.BoundPage?.BoundTaskDialog.UpdateTextElement(
                         TaskDialogTextElement.TDE_EXPANDED_INFORMATION,
                         value);
 
@@ -138,7 +138,7 @@ namespace KPreisser.UI
 
         internal override bool IsCreatable
         {
-            get => base.IsCreatable && !TaskDialogContents.IsNativeStringNullOrEmpty(this.text);
+            get => base.IsCreatable && !TaskDialogPage.IsNativeStringNullOrEmpty(this.text);
         }
 
 
@@ -155,7 +155,7 @@ namespace KPreisser.UI
         internal void HandleExpandoButtonClicked(bool expanded)
         {
             this.expanded = expanded;
-            this.OnExpandoButtonClicked(EventArgs.Empty);
+            this.OnExpandedChanged(EventArgs.Empty);
         }
 
 
@@ -172,9 +172,9 @@ namespace KPreisser.UI
         }
 
 
-        private void OnExpandoButtonClicked(EventArgs e)
+        private void OnExpandedChanged(EventArgs e)
         {
-            this.ExpandoButtonClicked?.Invoke(this, e);
+            this.ExpandedChanged?.Invoke(this, e);
         }
     }
 }

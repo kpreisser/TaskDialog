@@ -14,7 +14,7 @@ namespace KPreisser.UI
         private readonly HashSet<TaskDialogRadioButton> itemSet =
                 new HashSet<TaskDialogRadioButton>();
 
-        private TaskDialogContents boundTaskDialogContents;
+        private TaskDialogPage boundPage;
 
 
         /// <summary>
@@ -26,10 +26,10 @@ namespace KPreisser.UI
         }
 
 
-        internal TaskDialogContents BoundTaskDialogContents
+        internal TaskDialogPage BoundPage
         {
-            get => this.boundTaskDialogContents;
-            set => this.boundTaskDialogContents = value;
+            get => this.boundPage;
+            set => this.boundPage = value;
         }
 
 
@@ -58,8 +58,8 @@ namespace KPreisser.UI
         protected override void SetItem(int index, TaskDialogRadioButton item)
         {
             // Disallow collection modification, so that we don't need to copy it
-            // when binding the TaskDialogContents.
-            this.boundTaskDialogContents?.DenyIfBound();
+            // when binding the TaskDialogPage.
+            this.boundPage?.DenyIfBound();
             DenyIfHasOtherCollection(item);
 
             var oldItem = this[index];
@@ -86,8 +86,8 @@ namespace KPreisser.UI
         protected override void InsertItem(int index, TaskDialogRadioButton item)
         {
             // Disallow collection modification, so that we don't need to copy it
-            // when binding the TaskDialogContents.
-            this.boundTaskDialogContents?.DenyIfBound();
+            // when binding the TaskDialogPage.
+            this.boundPage?.DenyIfBound();
             DenyIfHasOtherCollection(item);
 
             if (!this.itemSet.Add(item))
@@ -104,8 +104,8 @@ namespace KPreisser.UI
         protected override void RemoveItem(int index)
         {
             // Disallow collection modification, so that we don't need to copy it
-            // when binding the TaskDialogContents.
-            this.boundTaskDialogContents?.DenyIfBound();
+            // when binding the TaskDialogPage.
+            this.boundPage?.DenyIfBound();
 
             var oldItem = this[index];
             oldItem.Collection = null;
@@ -119,8 +119,8 @@ namespace KPreisser.UI
         protected override void ClearItems()
         {
             // Disallow collection modification, so that we don't need to copy it
-            // when binding the TaskDialogContents.
-            this.boundTaskDialogContents?.DenyIfBound();
+            // when binding the TaskDialogPage.
+            this.boundPage?.DenyIfBound();
 
             foreach (var button in this)
                 button.Collection = null;

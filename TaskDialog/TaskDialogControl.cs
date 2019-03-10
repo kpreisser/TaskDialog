@@ -29,7 +29,7 @@ namespace KPreisser.UI
         }
 
 
-        internal TaskDialogContents BoundTaskDialogContents
+        internal TaskDialogPage BoundPage
         {
             get;
             private set;
@@ -55,10 +55,10 @@ namespace KPreisser.UI
         }
 
 
-        internal TaskDialogFlags Bind(TaskDialogContents contents)
+        internal TaskDialogFlags Bind(TaskDialogPage page)
         {
-            this.BoundTaskDialogContents = contents ??
-                    throw new ArgumentNullException(nameof(contents));
+            this.BoundPage = page ??
+                    throw new ArgumentNullException(nameof(page));
 
             // Use the current value of IsCreatable to determine if the control is
             // created. This is important because IsCreatable can change while the
@@ -74,7 +74,7 @@ namespace KPreisser.UI
                 this.UnbindCore();
 
             this.IsCreated = false;
-            this.BoundTaskDialogContents = null;
+            this.BoundPage = null;
         }
 
         /// <summary>
@@ -124,19 +124,19 @@ namespace KPreisser.UI
 
         private protected void DenyIfBound()
         {
-            this.BoundTaskDialogContents?.DenyIfBound();
+            this.BoundPage?.DenyIfBound();
         }
 
         private protected void DenyIfNotBound()
         {
-            if (this.BoundTaskDialogContents == null)
+            if (this.BoundPage == null)
                 throw new InvalidOperationException(
                         "This control is not currently bound to a task dialog.");
         }
 
         private protected void DenyIfBoundAndNotCreated()
         {
-            if (this.BoundTaskDialogContents != null && !this.IsCreated)
+            if (this.BoundPage != null && !this.IsCreated)
                 throw new InvalidOperationException("The control has not been created.");
         }
     }

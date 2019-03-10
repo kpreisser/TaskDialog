@@ -15,7 +15,7 @@ namespace TaskDialogExample
 
         private static void ShowTaskDialogExample()
         {
-            var dialogContents = new TaskDialogContents()
+            var dialogPage = new TaskDialogPage()
             {
                 Title = "Example 1",
                 Instruction = "Hello Task Dialog!   👍",
@@ -42,21 +42,21 @@ namespace TaskDialogExample
                 CanBeMinimized = true,
                 SizeToContent = true,
             };
-            dialogContents.Created += (s, e) =>
+            dialogPage.Created += (s, e) =>
             {
                 Console.WriteLine("Main Contents created!");
             };
-            dialogContents.Destroyed += (s, e) =>
+            dialogPage.Destroyed += (s, e) =>
             {
                 Console.WriteLine("Main Contents destroyed!");
             };
 
-            dialogContents.Expander.ExpandoButtonClicked += (s, e) =>
+            dialogPage.Expander.ExpandedChanged += (s, e) =>
             {
-                Console.WriteLine("Expander Expanded Changed: " + dialogContents.Expander.Expanded);
+                Console.WriteLine("Expander Expanded Changed: " + dialogPage.Expander.Expanded);
             };
 
-            using (var dialog = new TaskDialog(dialogContents))
+            using (var dialog = new TaskDialog(dialogPage))
             {
                 dialog.Opened += (s, e) =>
                 {
@@ -67,16 +67,16 @@ namespace TaskDialogExample
                     Console.WriteLine("Dialog closing!");
                 };
 
-                dialogContents.ProgressBar.Value = 1;
+                dialogPage.ProgressBar.Value = 1;
 
-                var buttonYes = dialogContents.CommonButtons.Add(TaskDialogResult.Yes);
+                var buttonYes = dialogPage.CommonButtons.Add(TaskDialogResult.Yes);
                 buttonYes.Enabled = false;
-                var buttonNo = dialogContents.CommonButtons.Add(TaskDialogResult.No);
+                var buttonNo = dialogPage.CommonButtons.Add(TaskDialogResult.No);
 
                 // Add a hidden "Cancel" button so that we can get notified when the user 
                 // closes the dialog through the window's X button or with ESC (and could
                 // cancel the close operation).
-                var buttonCancelHidden = dialogContents.CommonButtons.Add(TaskDialogResult.Cancel);
+                var buttonCancelHidden = dialogPage.CommonButtons.Add(TaskDialogResult.Cancel);
                 buttonCancelHidden.Visible = false;
                 buttonCancelHidden.Click += (s, e) =>
                 {
@@ -84,31 +84,31 @@ namespace TaskDialogExample
                 };
 
                 long timerCount = 2;
-                dialogContents.TimerTick += (s, e) =>
+                dialogPage.TimerTick += (s, e) =>
                 {
                     // Update the progress bar if value <= 35.
                     if (timerCount <= 35)
                     {
-                        dialogContents.ProgressBar.Value = (int)timerCount;
+                        dialogPage.ProgressBar.Value = (int)timerCount;
                     }
                     else if (timerCount == 36)
                     {
-                        dialogContents.ProgressBar.State = TaskDialogProgressBarState.Paused;
+                        dialogPage.ProgressBar.State = TaskDialogProgressBarState.Paused;
                     }
 
                     timerCount++;
                 };
 
-                dialogContents.HyperlinkClicked += (s, e) =>
+                dialogPage.HyperlinkClicked += (s, e) =>
                 {
                     Console.WriteLine("Hyperlink clicked!");
                     TaskDialog.Show(dialog, "Clicked Hyperlink: " + e.Hyperlink, icon: TaskDialogIcon.Information);
                 };
 
                 // Create custom buttons that are shown as command links.
-                var button1 = dialogContents.CustomButtons.Add("Change Icon + Enable Buttons  ✔");
-                var button2 = dialogContents.CustomButtons.Add("Disabled Button 🎵🎶", "After enabling, can show a new dialog.");
-                var button3 = dialogContents.CustomButtons.Add("Some Admin Action…", "Navigates to a new dialog page.");
+                var button1 = dialogPage.CustomButtons.Add("Change Icon + Enable Buttons  ✔");
+                var button2 = dialogPage.CustomButtons.Add("Disabled Button 🎵🎶", "After enabling, can show a new dialog.");
+                var button3 = dialogPage.CustomButtons.Add("Some Admin Action…", "Navigates to a new dialog page.");
                 button3.ElevationRequired = true;
 
                 TaskDialogIcon nextIcon = 0;
@@ -122,8 +122,8 @@ namespace TaskDialogExample
                     nextIcon++;
 
                     // Set the icon and the content.
-                    dialogContents.Icon = nextIcon;
-                    dialogContents.Instruction = "Icon: " + nextIcon;
+                    dialogPage.Icon = nextIcon;
+                    dialogPage.Instruction = "Icon: " + nextIcon;
 
                     // Enable the "Yes" button and the 3rd button when the checkbox is set.
                     buttonYes.Enabled = true;
@@ -139,7 +139,7 @@ namespace TaskDialogExample
                     e.CancelClose = true;
 
                     // Show a new Taskdialog that shows an incrementing number.
-                    var contents = new TaskDialogContents()
+                    var contents = new TaskDialogPage()
                     {
                         Text = "This is a new non-modal dialog!",
                         Icon = TaskDialogIcon.Information,
@@ -186,7 +186,7 @@ namespace TaskDialogExample
                     e.CancelClose = true;
 
                     // Create a new contents instance to which we will navigate the dialog.
-                    var newContents = new TaskDialogContents()
+                    var newContents = new TaskDialogPage()
                     {
                         Instruction = "Page 2",
                         Text = "Welcome to the second page!",
@@ -240,7 +240,7 @@ namespace TaskDialogExample
                     };
 
                     // Now navigate the dialog.
-                    dialog.CurrentContents = newContents;
+                    dialog.Page = newContents;
                 };
 
                 var result = dialog.Show();

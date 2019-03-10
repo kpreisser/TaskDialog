@@ -24,7 +24,7 @@ namespace KPreisser.UI
     /// and the thread needs to use the single-threaded apartment (STA) model.
     /// </remarks>
     [ToolboxItem(true)]
-    [DefaultProperty(nameof(CurrentContents))]
+    [DefaultProperty(nameof(Page))]
     public partial class TaskDialog : Component
 #if !NET_STANDARD
         , System.Windows.Forms.IWin32Window
@@ -58,24 +58,24 @@ namespace KPreisser.UI
         /// </summary>
         private IntPtr instanceHandlePtr;
 
-        private TaskDialogContents currentContents;
+        private TaskDialogPage page;
 
-        private TaskDialogContents boundContents;
+        private TaskDialogPage boundPage;
 
         private bool waitingForNavigatedEvent;
 
         /// <summary>
         /// Stores a value that indicates if the
-        /// <see cref="TaskDialogContents.Created"/> event has been called for the
-        /// current <see cref="TaskDialogContents"/>.
+        /// <see cref="TaskDialogPage.Created"/> event has been called for the
+        /// current <see cref="TaskDialogPage"/>.
         /// </summary>
         /// <remarks>
         /// This is used to prevent raising the 
-        /// <see cref="TaskDialogContents.Destroyed"/> event without raising the
-        /// <see cref="TaskDialogContents.Created"/> event first (e.g. if navigation
+        /// <see cref="TaskDialogPage.Destroyed"/> event without raising the
+        /// <see cref="TaskDialogPage.Created"/> event first (e.g. if navigation
         /// fails).
         /// </remarks>
-        private bool raisedContentsCreated;
+        private bool raisedPageCreated;
 
         /// <summary>
         /// A counter which is used to determine whether the dialog has been navigated
@@ -86,7 +86,7 @@ namespace KPreisser.UI
         /// always return S_FALSE to prevent the dialog from applying the button that
         /// raised the handler as dialog result. Otherwise, this can lead to memory access
         /// problems like <see cref="AccessViolationException"/>s, especially if the
-        /// previous dialog contents had radio buttons (but the new ones do not).
+        /// previous dialog page had radio buttons (but the new ones do not).
         /// 
         /// See the comment in <see cref="HandleTaskDialogCallback"/> for more
         /// information.
@@ -167,13 +167,13 @@ namespace KPreisser.UI
         ///// <remarks>
         ///// Instead of handling this event (which will be called for all navigations
         ///// of this dialog), you can also handle the
-        ///// <see cref="TaskDialogContents.Created"/> event that will only occur after the
-        ///// dialog navigated to that specific <see cref="TaskDialogContents"/> instance.
+        ///// <see cref="TaskDialogPage.Created"/> event that will only occur after the
+        ///// dialog navigated to that specific <see cref="TaskDialogPage"/> instance.
         ///// </remarks>
         //public event EventHandler Navigated;
 
         //// These events were removed since they are also available in the
-        //// TaskDialogContents, and are specific to the contents (not to the dialog).
+        //// TaskDialogPage, and are specific to the page (not to the dialog).
 
         ///// <summary>
         ///// Occurs when the user presses F1 while the dialog has focus, or when the
@@ -222,11 +222,11 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
-        public TaskDialog(TaskDialogContents contents)
+        public TaskDialog(TaskDialogPage page)
             : this()
         {
-            this.currentContents = contents ??
-                    throw new ArgumentNullException(nameof(contents));
+            this.page = page ??
+                    throw new ArgumentNullException(nameof(page));
         }
 
 
@@ -246,26 +246,26 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="TaskDialogContents"/> instance that represents
+        /// Gets or sets the <see cref="TaskDialogPage"/> instance that contains
         /// the contents which this task dialog will display.
         /// </summary>
         /// <remarks>
-        /// By setting this property while the task dialog is displayed, it will
-        /// recreate its contents from the specified <see cref="TaskDialogContents"/>
+        /// When setting this property while the task dialog is displayed, it will
+        /// recreate its contents from the specified <see cref="TaskDialogPage"/>
         /// ("navigation"). After the dialog is navigated, the <!--<see cref="Navigated"/>
-        /// and the --> <see cref="TaskDialogContents.Created"/> event will occur.
+        /// and the --> <see cref="TaskDialogPage.Created"/> event will occur.
         /// 
         /// Please note that you cannot update the task dialog or its controls
         /// directly after navigating it. You will need to wait for the mentioned
         /// event to occur before you can update the dialog or its controls.
         /// </remarks>
         [Category("Contents")]
-        [Description("Contains the current contents of the Task Dialog.")]
+        [Description("Contains the current page of the Task Dialog.")]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
-        public TaskDialogContents CurrentContents
+        public TaskDialogPage Page
         {
-            get => this.currentContents ??
-                    (this.currentContents = new TaskDialogContents());
+            get => this.page ??
+                    (this.page = new TaskDialogPage());
 
             set
             {
@@ -274,13 +274,13 @@ namespace KPreisser.UI
 
                 if (this.DialogIsShown)
                 {
-                    // Try to navigate the dialog. This will validate the new contents
-                    // and assign them only if they are OK.
+                    // Try to navigate the dialog. This will validate the new page
+                    // and assign it only if it is OK.
                     Navigate(value);
                 }
                 else
                 {
-                    this.currentContents = value;
+                    this.page = value;
                 }
             }
         }
@@ -418,7 +418,7 @@ namespace KPreisser.UI
                 TaskDialogButtons buttons = TaskDialogButtons.OK,
                 TaskDialogIcon icon = TaskDialogIcon.None)
         {
-            using (var dialog = new TaskDialog(new TaskDialogContents()
+            using (var dialog = new TaskDialog(new TaskDialogPage()
             {
                 Text = text,
                 Instruction = instruction,
@@ -461,6 +461,10 @@ namespace KPreisser.UI
         /// <summary>
         /// Shows the task dialog.
         /// </summary>
+        /// <remarks>
+        /// Showing the dialog will bind the <see cref="Page"/> and its
+        /// controls until this method returns.
+        /// </remarks>
         public TaskDialogButton Show()
         {
             return Show(IntPtr.Zero);
@@ -471,7 +475,7 @@ namespace KPreisser.UI
         /// Shows the task dialog.
         /// </summary>
         /// <remarks>
-        /// Showing the dialog will bind the <see cref="CurrentContents"/> and their
+        /// Showing the dialog will bind the <see cref="Page"/> and its
         /// controls until this method returns.
         /// </remarks>
         /// <param name="owner">The owner window, or <c>null</c> to show a modeless dialog.</param>
@@ -485,8 +489,8 @@ namespace KPreisser.UI
         /// Shows the task dialog.
         /// </summary>
         /// <remarks>
-        /// Showing the dialog will bind the <see cref="CurrentContents"/> and their
-        /// controls until this method returns or the dialog is navigated.
+        /// Showing the dialog will bind the <see cref="Page"/> and its
+        /// controls until this method returns.
         /// </remarks>
         /// <param name="hwndOwner">
         /// The handle of the owner window, or <see cref="IntPtr.Zero"/> to show a
@@ -500,8 +504,7 @@ namespace KPreisser.UI
                 throw new InvalidOperationException(
                         $"This {nameof(TaskDialog)} instance is already showing.");
 
-            // Validate the config.
-            this.CurrentContents.Validate(this);
+            this.Page.Validate(this);
 
             // Allocate a GCHandle which we will use for the callback data.
             var instanceHandle = GCHandle.Alloc(this);
@@ -515,7 +518,7 @@ namespace KPreisser.UI
                 //this.resultCustomButton = null;
                 //this.resultRadioButton = null;
 
-                // Bind the contents and allocate the memory.
+                // Bind the page and allocate the memory.
                 BindAndAllocateConfig(
                        hwndOwner,
                        out var ptrToFree,
@@ -561,20 +564,20 @@ namespace KPreisser.UI
 
                     // Ensure to clear the flag if a navigation did not complete.
                     this.waitingForNavigatedEvent = false;
-                    // Also, ensure the window handle and the raisedContentsCreated
+                    // Also, ensure the window handle and the raisedPageCreated
                     // flag are is cleared even if the 'Destroyed' notification did
                     // not occur (although that should only happen when there was an
                     // exception).
                     this.hwndDialog = IntPtr.Zero;
-                    this.raisedContentsCreated = false;
+                    this.raisedPageCreated = false;
 
                     // Clear the cached objects.
                     this.resultButton = default;
 
-                    // Unbind the contents. The 'Destroyed' event of the TaskDialogContent
+                    // Unbind the page. The 'Destroyed' event of the TaskDialogPage
                     // will already have been called from the callback.
-                    this.boundContents.Unbind();
-                    this.boundContents = null;
+                    this.boundPage.Unbind();
+                    this.boundPage = null;
 
                     // We need to ensure the callback delegate is not garbage-collected
                     // as long as TaskDialogIndirect doesn't return, by calling GC.KeepAlive().
@@ -900,21 +903,21 @@ namespace KPreisser.UI
             switch (notification)
             {
                 case TaskDialogNotification.TDN_CREATED:
-                    this.boundContents.ApplyInitialization();
+                    this.boundPage.ApplyInitialization();
 
                     this.OnOpened(EventArgs.Empty);
 
-                    this.raisedContentsCreated = true;
-                    this.boundContents.OnCreated(EventArgs.Empty);
+                    this.raisedPageCreated = true;
+                    this.boundPage.OnCreated(EventArgs.Empty);
                     break;
 
                 case TaskDialogNotification.TDN_DESTROYED:
                     // Only raise the 'Destroyed' event if we previously raised the
                     // 'Created' event.
-                    if (this.raisedContentsCreated)
+                    if (this.raisedPageCreated)
                     {
-                        this.raisedContentsCreated = false;
-                        this.boundContents.OnDestroyed(EventArgs.Empty);
+                        this.raisedPageCreated = false;
+                        this.boundPage.OnDestroyed(EventArgs.Empty);
                     }
 
                     this.OnClosed(EventArgs.Empty);
@@ -932,12 +935,12 @@ namespace KPreisser.UI
 
                 case TaskDialogNotification.TDN_NAVIGATED:
                     this.waitingForNavigatedEvent = false;
-                    this.boundContents.ApplyInitialization();
+                    this.boundPage.ApplyInitialization();
 
                     //this.OnNavigated(EventArgs.Empty);
 
-                    this.raisedContentsCreated = true;
-                    this.boundContents.OnCreated(EventArgs.Empty);
+                    this.raisedPageCreated = true;
+                    this.boundPage.OnCreated(EventArgs.Empty);
                     break;
 
                 case TaskDialogNotification.TDN_HYPERLINK_CLICKED:
@@ -945,7 +948,7 @@ namespace KPreisser.UI
 
                     var eventArgs = new TaskDialogHyperlinkClickedEventArgs(link);
                     //this.OnHyperlinkClicked(eventArgs);
-                    this.boundContents.OnHyperlinkClicked(eventArgs);
+                    this.boundPage.OnHyperlinkClicked(eventArgs);
                     break;
 
                 case TaskDialogNotification.TDN_BUTTON_CLICKED:
@@ -953,16 +956,16 @@ namespace KPreisser.UI
 
                     // Check if the button is part of the custom buttons.
                     var button = null as TaskDialogButton;
-                    if (buttonID >= TaskDialogContents.CustomButtonStartID)
+                    if (buttonID >= TaskDialogPage.CustomButtonStartID)
                     {
-                        button = this.boundContents.CustomButtons
-                                [buttonID - TaskDialogContents.CustomButtonStartID];
+                        button = this.boundPage.CustomButtons
+                                [buttonID - TaskDialogPage.CustomButtonStartID];
                     }
                     else
                     {
                         var result = (TaskDialogResult)buttonID;
-                        if (this.boundContents.CommonButtons.Contains(result))
-                            button = this.boundContents.CommonButtons[result];
+                        if (this.boundPage.CommonButtons.Contains(result))
+                            button = this.boundPage.CommonButtons[result];
                     }
 
                     bool handlerResult = true;
@@ -971,7 +974,7 @@ namespace KPreisser.UI
                         // Note: When the event handler returns true but the dialog was
                         // navigated within the handler, the buttonID of the handler
                         // would be set as the dialog's result even if this ID is from
-                        // the dialog contents before the dialog was navigated.
+                        // the dialog page before the dialog was navigated.
                         // (To fix this, in this case we could cache the button instance
                         // and its ID, so that when Show() returns, it can check if the
                         // button ID equals the last handled button, and use that
@@ -987,7 +990,7 @@ namespace KPreisser.UI
                         // event handler. This also avoids the need to cache the last
                         // handled button instance because it can no longer happen that
                         // TaskDialogIndirect() returns a buttonID that is no longer
-                        // present in the navigated TaskDialogContents.
+                        // present in the navigated TaskDialogPage.
                         checked
                         {
                             this.buttonClickNavigationCounter.stackCount++;
@@ -1068,25 +1071,25 @@ namespace KPreisser.UI
                 case TaskDialogNotification.TDN_RADIO_BUTTON_CLICKED:
                     int radioButtonID = wParam.ToInt32();
 
-                    var radioButton = this.boundContents.RadioButtons
-                            [radioButtonID - TaskDialogContents.RadioButtonStartID];
+                    var radioButton = this.boundPage.RadioButtons
+                            [radioButtonID - TaskDialogPage.RadioButtonStartID];
 
                     radioButton.HandleRadioButtonClicked();
                     break;
 
                 case TaskDialogNotification.TDN_EXPANDO_BUTTON_CLICKED:
-                    this.boundContents.Expander.HandleExpandoButtonClicked(
+                    this.boundPage.Expander.HandleExpandoButtonClicked(
                             wParam != IntPtr.Zero);
                     break;
 
                 case TaskDialogNotification.TDN_VERIFICATION_CLICKED:
-                    this.boundContents.CheckBox.HandleCheckBoxClicked(
+                    this.boundPage.CheckBox.HandleCheckBoxClicked(
                             wParam != IntPtr.Zero);
                     break;
 
                 case TaskDialogNotification.TDN_HELP:
                     //this.OnHelp(EventArgs.Empty);
-                    this.boundContents.OnHelp(EventArgs.Empty);
+                    this.boundPage.OnHelp(EventArgs.Empty);
                     break;
 
                 case TaskDialogNotification.TDN_TIMER:
@@ -1101,7 +1104,7 @@ namespace KPreisser.UI
 
                     var tickEventArgs = new TaskDialogTimerTickEventArgs(ticks);
                     //this.OnTimerTick(tickEventArgs);
-                    this.boundContents.OnTimerTick(tickEventArgs);
+                    this.boundPage.OnTimerTick(tickEventArgs);
 
                     return tickEventArgs.ResetTickCount ?
                             TaskDialogNativeMethods.S_FALSE :
@@ -1128,13 +1131,13 @@ namespace KPreisser.UI
 
         /// <summary>
         /// While the dialog is being shown, recreates the dialog from the specified
-        /// <paramref name="contents"/>.
+        /// <paramref name="page"/>.
         /// </summary>
         /// <remarks>
         /// Note that you should not call this method in the <see cref="Opened"/>
         /// event because the task dialog is not yet displayed in that state.
         /// </remarks>
-        private void Navigate(TaskDialogContents contents)
+        private void Navigate(TaskDialogPage page)
         {
             DenyIfDialogNotShownOrWaitingForNavigatedEvent();
 
@@ -1149,28 +1152,27 @@ namespace KPreisser.UI
                         $"{nameof(TaskDialogRadioButton)}.{nameof(TaskDialogRadioButton.CheckedChanged)} " +
                         $"event of one of the radio buttons of the current task dialog.");
 
-            // Validate the config.
-            contents.Validate(this);
+            page.Validate(this);
 
-            // After validation passed, we can now unbind the current contents and
+            // After validation passed, we can now unbind the current page and
             // bind the new one.
-            // Need to raise the "Destroyed" event for the current contents. The
-            // "Created" event for the new contents will occur from the callback.
-            // Note: "this.raisedContentsCreated" should always be true here.
-            if (this.raisedContentsCreated)
+            // Need to raise the "Destroyed" event for the current page. The
+            // "Created" event for the new page will occur from the callback.
+            // Note: "this.raisedPageCreated" should always be true here.
+            if (this.raisedPageCreated)
             {
-                this.raisedContentsCreated = false;
-                this.boundContents.OnDestroyed(EventArgs.Empty);
+                this.raisedPageCreated = false;
+                this.boundPage.OnDestroyed(EventArgs.Empty);
             }
 
-            this.boundContents.Unbind();
-            this.boundContents = null;
+            this.boundPage.Unbind();
+            this.boundPage = null;
 
-            this.currentContents = contents;
+            this.page = page;
 
             // Note: If this throws an OutOfMemoryException, we leave the previous
-            // contents in the unbound state. We could solve this by re-binding the
-            // previous contents in case of an exception.
+            // page in the unbound state. We could solve this by re-binding the
+            // previous page in case of an exception.
             // Note: We don't need to specify the owner window handle again when
             // navigating.
             BindAndAllocateConfig(
@@ -1179,7 +1181,7 @@ namespace KPreisser.UI
                     out var ptrTaskDialogConfig);
             try
             {
-                // Note: If the task dialog cannot be recreated with the new contents,
+                // Note: If the task dialog cannot be recreated with the new page,
                 // the dialog will close and TaskDialogIndirect() returns with an
                 // error code.
                 SendTaskDialogMessage(
@@ -1209,8 +1211,8 @@ namespace KPreisser.UI
                 out IntPtr ptrToFree,
                 out IntPtr ptrTaskDialogConfig)
         {
-            var contents = this.CurrentContents;
-            contents.Bind(
+            var page = this.Page;
+            page.Bind(
                     this,
                     out var flags,
                     out var commonButtonFlags,
@@ -1218,7 +1220,7 @@ namespace KPreisser.UI
                     out var footerIconValue,
                     out int defaultButtonID,
                     out int defaultRadioButtonID);
-            this.boundContents = contents;
+            this.boundPage = page;
             try
             {
                 checked
@@ -1233,42 +1235,42 @@ namespace KPreisser.UI
 
                     // Strings in TasDialogConfig
                     Align(ref sizeToAllocate, sizeof(char));
-                    sizeToAllocate += SizeOfString(contents.Title);
-                    sizeToAllocate += SizeOfString(contents.Instruction);
-                    sizeToAllocate += SizeOfString(contents.Text);
-                    sizeToAllocate += SizeOfString(contents.CheckBox?.Text);
-                    sizeToAllocate += SizeOfString(contents.Expander?.Text);
-                    sizeToAllocate += SizeOfString(contents.Expander?.ExpandedButtonText);
-                    sizeToAllocate += SizeOfString(contents.Expander?.CollapsedButtonText);
-                    sizeToAllocate += SizeOfString(contents.Footer?.Text);
+                    sizeToAllocate += SizeOfString(page.Title);
+                    sizeToAllocate += SizeOfString(page.Instruction);
+                    sizeToAllocate += SizeOfString(page.Text);
+                    sizeToAllocate += SizeOfString(page.CheckBox?.Text);
+                    sizeToAllocate += SizeOfString(page.Expander?.Text);
+                    sizeToAllocate += SizeOfString(page.Expander?.ExpandedButtonText);
+                    sizeToAllocate += SizeOfString(page.Expander?.CollapsedButtonText);
+                    sizeToAllocate += SizeOfString(page.Footer?.Text);
 
                     // Buttons array
-                    if (contents.CustomButtons.Count > 0)
+                    if (page.CustomButtons.Count > 0)
                     {
                         // Note: Theoretically we would not need to align the pointer here
                         // since the packing of the structure is set to 1. Note that this
                         // can cause an unaligned write when assigning the structure (the
                         // same happens with TaskDialogConfig).
                         Align(ref sizeToAllocate);
-                        sizeToAllocate += sizeof(TaskDialogButtonStruct) * contents.CustomButtons.Count;
+                        sizeToAllocate += sizeof(TaskDialogButtonStruct) * page.CustomButtons.Count;
 
                         // Strings in buttons array
                         Align(ref sizeToAllocate, sizeof(char));
-                        for (int i = 0; i < contents.CustomButtons.Count; i++)
-                            sizeToAllocate += SizeOfString(contents.CustomButtons[i].GetResultingText());
+                        for (int i = 0; i < page.CustomButtons.Count; i++)
+                            sizeToAllocate += SizeOfString(page.CustomButtons[i].GetResultingText());
                     }
 
                     // Radio buttons array
-                    if (contents.RadioButtons.Count > 0)
+                    if (page.RadioButtons.Count > 0)
                     {
                         // See comment above regarding alignment.
                         Align(ref sizeToAllocate);
-                        sizeToAllocate += sizeof(TaskDialogButtonStruct) * contents.RadioButtons.Count;
+                        sizeToAllocate += sizeof(TaskDialogButtonStruct) * page.RadioButtons.Count;
 
                         // Strings in radio buttons array
                         Align(ref sizeToAllocate, sizeof(char));
-                        for (int i = 0; i < contents.RadioButtons.Count; i++)
-                            sizeToAllocate += SizeOfString(contents.RadioButtons[i].Text);
+                        for (int i = 0; i < page.RadioButtons.Count; i++)
+                            sizeToAllocate += SizeOfString(page.RadioButtons[i].Text);
                     }
 
                     // Allocate the memory block. We add additional bytes to ensure we can
@@ -1300,34 +1302,34 @@ namespace KPreisser.UI
                             dwCommonButtons = commonButtonFlags,
                             mainIconUnion = iconValue,
                             footerIconUnion = footerIconValue,
-                            pszWindowTitle = MarshalString(contents.Title),
-                            pszMainInstruction = MarshalString(contents.Instruction),
-                            pszContent = MarshalString(contents.Text),
-                            pszVerificationText = MarshalString(contents.CheckBox?.Text),
-                            pszExpandedInformation = MarshalString(contents.Expander?.Text),
-                            pszExpandedControlText = MarshalString(contents.Expander?.ExpandedButtonText),
-                            pszCollapsedControlText = MarshalString(contents.Expander?.CollapsedButtonText),
-                            pszFooter = MarshalString(contents.Footer?.Text),
+                            pszWindowTitle = MarshalString(page.Title),
+                            pszMainInstruction = MarshalString(page.Instruction),
+                            pszContent = MarshalString(page.Text),
+                            pszVerificationText = MarshalString(page.CheckBox?.Text),
+                            pszExpandedInformation = MarshalString(page.Expander?.Text),
+                            pszExpandedControlText = MarshalString(page.Expander?.ExpandedButtonText),
+                            pszCollapsedControlText = MarshalString(page.Expander?.CollapsedButtonText),
+                            pszFooter = MarshalString(page.Footer?.Text),
                             nDefaultButton = defaultButtonID,
                             nDefaultRadioButton = defaultRadioButtonID,
                             pfCallback = callbackProcDelegatePtr,
                             lpCallbackData = this.instanceHandlePtr,
-                            cxWidth = checked((uint)contents.Width)
+                            cxWidth = checked((uint)page.Width)
                         };
 
                         // Buttons array
-                        if (contents.CustomButtons.Count > 0)
+                        if (page.CustomButtons.Count > 0)
                         {
                             Align(ref currentPtr);
                             var customButtonStructs = (TaskDialogButtonStruct*)currentPtr;
                             taskDialogConfig.pButtons = (IntPtr)customButtonStructs;
-                            taskDialogConfig.cButtons = (uint)contents.CustomButtons.Count;
-                            currentPtr += sizeof(TaskDialogButtonStruct) * contents.CustomButtons.Count;
+                            taskDialogConfig.cButtons = (uint)page.CustomButtons.Count;
+                            currentPtr += sizeof(TaskDialogButtonStruct) * page.CustomButtons.Count;
 
                             Align(ref currentPtr, sizeof(char));
-                            for (int i = 0; i < contents.CustomButtons.Count; i++)
+                            for (int i = 0; i < page.CustomButtons.Count; i++)
                             {
-                                var currentCustomButton = contents.CustomButtons[i];
+                                var currentCustomButton = page.CustomButtons[i];
                                 customButtonStructs[i] = new TaskDialogButtonStruct()
                                 {
                                     nButtonID = currentCustomButton.ButtonID,
@@ -1337,18 +1339,18 @@ namespace KPreisser.UI
                         }
 
                         // Radio buttons array
-                        if (contents.RadioButtons.Count > 0)
+                        if (page.RadioButtons.Count > 0)
                         {
                             Align(ref currentPtr);
                             var customRadioButtonStructs = (TaskDialogButtonStruct*)currentPtr;
                             taskDialogConfig.pRadioButtons = (IntPtr)customRadioButtonStructs;
-                            taskDialogConfig.cRadioButtons = (uint)contents.RadioButtons.Count;
-                            currentPtr += sizeof(TaskDialogButtonStruct) * contents.RadioButtons.Count;
+                            taskDialogConfig.cRadioButtons = (uint)page.RadioButtons.Count;
+                            currentPtr += sizeof(TaskDialogButtonStruct) * page.RadioButtons.Count;
 
                             Align(ref currentPtr, sizeof(char));
-                            for (int i = 0; i < contents.RadioButtons.Count; i++)
+                            for (int i = 0; i < page.RadioButtons.Count; i++)
                             {
-                                var currentCustomButton = contents.RadioButtons[i];
+                                var currentCustomButton = page.RadioButtons[i];
                                 customRadioButtonStructs[i] = new TaskDialogButtonStruct()
                                 {
                                     nButtonID = currentCustomButton.RadioButtonID,
@@ -1417,9 +1419,9 @@ namespace KPreisser.UI
             }
             catch
             {
-                // Unbind the contents, then rethrow the exception.
-                this.boundContents.Unbind();
-                this.boundContents = null;
+                // Unbind the page, then rethrow the exception.
+                this.boundPage.Unbind();
+                this.boundPage = null;
 
                 throw;
             }
@@ -1437,7 +1439,7 @@ namespace KPreisser.UI
                         $"Please wait for the " +
                         //$"{nameof(TaskDialog)}.{nameof(this.Navigated)} " +
                         //$"event or for the " +
-                        $"{nameof(TaskDialogContents)}.{nameof(TaskDialogContents.Created)} " +
+                        $"{nameof(TaskDialogPage)}.{nameof(TaskDialogPage.Created)} " +
                         $"event to occur.");
         }
 
@@ -1468,7 +1470,7 @@ namespace KPreisser.UI
             // (and therefore there is no risk that one of the links loses focus).
             UpdateTextElement(
                     TaskDialogTextElement.TDE_MAIN_INSTRUCTION,
-                    this.boundContents.Instruction);
+                    this.boundPage.Instruction);
         }
     }
 }

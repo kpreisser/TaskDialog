@@ -69,7 +69,7 @@ namespace KPreisser.UI
             {
                 this.DenyIfBoundAndNotCreated();
 
-                if (this.BoundTaskDialogContents == null)
+                if (this.BoundPage == null)
                 {
                     this.@checked = value;
                 }
@@ -78,7 +78,7 @@ namespace KPreisser.UI
                     // Click the checkbox which should cause a call to
                     // HandleCheckBoxClicked(), where we will update the checked
                     // state.
-                    this.BoundTaskDialogContents.BoundTaskDialog.ClickCheckBox(
+                    this.BoundPage.BoundTaskDialog.ClickCheckBox(
                             value);
                 }
             }
@@ -87,7 +87,7 @@ namespace KPreisser.UI
 
         internal override bool IsCreatable
         {
-            get => base.IsCreatable && !TaskDialogContents.IsNativeStringNullOrEmpty(this.text);
+            get => base.IsCreatable && !TaskDialogPage.IsNativeStringNullOrEmpty(this.text);
         }
 
 
@@ -99,7 +99,7 @@ namespace KPreisser.UI
             this.DenyIfNotBound();
             this.DenyIfBoundAndNotCreated();
 
-            this.BoundTaskDialogContents.BoundTaskDialog.ClickCheckBox(
+            this.BoundPage.BoundTaskDialog.ClickCheckBox(
                     this.@checked,
                     true);
         }
