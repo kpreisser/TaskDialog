@@ -6,7 +6,7 @@
     <DefaultLanguage>en-US</DefaultLanguage>
     <PackageId>TaskDialog</PackageId>
     <RootNamespace>KPreisser.UI</RootNamespace>
-    <LangVersion>7.2</LangVersion>
+    <LangVersion>7.3</LangVersion>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
 

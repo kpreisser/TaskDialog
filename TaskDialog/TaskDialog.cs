@@ -580,17 +580,18 @@ namespace KPreisser.UI
                     this.boundPage = null;
 
                     // We need to ensure the callback delegate is not garbage-collected
-                    // as long as TaskDialogIndirect doesn't return, by calling GC.KeepAlive().
+                    // as long as TaskDialogIndirect doesn't return, by calling
+                    // GC.KeepAlive().
                     // 
-                    // This is not an exaggeration, as the comment for GC.KeepAlive() says
-                    // the following:
+                    // This is not an exaggeration, as the comment for GC.KeepAlive()
+                    // says the following:
                     // The JIT is very aggressive about keeping an 
                     // object's lifetime to as small a window as possible, to the point
                     // where a 'this' pointer isn't considered live in an instance method
                     // unless you read a value from the instance.
                     //
-                    // Note: As this is a static field, in theory we would not need to call
-                    // GC.KeepAlive() here, but we still do it to be safe.
+                    // Note: As this is a static field, in theory we would not need to
+                    // call GC.KeepAlive() here, but we still do it to be safe.
                     GC.KeepAlive(callbackProcDelegate);
                 }
             }
@@ -771,7 +772,7 @@ namespace KPreisser.UI
                 TaskDialogTextElement element,
                 string text)
         {
-            DenyIfDialogNotShownOrWaitingForNavigatedEvent();
+            DenyIfDialogNotUpdatable();
 
             // Note: Instead of null, we must specify the empty string; otherwise
             // the update would be ignored.
@@ -811,7 +812,7 @@ namespace KPreisser.UI
 
         internal void UpdateTitle(string title)
         {
-            DenyIfDialogNotShownOrWaitingForNavigatedEvent();
+            DenyIfDialogNotUpdatable();
 
             // TODO: Because we use SetWindowText() directly (as there is no task
             // dialog message for setting the title), there is a small discrepancy
@@ -1022,7 +1023,7 @@ namespace KPreisser.UI
                         // override the previously set result, which would mean the
                         // button returned from Show() would not match one specified
                         // in the "Closing" event's args.
-                        if (this.resultButton.button != null)
+                        if (this.resultButton != default)
                         {
                             handlerResult = false;
                         }
@@ -1132,7 +1133,7 @@ namespace KPreisser.UI
         /// </remarks>
         private void Navigate(TaskDialogPage page)
         {
-            DenyIfDialogNotShownOrWaitingForNavigatedEvent();
+            DenyIfDialogNotUpdatable();
 
             // Don't allow to navigate the dialog when we are in a RadioButtonClicked
             // notification, because the dialog doesn't seem to correctly handle this
@@ -1420,7 +1421,7 @@ namespace KPreisser.UI
             }
         }
 
-        private void DenyIfDialogNotShownOrWaitingForNavigatedEvent()
+        private void DenyIfDialogNotUpdatable()
         {
             if (!this.DialogIsShown)
                 throw new InvalidOperationException(
@@ -1430,15 +1431,25 @@ namespace KPreisser.UI
                 throw new InvalidOperationException(
                         "Cannot update the task dialog directly after navigating it. " +
                         $"Please wait for the " +
-                        //$"{nameof(TaskDialog)}.{nameof(this.Navigated)} " +
-                        //$"event or for the " +
                         $"{nameof(TaskDialogPage)}.{nameof(TaskDialogPage.Created)} " +
                         $"event to occur.");
+
+            // Don't allow to send messages when the dialog window has already closed.
+            // Otherwise, it would be possible to navigate the dialog if it has already
+            // applied a result button, which would result in weird/undefined behavior
+            // (e.g. returning "Cancel" (2) as button result even though a different
+            // button has already been set as result).
+            if (this.resultButton != default)
+                throw new InvalidOperationException(
+                        "Cannot update the task dialog when it has already closed.");
         }
 
-        private void SendTaskDialogMessage(TaskDialogMessage message, int wParam, IntPtr lParam)
+        private void SendTaskDialogMessage(
+                TaskDialogMessage message,
+                int wParam,
+                IntPtr lParam)
         {
-            DenyIfDialogNotShownOrWaitingForNavigatedEvent();
+            DenyIfDialogNotUpdatable();
 
             TaskDialogNativeMethods.SendMessage(
                     this.hwndDialog,
