@@ -975,11 +975,7 @@ namespace KPreisser.UI
                         // navigated within the handler, the buttonID of the handler
                         // would be set as the dialog's result even if this ID is from
                         // the dialog page before the dialog was navigated.
-                        // (To fix this, in this case we could cache the button instance
-                        // and its ID, so that when Show() returns, it can check if the
-                        // button ID equals the last handled button, and use that
-                        // instance in that case.)
-                        // However, also memory access problems like
+                        // Additionally, memory access problems like
                         // AccessViolationExceptions seem to occur in this situation
                         // (especially if the dialog also had radio buttons before the
                         // navigation; these would also be set as result of the dialog),
@@ -987,10 +983,7 @@ namespace KPreisser.UI
                         // the native TaskDialog.
                         // To fix the memory access problems, we simply always return
                         // S_FALSE when the dialog was navigated within the ButtonClicked
-                        // event handler. This also avoids the need to cache the last
-                        // handled button instance because it can no longer happen that
-                        // TaskDialogIndirect() returns a buttonID that is no longer
-                        // present in the navigated TaskDialogPage.
+                        // event handler.
                         checked
                         {
                             this.buttonClickNavigationCounter.stackCount++;
