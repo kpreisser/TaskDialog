@@ -642,6 +642,9 @@ namespace KPreisser.UI
                 out int defaultButtonID,
                 out int defaultRadioButtonID)
         {
+            if (this.boundTaskDialog != null)
+                throw new InvalidOperationException();
+
             //// This method assumes Validate() has already been called.
 
             this.boundTaskDialog = owner;
@@ -749,6 +752,9 @@ namespace KPreisser.UI
 
         internal void Unbind()
         {
+            if (this.boundTaskDialog == null)
+                throw new InvalidOperationException();
+
             var commonButtons = this.CommonButtons;
             var customButtons = this.CustomButtons;
             var radioButtons = this.RadioButtons;

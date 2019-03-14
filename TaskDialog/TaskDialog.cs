@@ -75,7 +75,7 @@ namespace KPreisser.UI
         /// <see cref="TaskDialogPage.Created"/> event first (e.g. if navigation
         /// fails).
         /// </remarks>
-        private bool raisedPageCreated;
+        private bool raisePageDestroyed;
 
         /// <summary>
         /// A counter which is used to determine whether the dialog has been navigated
@@ -124,6 +124,17 @@ namespace KPreisser.UI
         //private bool resultCheckBoxChecked;
 
         private bool suppressButtonClickedEvent;
+
+        /// <summary>
+        /// Specifies if the current code is called from within
+        /// <see cref="Navigate(TaskDialogPage)"/>.
+        /// </summary>
+        /// <remarks>
+        /// This is used to detect if you call <see cref="Navigate(TaskDialogPage)"/>
+        /// from within an event raised by <see cref="Navigate(TaskDialogPage)"/>,
+        /// which is not supported.
+        /// </remarks>
+        private bool isInNavigate;
 
 
         /// <summary>
@@ -569,7 +580,7 @@ namespace KPreisser.UI
                     // not occur (although that should only happen when there was an
                     // exception).
                     this.hwndDialog = IntPtr.Zero;
-                    this.raisedPageCreated = false;
+                    this.raisePageDestroyed = false;
 
                     // Clear the cached objects.
                     this.resultButton = default;
@@ -908,16 +919,16 @@ namespace KPreisser.UI
 
                     this.OnOpened(EventArgs.Empty);
 
-                    this.raisedPageCreated = true;
+                    this.raisePageDestroyed = true;
                     this.boundPage.OnCreated(EventArgs.Empty);
                     break;
 
                 case TaskDialogNotification.TDN_DESTROYED:
                     // Only raise the 'Destroyed' event if we previously raised the
                     // 'Created' event.
-                    if (this.raisedPageCreated)
+                    if (this.raisePageDestroyed)
                     {
-                        this.raisedPageCreated = false;
+                        this.raisePageDestroyed = false;
                         this.boundPage.OnDestroyed(EventArgs.Empty);
                     }
 
@@ -940,7 +951,7 @@ namespace KPreisser.UI
 
                     //this.OnNavigated(EventArgs.Empty);
 
-                    this.raisedPageCreated = true;
+                    this.raisePageDestroyed = true;
                     this.boundPage.OnCreated(EventArgs.Empty);
                     break;
 
@@ -1139,9 +1150,10 @@ namespace KPreisser.UI
             // therefore has set a result button), because that would result in
             // weird /undefined behavior (e.g. returning "Cancel" (2) as button
             // result even though a different button has already been set as result).
+            const string dialogAlreadyClosedMesssage =
+                    "Cannot navigate the dialog when it has already closed.";
             if (this.resultButton != default)
-                throw new InvalidOperationException(
-                        "Cannot navigate the dialog when it has already closed.");
+                throw new InvalidOperationException(dialogAlreadyClosedMesssage);
 
             // Don't allow to navigate the dialog when we are in a RadioButtonClicked
             // notification, because the dialog doesn't seem to correctly handle this
@@ -1150,62 +1162,85 @@ namespace KPreisser.UI
             // See: https://github.com/dotnet/winforms/issues/146#issuecomment-466784079
             if (this.RadioButtonClickedStackCount > 0)
                 throw new InvalidOperationException(
-                        "Cannot navigate the dialog from within the " +
+                        $"Cannot navigate the dialog from within the " +
                         $"{nameof(TaskDialogRadioButton)}.{nameof(TaskDialogRadioButton.CheckedChanged)} " +
                         $"event of one of the radio buttons of the current task dialog.");
 
-            page.Validate(this);
+            // Don't allow to navigate the dialog if called from an event handler
+            // (TaskDialogPage.Destroyed) that is raised from within this method.
+            if (this.isInNavigate)
+                throw new InvalidOperationException(
+                        "Cannot navigate the dialog from an event handler that is" +
+                        "called from within navigation.");
 
-            // After validation passed, we can now unbind the current page and
-            // bind the new one.
-            // Need to raise the "Destroyed" event for the current page. The
-            // "Created" event for the new page will occur from the callback.
-            // Note: "this.raisedPageCreated" should always be true here.
-            if (this.raisedPageCreated)
-            {
-                this.raisedPageCreated = false;
-                this.boundPage.OnDestroyed(EventArgs.Empty);
-            }
-
-            this.boundPage.Unbind();
-            this.boundPage = null;
-
-            this.page = page;
-
-            // Note: If this throws an OutOfMemoryException, we leave the previous
-            // page in the unbound state. We could solve this by re-binding the
-            // previous page in case of an exception.
-            // Note: We don't need to specify the owner window handle again when
-            // navigating.
-            BindAndAllocateConfig(
-                    IntPtr.Zero,
-                    out var ptrToFree,
-                    out var ptrTaskDialogConfig);
+            this.isInNavigate = true;
             try
             {
-                // Note: If the task dialog cannot be recreated with the new page,
-                // the dialog will close and TaskDialogIndirect() returns with an
-                // error code.
-                SendTaskDialogMessage(
-                        TaskDialogMessage.TDM_NAVIGATE_PAGE,
-                        0,
-                        ptrTaskDialogConfig);
+                page.Validate(this);
+
+                // After validation passed, we can now unbind the current page and
+                // bind the new one.
+                // Need to raise the "Destroyed" event for the current page. The
+                // "Created" event for the new page will occur from the callback.
+                // Note: "this.raisedPageCreated" should always be true here.
+                if (this.raisePageDestroyed)
+                {
+                    this.raisePageDestroyed = false;
+                    this.boundPage.OnDestroyed(EventArgs.Empty);
+                }
+
+                // Need to check again if the dialog has not already been closed, since
+                // the Destroyed event handler could have performed a button click that
+                // closed the dialog.
+                // TODO: Another option would be to disallow button clicks while within
+                // the event handler.
+                if (this.resultButton != default)
+                    throw new InvalidOperationException(dialogAlreadyClosedMesssage);
+
+                this.boundPage.Unbind();
+                this.boundPage = null;
+
+                this.page = page;
+
+                // Note: If this throws an OutOfMemoryException, we leave the previous
+                // page in the unbound state. We could solve this by re-binding the
+                // previous page in case of an exception.
+                // Note: We don't need to specify the owner window handle again when
+                // navigating.
+                BindAndAllocateConfig(
+                        IntPtr.Zero,
+                        out var ptrToFree,
+                        out var ptrTaskDialogConfig);
+                try
+                {
+                    // Note: If the task dialog cannot be recreated with the new page,
+                    // the dialog will close and TaskDialogIndirect() returns with an
+                    // error code.
+                    SendTaskDialogMessage(
+                            TaskDialogMessage.TDM_NAVIGATE_PAGE,
+                            0,
+                            ptrTaskDialogConfig);
+                }
+                finally
+                {
+                    // We can now free the memory because SendMessage does not return
+                    // until the message has been processed.
+                    FreeConfig(ptrToFree);
+                }
+
+                // Indicate to the ButtonClicked handlers currently on the stack that
+                // the dialog was navigated.
+                this.buttonClickNavigationCounter.navigationIndex =
+                        this.buttonClickNavigationCounter.stackCount;
+
+                // Also, disallow updates until we received the Navigated event
+                // because that messages would be lost.
+                this.waitingForNavigatedEvent = true;
             }
-            finally
+            finally            
             {
-                // We can now free the memory because SendMessage does not return
-                // until the message has been processed.
-                FreeConfig(ptrToFree);
+                this.isInNavigate = false;
             }
-
-            // Indicate to the ButtonClicked handlers currently on the stack that
-            // the dialog was navigated.
-            this.buttonClickNavigationCounter.navigationIndex =
-                    this.buttonClickNavigationCounter.stackCount;
-
-            // Also, disallow updates until we received the Navigated event
-            // because that messages would be lost.
-            this.waitingForNavigatedEvent = true;
         }
 
         private unsafe void BindAndAllocateConfig(
