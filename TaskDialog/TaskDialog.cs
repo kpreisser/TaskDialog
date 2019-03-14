@@ -1135,6 +1135,14 @@ namespace KPreisser.UI
         {
             DenyIfDialogNotUpdatable();
 
+            // Don't allow navigation of the dialog window is already closed (and
+            // therefore has set a result button), because that would result in
+            // weird /undefined behavior (e.g. returning "Cancel" (2) as button
+            // result even though a different button has already been set as result).
+            if (this.resultButton != default)
+                throw new InvalidOperationException(
+                        "Cannot navigate the dialog when it has already closed.");
+
             // Don't allow to navigate the dialog when we are in a RadioButtonClicked
             // notification, because the dialog doesn't seem to correctly handle this
             // (e.g. when running the event loop after navigation, an
@@ -1433,15 +1441,6 @@ namespace KPreisser.UI
                         $"Please wait for the " +
                         $"{nameof(TaskDialogPage)}.{nameof(TaskDialogPage.Created)} " +
                         $"event to occur.");
-
-            // Don't allow to send messages when the dialog window has already closed.
-            // Otherwise, it would be possible to navigate the dialog if it has already
-            // applied a result button, which would result in weird/undefined behavior
-            // (e.g. returning "Cancel" (2) as button result even though a different
-            // button has already been set as result).
-            if (this.resultButton != default)
-                throw new InvalidOperationException(
-                        "Cannot update the task dialog when it has already closed.");
         }
 
         private void SendTaskDialogMessage(
