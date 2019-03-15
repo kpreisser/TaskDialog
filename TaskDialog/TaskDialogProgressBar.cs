@@ -53,7 +53,8 @@ namespace KPreisser.UI
         {
             get => this.state;
 
-            set {
+            set
+            {
                 this.DenyIfBoundAndNotCreated();
 
                 if (this.BoundPage != null && value == TaskDialogProgressBarState.None)

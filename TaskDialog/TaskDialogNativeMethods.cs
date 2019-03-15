@@ -276,7 +276,7 @@ namespace KPreisser.UI
 
         [DllImport("user32.dll",
                 EntryPoint = "SendMessageW",
-                ExactSpelling = true, 
+                ExactSpelling = true,
                 SetLastError = true)]
         public static extern IntPtr SendMessage(
                 IntPtr hWnd,

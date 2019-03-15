@@ -4,8 +4,8 @@ using System.ComponentModel;
 using System.Linq;
 
 using TaskDialogFlags = KPreisser.UI.TaskDialogNativeMethods.TASKDIALOG_FLAGS;
-using TaskDialogTextElement = KPreisser.UI.TaskDialogNativeMethods.TASKDIALOG_ELEMENTS;
 using TaskDialogIconElement = KPreisser.UI.TaskDialogNativeMethods.TASKDIALOG_ICON_ELEMENTS;
+using TaskDialogTextElement = KPreisser.UI.TaskDialogNativeMethods.TASKDIALOG_ELEMENTS;
 
 namespace KPreisser.UI
 {
@@ -163,7 +163,7 @@ namespace KPreisser.UI
         {
             get => this.radioButtons ??
                     (this.radioButtons = new TaskDialogRadioButtonCollection());
-            
+
             set
             {
                 // We must deny this if we are bound because we need to be able to
@@ -657,9 +657,9 @@ namespace KPreisser.UI
                 iconValue = this.iconHandle;
             }
             else
-            {                
+            {
                 iconValue = (IntPtr)this.icon;
-            }            
+            }
 
             if (this.startupLocation == TaskDialogStartupLocation.CenterParent)
                 flags |= TaskDialogFlags.TDF_POSITION_RELATIVE_TO_WINDOW;
@@ -761,13 +761,13 @@ namespace KPreisser.UI
 
             foreach (var commonButton in commonButtons)
                 commonButton.Unbind();
-            
+
             foreach (var customButton in customButtons)
                 customButton.Unbind();
-            
+
             foreach (var radioButton in radioButtons)
                 radioButton.Unbind();
-            
+
             commonButtons.BoundPage = null;
             customButtons.BoundPage = null;
             radioButtons.BoundPage = null;
@@ -776,7 +776,7 @@ namespace KPreisser.UI
             this.expander?.Unbind();
             this.footer?.Unbind();
             this.progressBar?.Unbind();
-            
+
             this.boundTaskDialog = null;
         }
 

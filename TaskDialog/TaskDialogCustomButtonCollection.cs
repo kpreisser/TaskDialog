@@ -7,7 +7,7 @@ namespace KPreisser.UI
     /// <summary>
     /// 
     /// </summary>
-    public class TaskDialogCustomButtonCollection 
+    public class TaskDialogCustomButtonCollection
         : Collection<TaskDialogCustomButton>
     {
         // HashSet to detect duplicate items.
@@ -108,8 +108,8 @@ namespace KPreisser.UI
             // Disallow collection modification, so that we don't need to copy it
             // when binding the TaskDialogPage.
             this.boundPage?.DenyIfBound();
-            
-            var oldItem = this[index];            
+
+            var oldItem = this[index];
             oldItem.Collection = null;
             this.itemSet.Remove(oldItem);
             base.RemoveItem(index);

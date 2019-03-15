@@ -1148,7 +1148,7 @@ namespace KPreisser.UI
 
             // Don't allow navigation of the dialog window is already closed (and
             // therefore has set a result button), because that would result in
-            // weird /undefined behavior (e.g. returning "Cancel" (2) as button
+            // weird/undefined behavior (e.g. returning "Cancel" (2) as button
             // result even though a different button has already been set as result).
             const string dialogAlreadyClosedMesssage =
                     "Cannot navigate the dialog when it has already closed.";
@@ -1237,7 +1237,7 @@ namespace KPreisser.UI
                 // because that messages would be lost.
                 this.waitingForNavigatedEvent = true;
             }
-            finally            
+            finally
             {
                 this.isInNavigate = false;
             }

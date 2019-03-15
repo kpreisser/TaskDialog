@@ -48,7 +48,8 @@ namespace KPreisser.UI
         {
             get => this.text;
 
-            set {
+            set
+            {
                 this.DenyIfBound();
 
                 this.text = value;

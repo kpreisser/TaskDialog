@@ -58,7 +58,8 @@ namespace KPreisser.UI
         {
             get => this.text;
 
-            set {
+            set
+            {
                 this.DenyIfBoundAndNotCreated();
 
                 // Update the text if we are bound.

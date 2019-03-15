@@ -39,7 +39,7 @@ namespace KPreisser.UI
         public string Text
         {
             get => this.text;
-            
+
             set
             {
                 this.DenyIfBound();
@@ -116,7 +116,7 @@ namespace KPreisser.UI
             string text = this.text?.Replace("\r\n", "\r").Replace("\n", "\r");
 
             if ((page?.CommandLinkMode == TaskDialogCommandLinkMode.CommandLinks ||
-                    page?.CommandLinkMode == TaskDialogCommandLinkMode.CommandLinksNoIcon) && 
+                    page?.CommandLinkMode == TaskDialogCommandLinkMode.CommandLinksNoIcon) &&
                     text != null && this.descriptionText != null)
                 text += '\n' + this.descriptionText;
 

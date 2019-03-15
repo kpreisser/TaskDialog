@@ -2,8 +2,8 @@
 using System.ComponentModel;
 
 using TaskDialogFlags = KPreisser.UI.TaskDialogNativeMethods.TASKDIALOG_FLAGS;
-using TaskDialogTextElement = KPreisser.UI.TaskDialogNativeMethods.TASKDIALOG_ELEMENTS;
 using TaskDialogIconElement = KPreisser.UI.TaskDialogNativeMethods.TASKDIALOG_ICON_ELEMENTS;
+using TaskDialogTextElement = KPreisser.UI.TaskDialogNativeMethods.TASKDIALOG_ELEMENTS;
 
 namespace KPreisser.UI
 {
@@ -51,7 +51,8 @@ namespace KPreisser.UI
         {
             get => this.text;
 
-            set {
+            set
+            {
                 this.DenyIfBoundAndNotCreated();
 
                 // Update the text if we are bound.

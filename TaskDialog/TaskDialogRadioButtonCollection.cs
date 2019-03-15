@@ -7,7 +7,7 @@ namespace KPreisser.UI
     /// <summary>
     /// 
     /// </summary>
-    public class TaskDialogRadioButtonCollection 
+    public class TaskDialogRadioButtonCollection
         : Collection<TaskDialogRadioButton>
     {
         // HashSet to detect duplicate items.
@@ -92,7 +92,7 @@ namespace KPreisser.UI
 
             if (!this.itemSet.Add(item))
                 throw new ArgumentException();
-            
+
             item.Collection = this;
             base.InsertItem(index, item);
         }

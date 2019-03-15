@@ -17,7 +17,7 @@ namespace KPreisser.UI
             this.Hyperlink = hyperlink;
         }
 
-        
+
         /// <summary>
         /// 
         /// </summary>

@@ -139,7 +139,7 @@ namespace KPreisser.UI
         public void PerformClick()
         {
             // Note: We allow a click even if the button is not visible/created.
-            DenyIfNotBound();            
+            DenyIfNotBound();
 
             this.BoundPage.BoundTaskDialog.ClickButton(this.ButtonID);
         }

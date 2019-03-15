@@ -7,7 +7,7 @@ namespace KPreisser.UI
     /// <summary>
     /// 
     /// </summary>
-    public class TaskDialogCommonButtonCollection 
+    public class TaskDialogCommonButtonCollection
         : KeyedCollection<TaskDialogResult, TaskDialogCommonButton>
     {
         private TaskDialogPage boundPage;
@@ -75,7 +75,7 @@ namespace KPreisser.UI
             if ((buttons & TaskDialogButtons.Close) == TaskDialogButtons.Close)
                 yield return TaskDialogResult.Close;
             if ((buttons & TaskDialogButtons.Help) == TaskDialogButtons.Help)
-                yield return TaskDialogResult.Help;            
+                yield return TaskDialogResult.Help;
         }
 
 
