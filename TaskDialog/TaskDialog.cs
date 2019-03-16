@@ -171,6 +171,13 @@ namespace KPreisser.UI
         /// dialog window will close, and the <see cref="Closed"/> event will be
         /// raised afterwards.
         /// 
+        /// Note: The <see cref="Closed"/> event might not be called immediately
+        /// after the <see cref="Closing"/> event (even though the dialog window
+        /// has already closed). This can happen for example when showing multiple 
+        /// (modeless) dialogs at the same time and then closing the one that
+        /// was shown first – in that case, the <see cref="Closed"/> event for
+        /// that dialog will be called only after the second dialog is also closed.
+        /// 
         /// Note: This event might not always be called, e.g. if navigation of the
         /// dialog fails.
         /// </remarks>
