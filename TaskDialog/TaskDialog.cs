@@ -562,7 +562,7 @@ namespace KPreisser.UI
                     // Ensure to clear the flag if a navigation did not complete.
                     this.waitingForNavigatedEvent = false;
                     // Also, ensure the window handle and the
-                    // raiseClosed /raisePageDestroyed flags are is cleared even if
+                    // raiseClosed/raisePageDestroyed flags are is cleared even if
                     // the TDN_DESTROYED notification did not occur (although that
                     // should only happen when there was an exception).
                     this.hwndDialog = IntPtr.Zero;
@@ -1231,7 +1231,7 @@ namespace KPreisser.UI
                 // Indicate to the ButtonClicked handlers currently on the stack that
                 // the dialog was navigated.
                 this.buttonClickNavigationCounter.navigationIndex =
-                        this.buttonClickNavigationCounter.stackCount;                
+                        this.buttonClickNavigationCounter.stackCount;
             }
             finally
             {
