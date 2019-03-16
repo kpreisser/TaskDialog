@@ -66,8 +66,22 @@ namespace KPreisser.UI
 
         /// <summary>
         /// Stores a value that indicates if the
+        /// <see cref="Opened"/> event has been called and so the
+        /// <see cref="Closed"/> event can be called later.
+        /// </summary>
+        /// <remarks>
+        /// This is used to prevent raising the 
+        /// <see cref="Closed"/> event without raising the
+        /// <see cref="Opened"/> event first (e.g. if the dialog cannot be shown
+        /// due to an invalid icon).
+        /// </remarks>
+        private bool raiseClosed;
+
+        /// <summary>
+        /// Stores a value that indicates if the
         /// <see cref="TaskDialogPage.Created"/> event has been called for the
-        /// current <see cref="TaskDialogPage"/>.
+        /// current <see cref="TaskDialogPage"/> and so the corresponding
+        /// <see cref="TaskDialogPage.Destroyed"/> can be called later.
         /// </summary>
         /// <remarks>
         /// This is used to prevent raising the 
@@ -547,11 +561,12 @@ namespace KPreisser.UI
 
                     // Ensure to clear the flag if a navigation did not complete.
                     this.waitingForNavigatedEvent = false;
-                    // Also, ensure the window handle and the raisedPageCreated
-                    // flag are is cleared even if the 'Destroyed' notification did
-                    // not occur (although that should only happen when there was an
-                    // exception).
+                    // Also, ensure the window handle and the
+                    // raiseClosed /raisePageDestroyed flags are is cleared even if
+                    // the TDN_DESTROYED notification did not occur (although that
+                    // should only happen when there was an exception).
                     this.hwndDialog = IntPtr.Zero;
+                    this.raiseClosed = false;
                     this.raisePageDestroyed = false;
 
                     // Clear the cached objects.
@@ -894,6 +909,7 @@ namespace KPreisser.UI
                 case TaskDialogNotification.TDN_CREATED:
                     this.boundPage.ApplyInitialization();
 
+                    this.raiseClosed = true;
                     this.OnOpened(EventArgs.Empty);
 
                     this.raisePageDestroyed = true;
@@ -901,15 +917,17 @@ namespace KPreisser.UI
                     break;
 
                 case TaskDialogNotification.TDN_DESTROYED:
-                    // Only raise the 'Destroyed' event if we previously raised the
-                    // 'Created' event.
                     if (this.raisePageDestroyed)
                     {
                         this.raisePageDestroyed = false;
                         this.boundPage.OnDestroyed(EventArgs.Empty);
                     }
 
-                    this.OnClosed(EventArgs.Empty);
+                    if (this.raiseClosed)
+                    {
+                        this.raiseClosed = false;
+                        this.OnClosed(EventArgs.Empty);
+                    }
 
                     // Clear the dialog handle, because according to the docs, we must not
                     // continue to send any notifications to the dialog after the callback
