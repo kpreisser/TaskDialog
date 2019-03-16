@@ -1095,16 +1095,17 @@ namespace KPreisser.UI
 
             // Note: Previously, the code caught exceptions and returned
             // Marshal.GetHRForException(), so that the TaskDialog would be closed on an
-            // unhandled exception and we could rethrow it after TaskDialogIndirect() returns.
+            // unhandled exception and we could rethrow it after TaskDialogIndirect()
+            // returns.
             // However, this causes the debugger to not break at the original exception
-            // location, and it is probably not desired that the Dialog is actually destroyed
-            // because this would be inconsistent with the case when an unhandled exception
-            // occurs in a different WndProc function not handled by the TaskDialog
-            // (e.g. a WinForms/WPF Timer Tick event). Additionally, if you had multiple
-            // (non-modal) dialogs showing and the exception would occur in the callback
-            // of an outer dialog, it would not be rethrown until the inner dialogs
-            // were also closed. Therefore, we don't catch exceptions (and return
-            // a error HResult) any more.
+            // location, and it is probably not desired that the Dialog is actually
+            // destroyed because this would be inconsistent with the case when an
+            // unhandled exception occurs in a different WndProc function not handled
+            // by the TaskDialog (e.g. a WinForms/WPF Timer Tick event). Additionally,
+            // if you had multiple (non-modal) dialogs showing and the exception would
+            // occur in the callback of an outer dialog, it would not be rethrown until
+            // the inner dialogs were also closed. Therefore, we don't catch exceptions
+            // (and return a error HResult) any more.
             // Note: Currently, this means that a NRE will occur in the callback after
             // TaskDialog.Show() returns due to an unhandled exception because the
             // TaskDialog is still displayed (see comment in Show()).
