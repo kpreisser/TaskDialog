@@ -224,7 +224,11 @@ namespace KPreisser.UI
             //// and the user added an event handler to automatically select the first
             //// radio button (ID 1) when the second one (ID 2) is selected in the UI.
             //// This means the stack will then look as follows:
-            //// Show() -> Callback: RadioButtonClicked [ID 2] -> SendMessage: ClickRadioButton [ID 1] -> Callback: RadioButtonClicked [ID 1]
+            //// Show() ->
+            //// Callback: RadioButtonClicked [ID 2] ->
+            //// SendMessage: ClickRadioButton [ID 1] ->
+            //// Callback: RadioButtonClicked [ID 1]
+            ////
             //// However, when the initial RadioButtonClicked handler (ID 2) returns, the
             //// TaskDialog again calls the handler for ID 1 (which wouldn't be a problem),
             //// and then again calls it for ID 2, which is unexpected (and it doesn't

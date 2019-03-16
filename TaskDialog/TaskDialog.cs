@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 using TaskDialogButtonStruct = KPreisser.UI.TaskDialogNativeMethods.TASKDIALOG_BUTTON;
+using TaskDialogCallbackDelegate = KPreisser.UI.TaskDialogNativeMethods.PFTASKDIALOGCALLBACK;
 using TaskDialogConfig = KPreisser.UI.TaskDialogNativeMethods.TASKDIALOGCONFIG;
 using TaskDialogIconElement = KPreisser.UI.TaskDialogNativeMethods.TASKDIALOG_ICON_ELEMENTS;
 using TaskDialogMessage = KPreisser.UI.TaskDialogNativeMethods.TASKDIALOG_MESSAGES;
@@ -39,7 +40,7 @@ namespace KPreisser.UI
         /// We must store this delegate (and prevent it from being garbage-collected)
         /// to ensure the function pointer doesn't become invalid.
         /// </remarks>
-        private static readonly TaskDialogNativeMethods.PFTASKDIALOGCALLBACK callbackProcDelegate;
+        private static readonly TaskDialogCallbackDelegate callbackProcDelegate;
 
         /// <summary>
         /// The function pointer created from <see cref="callbackProcDelegate"/>.
@@ -529,7 +530,7 @@ namespace KPreisser.UI
                        out var ptrTaskDialogConfig);
                 try
                 {
-                    int ret = TaskDialogNativeMethods.TaskDialogIndirect(
+                    int returnValue = TaskDialogNativeMethods.TaskDialogIndirect(
                             ptrTaskDialogConfig,
                             out int resultButtonID,
                             out int resultRadioButtonID,
@@ -552,9 +553,9 @@ namespace KPreisser.UI
                     // Marshal.ThrowExceptionForHR will use the IErrorInfo on the
                     // current thread if it exists, in which case it ignores the
                     // error code. Therefore we only call it if the HResult is not
-                    // a success code to avoid incorrect exceptions being thrown.
-                    if (ret < 0)
-                        Marshal.ThrowExceptionForHR(ret);
+                    // a success code.
+                    if (returnValue < 0)
+                        Marshal.ThrowExceptionForHR(returnValue);
 
                     // The returned button ID should always equal the cached result
                     // button ID.
@@ -942,8 +943,8 @@ namespace KPreisser.UI
                     // notification.
                     // Note: When multiple dialogs are shown (so Show() will occur multiple
                     // times in the call stack) and a previously opened dialog is closed,
-                    // the Destroyed notification for the closed dialog will only occur after
-                    // the newer dialogs are also closed.
+                    // the Destroyed notification for the closed dialog will only occur
+                    // after the newer dialogs are also closed.
                     this.hwndDialog = IntPtr.Zero;
                     break;
 
@@ -1149,15 +1150,6 @@ namespace KPreisser.UI
         {
             DenyIfDialogNotUpdatable();
 
-            // Don't allow navigation of the dialog window is already closed (and
-            // therefore has set a result button), because that would result in
-            // weird/undefined behavior (e.g. returning "Cancel" (2) as button
-            // result even though a different button has already been set as result).
-            const string dialogAlreadyClosedMesssage =
-                    "Cannot navigate the dialog when it has already closed.";
-            if (this.resultButton != default)
-                throw new InvalidOperationException(dialogAlreadyClosedMesssage);
-
             // Don't allow to navigate the dialog when we are in a RadioButtonClicked
             // notification, because the dialog doesn't seem to correctly handle this
             // (e.g. when running the event loop after navigation, an
@@ -1176,6 +1168,15 @@ namespace KPreisser.UI
                         "Cannot navigate the dialog from an event handler that is" +
                         "called from within navigation.");
 
+            // Don't allow navigation of the dialog window is already closed (and
+            // therefore has set a result button), because that would result in
+            // weird/undefined behavior (e.g. returning "Cancel" (2) as button
+            // result even though a different button has already been set as result).
+            const string dialogAlreadyClosedMesssage =
+                    "Cannot navigate the dialog when it has already closed.";
+            if (this.resultButton != default)
+                throw new InvalidOperationException(dialogAlreadyClosedMesssage);
+
             this.isInNavigate = true;
             try
             {
@@ -1190,15 +1191,22 @@ namespace KPreisser.UI
                 {
                     this.raisePageDestroyed = false;
                     this.boundPage.OnDestroyed(EventArgs.Empty);
-                }
 
-                // Need to check again if the dialog has not already been closed, since
-                // the Destroyed event handler could have performed a button click that
-                // closed the dialog.
-                // TODO: Another option would be to disallow button clicks while within
-                // the event handler.
-                if (this.resultButton != default)
-                    throw new InvalidOperationException(dialogAlreadyClosedMesssage);
+                    // Need to check again if the dialog has not already been closed, since
+                    // the Destroyed event handler could have performed a button click that
+                    // closed the dialog.
+                    // TODO: Another option would be to disallow button clicks while within
+                    // the event handler.
+                    if (this.resultButton != default)
+                        throw new InvalidOperationException(dialogAlreadyClosedMesssage);
+
+                    // Also, we need to validate the page again. For example, the user
+                    // might change the properties of the new page or its controls within
+                    // the "Destroyed" event so that it would no longer be valid, or e.g.
+                    // navigate a different dialog to that page in the meantime (although
+                    // admittedly that would be a very strange pattern).
+                    page.Validate(this);
+                }
 
                 this.boundPage.Unbind();
                 this.boundPage = null;
@@ -1265,10 +1273,10 @@ namespace KPreisser.UI
             {
                 checked
                 {
-                    // First, calculate the necessary memory size we need to allocate for all
-                    // structs and strings.
-                    // Note: Each Align() call when calculating the size must correspond with a
-                    // Align() call when incrementing the pointer.
+                    // First, calculate the necessary memory size we need to allocate for
+                    // all structs and strings.
+                    // Note: Each Align() call when calculating the size must correspond
+                    // with a Align() call when incrementing the pointer.
                     // Use a byte pointer so we can use byte-wise pointer arithmetics.
                     var sizeToAllocate = (byte*)0;
                     sizeToAllocate += sizeof(TaskDialogConfig);

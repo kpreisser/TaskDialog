@@ -588,7 +588,8 @@ namespace KPreisser.UI
             //// controls to be added, and the control will check the state by
             //// itself.
             //// Ensure that if we have a checkbox, its text is not null/empty.
-            //// Otherwise we will get AccessViolationExceptions when sending a Click message.
+            //// Otherwise we will get AccessViolationExceptions when sending a Click
+            //// message.
             //if (this.checkBox != null &&
             //        IsNativeStringNullOrEmpty(this.checkBox.Text))
             //    throw new InvalidOperationException(
@@ -604,7 +605,8 @@ namespace KPreisser.UI
                     if (!foundDefaultButton)
                         foundDefaultButton = true;
                     else
-                        throw new InvalidOperationException("Only one button can be set as default button.");
+                        throw new InvalidOperationException(
+                                "Only one button can be set as default button.");
                 }
             }
 
@@ -614,21 +616,24 @@ namespace KPreisser.UI
             foreach (var button in this.customButtons)
             {
                 if (!button.IsCreatable)
-                    throw new InvalidOperationException("The text of a custom button must not be null or empty.");
+                    throw new InvalidOperationException(
+                            "The text of a custom button must not be null or empty.");
             }
 
             bool foundCheckedRadioButton = false;
             foreach (var button in this.radioButtons)
             {
                 if (!button.IsCreatable)
-                    throw new InvalidOperationException("The text of a radio button must not be null or empty.");
+                    throw new InvalidOperationException(
+                            "The text of a radio button must not be null or empty.");
 
                 if (button.Checked)
                 {
                     if (!foundCheckedRadioButton)
                         foundCheckedRadioButton = true;
                     else
-                        throw new InvalidOperationException("Only one radio button can be set as checked.");
+                        throw new InvalidOperationException(
+                                "Only one radio button can be set as checked.");
                 }
             }
         }
