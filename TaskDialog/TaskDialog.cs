@@ -121,8 +121,6 @@ namespace KPreisser.UI
         /// </remarks>
         private (TaskDialogButton button, int buttonID) resultButton;
 
-        //private bool resultCheckBoxChecked;
-
         private bool suppressButtonClickedEvent;
 
         /// <summary>
@@ -155,7 +153,9 @@ namespace KPreisser.UI
         /// </summary>
         /// <remarks>
         /// You can cancel the close by setting
-        /// <see cref="CancelEventArgs.Cancel"/> to <c>true</c>.
+        /// <see cref="CancelEventArgs.Cancel"/> to <c>true</c>. Otherwise, the
+        /// dialog window will close, and the <see cref="Closed"/> event will be
+        /// raised afterwards.
         /// 
         /// Note: This event might not always be called, e.g. if navigation of the
         /// dialog fails.
@@ -296,49 +296,27 @@ namespace KPreisser.UI
             }
         }
 
-        ///// <summary>
-        ///// If <see cref="ResultCustomButton"/> is null, this field contains the
-        ///// <see cref="TaskDialogResult"/> of the common buttons that was pressed.
-        ///// </summary>
-        //public TaskDialogCommonButton ResultCommonButton
-        //{
-        //    get => this.resultCommonButton;
-        //}
-
-        ///// <summary>
-        ///// If not null, contains the custom button that was pressed. Otherwise, 
-        ///// <see cref="ResultCommonButton"/> contains the common button that was pressed.
-        ///// </summary>
-        //public TaskDialogCustomButton ResultCustomButton
-        //{
-        //    get => this.resultCustomButton;
-        //}
-
-        ///// <summary>
-        ///// After the <see cref="Show(IntPtr)"/> method returns, will contain the
-        ///// <see cref="TaskDialogRadioButton"/> that the user has selected, or <c>null</c>
-        ///// if none was selected.
-        ///// </summary>
-        //public TaskDialogRadioButton ResultRadioButton
-        //{
-        //    get => this.resultRadioButton;
-        //}
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        //public bool ResultCheckBoxChecked
-        //{
-        //    get => this.resultCheckBoxChecked;
-        //}
-
+        /// <summary>
+        /// Gets a value that indicates whether <see cref="Show(IntPtr)"/> is
+        /// currently being called.
+        /// </summary>
+        internal bool DialogIsShown
+        {
+            get => this.instanceHandlePtr != IntPtr.Zero;
+        }
 
         /// <summary>
-        /// Gets a value that indicates whether the native task dialog window has been
-        /// created and its handle is available using the <see cref="Handle"/> property.
+        /// Gets a value that indicates whether the native task dialog window has
+        /// been created and its handle is available using the <see cref="Handle"/>
+        /// property.
         /// </summary>
-        [Browsable(false)]
-        internal bool DialogIsShown
+        /// <remarks>
+        /// This property can only be <c>true</c> if <see cref="DialogIsShown"/> is
+        /// also <c>true</c>. However, normally this property should be equivalent
+        /// to <see cref="DialogIsShown"/>, because when showing the dialog, the
+        /// callback should have been called setting the handle.
+        /// </remarks>
+        internal bool HandleAvailable
         {
             get => this.hwndDialog != IntPtr.Zero;
         }
@@ -511,9 +489,9 @@ namespace KPreisser.UI
         {
             // Recursive Show() is not possible because a TaskDialog instance can only
             // represent a single native dialog.
-            if (this.instanceHandlePtr != IntPtr.Zero)
+            if (this.DialogIsShown)
                 throw new InvalidOperationException(
-                        $"This {nameof(TaskDialog)} instance is already showing.");
+                        $"This {nameof(TaskDialog)} instance is already being shown.");
 
             this.Page.Validate(this);
 
@@ -522,12 +500,6 @@ namespace KPreisser.UI
             try
             {
                 this.instanceHandlePtr = GCHandle.ToIntPtr(instanceHandle);
-
-                // Clear the previous result properties.
-                //this.resultCheckBoxChecked = default;
-                //this.resultCommonButton = default;
-                //this.resultCustomButton = null;
-                //this.resultRadioButton = null;
 
                 // Bind the page and allocate the memory.
                 BindAndAllocateConfig(
@@ -619,6 +591,11 @@ namespace KPreisser.UI
         /// Closes the shown task dialog with a 
         /// <see cref="TaskDialogResult.Cancel"/> result.
         /// </summary>
+        /// <remarks>
+        /// To close the dialog with a different result, call the
+        /// <see cref="TaskDialogButton.PerformClick"/> method of the
+        /// <see cref="TaskDialogButton"/> which you want to set as result.
+        /// </remarks>
         public void Close()
         {
             this.suppressButtonClickedEvent = true;
@@ -1228,14 +1205,14 @@ namespace KPreisser.UI
                     FreeConfig(ptrToFree);
                 }
 
+                // After sending the navigation message, disallow updates until we
+                // received the Navigated event because that messages would be lost.
+                this.waitingForNavigatedEvent = true;
+
                 // Indicate to the ButtonClicked handlers currently on the stack that
                 // the dialog was navigated.
                 this.buttonClickNavigationCounter.navigationIndex =
-                        this.buttonClickNavigationCounter.stackCount;
-
-                // Also, disallow updates until we received the Navigated event
-                // because that messages would be lost.
-                this.waitingForNavigatedEvent = true;
+                        this.buttonClickNavigationCounter.stackCount;                
             }
             finally
             {
@@ -1466,7 +1443,7 @@ namespace KPreisser.UI
 
         private void DenyIfDialogNotUpdatable()
         {
-            if (!this.DialogIsShown)
+            if (!this.HandleAvailable)
                 throw new InvalidOperationException(
                         "Can only update the state of a task dialog while it is shown.");
 
