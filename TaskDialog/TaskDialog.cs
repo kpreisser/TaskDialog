@@ -76,7 +76,7 @@ namespace KPreisser.UI
         /// <see cref="Opened"/> event first (e.g. if the dialog cannot be shown
         /// due to an invalid icon).
         /// </remarks>
-        private bool raiseClosed;
+        private bool raisedOpened;
 
         /// <summary>
         /// Stores a value that indicates if the
@@ -90,7 +90,7 @@ namespace KPreisser.UI
         /// <see cref="TaskDialogPage.Created"/> event first (e.g. if navigation
         /// fails).
         /// </remarks>
-        private bool raisePageDestroyed;
+        private bool raisedPageCreated;
 
         /// <summary>
         /// A counter which is used to determine whether the dialog has been navigated
@@ -193,17 +193,6 @@ namespace KPreisser.UI
         /// <see cref="Handle"/> is available.
         /// </remarks>
         public event EventHandler Closed;
-
-        ///// <summary>
-        ///// Occurs after the task dialog has navigated.
-        ///// </summary>
-        ///// <remarks>
-        ///// Instead of handling this event (which will be called for all navigations
-        ///// of this dialog), you can also handle the
-        ///// <see cref="TaskDialogPage.Created"/> event that will only occur after the
-        ///// dialog navigated to that specific <see cref="TaskDialogPage"/> instance.
-        ///// </remarks>
-        //public event EventHandler Navigated;
 
         //// These events were removed since they are also available in the
         //// TaskDialogPage, and are specific to the page (not to the dialog).
@@ -574,8 +563,8 @@ namespace KPreisser.UI
                     // the TDN_DESTROYED notification did not occur (although that
                     // should only happen when there was an exception).
                     this.hwndDialog = IntPtr.Zero;
-                    this.raiseClosed = false;
-                    this.raisePageDestroyed = false;
+                    this.raisedOpened = false;
+                    this.raisedPageCreated = false;
 
                     // Clear the cached objects.
                     this.resultButton = default;
@@ -870,15 +859,6 @@ namespace KPreisser.UI
         ///// 
         ///// </summary>
         ///// <param name="e"></param>
-        //protected void OnNavigated(EventArgs e)
-        //{
-        //    this.Navigated?.Invoke(this, e);
-        //}
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <param name="e"></param>
         //protected void OnHelp(EventArgs e)
         //{
         //    this.Help?.Invoke(this, e);
@@ -917,34 +897,48 @@ namespace KPreisser.UI
                 case TaskDialogNotification.TDN_CREATED:
                     this.boundPage.ApplyInitialization();
 
-                    this.raiseClosed = true;
-                    this.OnOpened(EventArgs.Empty);
+                    //// Note: If the user navigates the dialog within the Opened event
+                    //// and then runs the event loop, the Created and Destroyed events
+                    //// for the original page would never be called (because the callback
+                    //// would raise the Created event for the new page from the
+                    //// TDN_NAVIGATED notification and then the Opened event returns),
+                    //// but we consider this to be OK.
+                    
+                    if (!this.raisedOpened)
+                    {
+                        this.raisedOpened = true;
+                        this.OnOpened(EventArgs.Empty);
+                    }
 
-                    this.raisePageDestroyed = true;
-                    this.boundPage.OnCreated(EventArgs.Empty);
+                    if (!this.raisedPageCreated)
+                    {
+                        this.raisedPageCreated = true;
+                        this.boundPage.OnCreated(EventArgs.Empty);
+                    }
                     break;
 
                 case TaskDialogNotification.TDN_DESTROYED:
-                    if (this.raisePageDestroyed)
+                    //// Note: When multiple dialogs are shown (so Show() will occur multiple
+                    //// times in the call stack) and a previously opened dialog is closed,
+                    //// the Destroyed notification for the closed dialog will only occur
+                    //// after the newer dialogs are also closed.
+
+                    if (this.raisedPageCreated)
                     {
-                        this.raisePageDestroyed = false;
+                        this.raisedPageCreated = false;
                         this.boundPage.OnDestroyed(EventArgs.Empty);
                     }
 
-                    if (this.raiseClosed)
+                    if (this.raisedOpened)
                     {
-                        this.raiseClosed = false;
+                        this.raisedOpened = false;
                         this.OnClosed(EventArgs.Empty);
                     }
 
                     // Clear the dialog handle, because according to the docs, we must not
                     // continue to send any notifications to the dialog after the callback
                     // function has returned from being called with the 'Destroyed'
-                    // notification.
-                    // Note: When multiple dialogs are shown (so Show() will occur multiple
-                    // times in the call stack) and a previously opened dialog is closed,
-                    // the Destroyed notification for the closed dialog will only occur
-                    // after the newer dialogs are also closed.
+                    // notification.                    
                     this.hwndDialog = IntPtr.Zero;
                     break;
 
@@ -952,10 +946,12 @@ namespace KPreisser.UI
                     this.waitingForNavigatedEvent = false;
                     this.boundPage.ApplyInitialization();
 
-                    //this.OnNavigated(EventArgs.Empty);
-
-                    this.raisePageDestroyed = true;
-                    this.boundPage.OnCreated(EventArgs.Empty);
+                    Debug.Assert(!this.raisedPageCreated);
+                    if (!this.raisedPageCreated)
+                    {
+                        this.raisedPageCreated = true;
+                        this.boundPage.OnCreated(EventArgs.Empty);
+                    }
                     break;
 
                 case TaskDialogNotification.TDN_HYPERLINK_CLICKED:
@@ -1187,9 +1183,9 @@ namespace KPreisser.UI
                 // Need to raise the "Destroyed" event for the current page. The
                 // "Created" event for the new page will occur from the callback.
                 // Note: "this.raisedPageCreated" should always be true here.
-                if (this.raisePageDestroyed)
+                if (this.raisedPageCreated)
                 {
-                    this.raisePageDestroyed = false;
+                    this.raisedPageCreated = false;
                     this.boundPage.OnDestroyed(EventArgs.Empty);
 
                     // Need to check again if the dialog has not already been closed, since
