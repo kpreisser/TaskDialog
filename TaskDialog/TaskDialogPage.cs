@@ -94,12 +94,6 @@ namespace KPreisser.UI
         /// </summary>
         public event EventHandler<TaskDialogHyperlinkClickedEventArgs> HyperlinkClicked;
 
-        /// <summary>
-        /// Occurs approximately every 200 milliseconds while this
-        /// <see cref="TaskDialogPage"/> is bound.
-        /// </summary>
-        public event EventHandler<TaskDialogTimerTickEventArgs> TimerTick;
-
 
         /// <summary>
         /// 
@@ -669,11 +663,6 @@ namespace KPreisser.UI
             if (this.startupLocation == TaskDialogStartupLocation.CenterParent)
                 flags |= TaskDialogFlags.TDF_POSITION_RELATIVE_TO_WINDOW;
 
-            // Specify the timer flag if an event handler has been added to the timer
-            // tick event.
-            if (this.TimerTick != null)
-                flags |= TaskDialogFlags.TDF_CALLBACK_TIMER;
-
             // Only specify the command link flags if there actually are custom buttons;
             // otherwise the dialog will not work.
             if (this.customButtons.Count > 0)
@@ -836,15 +825,6 @@ namespace KPreisser.UI
         internal protected void OnHyperlinkClicked(TaskDialogHyperlinkClickedEventArgs e)
         {
             this.HyperlinkClicked?.Invoke(this, e);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="e"></param>
-        internal protected void OnTimerTick(TaskDialogTimerTickEventArgs e)
-        {
-            this.TimerTick?.Invoke(this, e);
         }
 
 

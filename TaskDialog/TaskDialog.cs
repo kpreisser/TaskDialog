@@ -1095,24 +1095,6 @@ namespace KPreisser.UI
                     //this.OnHelp(EventArgs.Empty);
                     this.boundPage.OnHelp(EventArgs.Empty);
                     break;
-
-                case TaskDialogNotification.TDN_TIMER:
-                    // Note: The documentation specifies that wParam contains a DWORD,
-                    // which might mean that on 64-bit platforms the highest bit (63)
-                    // will be zero even if the DWORD has its highest bit (31) set. In
-                    // that case, IntPtr.ToInt32() would throw an OverflowException.
-                    // Therefore, we use .ToInt64() and then convert it to an int.
-                    int ticks = IntPtr.Size == 8 ?
-                            unchecked((int)wParam.ToInt64()) :
-                            wParam.ToInt32();
-
-                    var tickEventArgs = new TaskDialogTimerTickEventArgs(ticks);
-                    //this.OnTimerTick(tickEventArgs);
-                    this.boundPage.OnTimerTick(tickEventArgs);
-
-                    return tickEventArgs.ResetTickCount ?
-                            TaskDialogNativeMethods.S_FALSE :
-                            TaskDialogNativeMethods.S_OK;
             }
 
             // Note: Previously, the code caught exceptions and returned

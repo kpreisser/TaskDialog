@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Windows.Forms;
 using KPreisser.UI;
 
 namespace TaskDialogExample
@@ -84,19 +85,33 @@ namespace TaskDialogExample
                 };
 
                 long timerCount = 2;
-                dialogPage.TimerTick += (s, e) =>
+                var dialogPageTimer = null as Timer;
+                dialogPage.Created += (s, e) =>
                 {
-                    // Update the progress bar if value <= 35.
-                    if (timerCount <= 35)
+                    dialogPageTimer = new Timer()
                     {
-                        dialogPage.ProgressBar.Value = (int)timerCount;
-                    }
-                    else if (timerCount == 36)
+                        Enabled = true,
+                        Interval = 200
+                    };
+                    dialogPageTimer.Tick += (s2, e2) =>
                     {
-                        dialogPage.ProgressBar.State = TaskDialogProgressBarState.Paused;
-                    }
+                        // Update the progress bar if value <= 35.
+                        if (timerCount <= 35)
+                        {
+                            dialogPage.ProgressBar.Value = (int)timerCount;
+                        }
+                        else if (timerCount == 36)
+                        {
+                            dialogPage.ProgressBar.State = TaskDialogProgressBarState.Paused;
+                        }
 
-                    timerCount++;
+                        timerCount++;
+                    };
+                };
+                dialogPage.Destroyed += (s, e) =>
+                {
+                    dialogPageTimer.Dispose();
+                    dialogPageTimer = null;
                 };
 
                 dialogPage.HyperlinkClicked += (s, e) =>
@@ -139,27 +154,41 @@ namespace TaskDialogExample
                     e.CancelClose = true;
 
                     // Show a new Taskdialog that shows an incrementing number.
-                    var contents = new TaskDialogPage()
+                    var newPage = new TaskDialogPage()
                     {
                         Text = "This is a new non-modal dialog!",
                         Icon = TaskDialogIcon.Information,
                     };
 
-                    var buttonClose = contents.CommonButtons.Add(TaskDialogResult.Close);
-                    var buttonContinue = contents.CommonButtons.Add(TaskDialogResult.Continue);
+                    var buttonClose = newPage.CommonButtons.Add(TaskDialogResult.Close);
+                    var buttonContinue = newPage.CommonButtons.Add(TaskDialogResult.Continue);
 
                     int number = 0;
                     void UpdateNumberText(bool callUpdate = true)
                     {
                         // Update the instruction with the new number.
-                        contents.Instruction = "Hi there!  Number: " + number.ToString();
+                        newPage.Instruction = "Hi there!  Number: " + number.ToString();
                     }
                     UpdateNumberText(false);
 
-                    contents.TimerTick += (s2, e2) =>
+                    var newPageTimer = null as Timer;
+                    newPage.Created += (s2, e2) =>
                     {
-                        number++;
-                        UpdateNumberText();
+                        newPageTimer = new Timer()
+                        {
+                            Enabled = true,
+                            Interval = 200
+                        };
+                        newPageTimer.Tick += (s3, e3) =>
+                        {
+                            number++;
+                            UpdateNumberText();
+                        };
+                    };
+                    newPage.Destroyed += (s2, e2) =>
+                    {
+                        newPageTimer.Dispose();
+                        newPageTimer = null;
                     };
 
                     buttonContinue.Click += (s2, e2) =>
@@ -171,7 +200,7 @@ namespace TaskDialogExample
                         UpdateNumberText();
                     };
 
-                    using (var innerDialog = new TaskDialog(contents))
+                    using (var innerDialog = new TaskDialog(newPage))
                     {
                         var innerResult = innerDialog.Show();
                         Console.WriteLine("Result of new dialog: " + innerResult);
