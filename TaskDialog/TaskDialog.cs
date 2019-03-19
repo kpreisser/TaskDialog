@@ -917,6 +917,18 @@ namespace KPreisser.UI
                     }
                     break;
 
+                case TaskDialogNotification.TDN_NAVIGATED:
+                    this.waitingForNavigatedEvent = false;
+                    this.boundPage.ApplyInitialization();
+
+                    Debug.Assert(!this.raisedPageCreated);
+                    if (!this.raisedPageCreated)
+                    {
+                        this.raisedPageCreated = true;
+                        this.boundPage.OnCreated(EventArgs.Empty);
+                    }
+                    break;
+
                 case TaskDialogNotification.TDN_DESTROYED:
                     //// Note: When multiple dialogs are shown (so Show() will occur multiple
                     //// times in the call stack) and a previously opened dialog is closed,
@@ -940,18 +952,6 @@ namespace KPreisser.UI
                     // function has returned from being called with the 'Destroyed'
                     // notification.                    
                     this.hwndDialog = IntPtr.Zero;
-                    break;
-
-                case TaskDialogNotification.TDN_NAVIGATED:
-                    this.waitingForNavigatedEvent = false;
-                    this.boundPage.ApplyInitialization();
-
-                    Debug.Assert(!this.raisedPageCreated);
-                    if (!this.raisedPageCreated)
-                    {
-                        this.raisedPageCreated = true;
-                        this.boundPage.OnCreated(EventArgs.Empty);
-                    }
                     break;
 
                 case TaskDialogNotification.TDN_HYPERLINK_CLICKED:
