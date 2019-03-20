@@ -5,20 +5,48 @@ namespace KPreisser.UI
 {
     internal static class TaskDialogNativeMethods
     {
-        //// Note: The TaskDialog declarations (including quoted comments)
-        //// were taken from CommCtrl.h.
-
         public const int WM_USER = 0x400;
+
+        //// HResult codes
 
         public const int S_OK = 0x0;
 
         public const int S_FALSE = 0x1;
+
+        //// Progress Bar states
 
         public const int PBST_NORMAL = 0x0001;
 
         public const int PBST_ERROR = 0x0002;
 
         public const int PBST_PAUSED = 0x0003;
+
+        //// Dialog Box Command IDs
+
+        public const int IDOK = 1;
+
+        public const int IDCANCEL = 2;
+
+        public const int IDABORT = 3;
+
+        public const int IDRETRY = 4;
+
+        public const int IDIGNORE = 5;
+
+        public const int IDYES = 6;
+
+        public const int IDNO = 7;
+
+        public const int IDCLOSE = 8;
+
+        public const int IDHELP = 9;
+
+        public const int IDTRYAGAIN = 10;
+
+        public const int IDCONTINUE = 11;
+
+        //// Note: The TaskDialog declarations (including quoted comments)
+        //// were taken from CommCtrl.h.
 
         [Flags]
         internal enum TASKDIALOG_FLAGS : int

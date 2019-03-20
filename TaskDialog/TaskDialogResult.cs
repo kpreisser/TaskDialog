@@ -13,7 +13,7 @@
         /// <summary>
         /// 
         /// </summary>
-        OK = 1,
+        OK = TaskDialogNativeMethods.IDOK,
 
         /// <summary>
         /// 
@@ -24,37 +24,37 @@
         /// pressing ESC or Alt+F4 (just as if you enabled
         /// <see cref="TaskDialogPage.AllowCancel"/>).
         /// </remarks>
-        Cancel = 2,
+        Cancel = TaskDialogNativeMethods.IDCANCEL,
 
         /// <summary>
         /// 
         /// </summary>
-        Abort = 3,
+        Abort = TaskDialogNativeMethods.IDABORT,
 
         /// <summary>
         /// 
         /// </summary>
-        Retry = 4,
+        Retry = TaskDialogNativeMethods.IDRETRY,
 
         /// <summary>
         /// 
         /// </summary>
-        Ignore = 5,
+        Ignore = TaskDialogNativeMethods.IDIGNORE,
 
         /// <summary>
         /// 
         /// </summary>
-        Yes = 6,
+        Yes = TaskDialogNativeMethods.IDYES,
 
         /// <summary>
         /// 
         /// </summary>
-        No = 7,
+        No = TaskDialogNativeMethods.IDNO,
 
         /// <summary>
         /// 
         /// </summary>
-        Close = 8,
+        Close = TaskDialogNativeMethods.IDCLOSE,
 
         /// <summary>
         /// 
@@ -63,16 +63,16 @@
         /// Note: Clicking this button will not close the dialog, but will raise the
         /// <see cref="TaskDialogPage.Help"/> event.
         /// </remarks>
-        Help = 9,
+        Help = TaskDialogNativeMethods.IDHELP,
 
         /// <summary>
         /// 
         /// </summary>
-        TryAgain = 10,
+        TryAgain = TaskDialogNativeMethods.IDTRYAGAIN,
 
         /// <summary>
         /// 
         /// </summary>
-        Continue = 11
+        Continue = TaskDialogNativeMethods.IDCONTINUE
     }
 }
