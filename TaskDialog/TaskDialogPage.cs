@@ -562,9 +562,10 @@ namespace KPreisser.UI
             if (this.CommonButtons.BoundPage != null && this.CommonButtons.BoundPage != this ||
                     this.CustomButtons.BoundPage != null && this.CustomButtons.BoundPage != this ||
                     this.RadioButtons.BoundPage != null && this.RadioButtons.BoundPage != this ||
+                    this.checkBox?.BoundPage != null && this.checkBox.BoundPage != this ||
                     this.expander?.BoundPage != null && this.expander.BoundPage != this ||
-                    this.progressBar?.BoundPage != null && this.progressBar.BoundPage != this ||
-                    this.checkBox?.BoundPage != null && this.checkBox.BoundPage != this)
+                    this.footer?.BoundPage != null && this.footer.BoundPage != this ||
+                    this.progressBar?.BoundPage != null && this.progressBar.BoundPage != this)
                 throw new InvalidOperationException();
 
             foreach (var control in (this.CommonButtons as IEnumerable<TaskDialogControl>)
