@@ -785,9 +785,10 @@ namespace KPreisser.UI
             foreach (var button in this.RadioButtons)
                 button.ApplyInitialization();
 
-            this.expander?.ApplyInitialization();
-            this.progressBar?.ApplyInitialization();
             this.checkBox?.ApplyInitialization();
+            this.expander?.ApplyInitialization();
+            this.footer?.ApplyInitialization();
+            this.progressBar?.ApplyInitialization();            
         }
 
 
