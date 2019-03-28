@@ -208,11 +208,6 @@ namespace KPreisser.UI
         ///// </summary>
         //public event EventHandler<TaskDialogHyperlinkClickedEventArgs> HyperlinkClicked;
 
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        //public event EventHandler<TaskDialogTimerTickEventArgs> TimerTick;
-
 
         static TaskDialog()
         {
@@ -457,6 +452,20 @@ namespace KPreisser.UI
                     commonButton.Result == TaskDialogResult.Help);
         }
 
+        private static TaskDialogCommonButton CreatePlaceholderButton(
+                TaskDialogResult result)
+        {
+            // TODO: Maybe bind the button so that the user
+            // cannot change the properties, like it is the
+            // case with the regular buttons added to the
+            // collections.
+            return new TaskDialogCommonButton(
+                    result)
+            {
+                Visible = false
+            };
+        }
+
 
         /// <summary>
         /// Shows the task dialog.
@@ -546,10 +555,20 @@ namespace KPreisser.UI
                     if (returnValue < 0)
                         Marshal.ThrowExceptionForHR(returnValue);
 
-                    // The returned button ID should always equal the cached result
-                    // button ID.
-                    Debug.Assert(resultButtonID == this.resultButton.buttonID);
-                    return this.resultButton.button;
+                    // Normally, the returned button ID should always equal the cached
+                    // result button ID. However, in some cases when the dialog is closed
+                    // abormally (e.g. when closing the main window while a modeless task
+                    // dialog is displayed), the dialog returns IDCANCEL (2) without
+                    // priorly raising the TDN_BUTTON_CLICKED notification.
+                    // Therefore, in that case we need to retrieve the button ourselves.
+                    TaskDialogButton resultButton;
+                    if (resultButtonID == this.resultButton.buttonID)
+                        resultButton = this.resultButton.button;
+                    else
+                        resultButton = this.boundPage.GetBoundButtonByID(resultButtonID) ??
+                                CreatePlaceholderButton((TaskDialogResult)resultButtonID);
+
+                    return resultButton;
                 }
                 finally
                 {
@@ -873,15 +892,6 @@ namespace KPreisser.UI
         //    this.HyperlinkClicked?.Invoke(this, e);
         //}
 
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <param name="e"></param>
-        //protected void OnTimerTick(TaskDialogTimerTickEventArgs e)
-        //{
-        //    this.TimerTick?.Invoke(this, e);
-        //}
-
 
         private int HandleTaskDialogCallback(
                 IntPtr hWnd,
@@ -963,21 +973,8 @@ namespace KPreisser.UI
                     break;
 
                 case TaskDialogNotification.TDN_BUTTON_CLICKED:
-                    int buttonID = wParam.ToInt32();
-
-                    // Check if the button is part of the custom buttons.
-                    var button = null as TaskDialogButton;
-                    if (buttonID >= TaskDialogPage.CustomButtonStartID)
-                    {
-                        button = this.boundPage.CustomButtons
-                                [buttonID - TaskDialogPage.CustomButtonStartID];
-                    }
-                    else
-                    {
-                        var result = (TaskDialogResult)buttonID;
-                        if (this.boundPage.CommonButtons.Contains(result))
-                            button = this.boundPage.CommonButtons[result];
-                    }
+                    int buttonID = (int)wParam;
+                    var button = this.boundPage.GetBoundButtonByID(buttonID);
 
                     bool handlerResult = true;
                     if (button != null && !this.suppressButtonClickedEvent)
@@ -1045,15 +1042,8 @@ namespace KPreisser.UI
                             // return that instance after TaskDialogIndirect() returns.
                             if (button == null)
                             {
-                                // TODO: Maybe bind the button so that the user
-                                // cannot change the properties, like it is the
-                                // case with the regular buttons added to the
-                                // collections.
-                                button = new TaskDialogCommonButton(
-                                        (TaskDialogResult)buttonID)
-                                {
-                                    Visible = false
-                                };
+                                button = CreatePlaceholderButton(
+                                        (TaskDialogResult)buttonID);
                             }
 
                             // The button would close the dialog, so raise the event.
@@ -1073,10 +1063,8 @@ namespace KPreisser.UI
                             TaskDialogNativeMethods.S_FALSE;
 
                 case TaskDialogNotification.TDN_RADIO_BUTTON_CLICKED:
-                    int radioButtonID = wParam.ToInt32();
-
-                    var radioButton = this.boundPage.RadioButtons
-                            [radioButtonID - TaskDialogPage.RadioButtonStartID];
+                    int radioButtonID = (int)wParam;
+                    var radioButton = this.boundPage.GetBoundRadioButtonByID(radioButtonID);
 
                     radioButton.HandleRadioButtonClicked();
                     break;
@@ -1148,7 +1136,7 @@ namespace KPreisser.UI
 
             // Don't allow navigation of the dialog window is already closed (and
             // therefore has set a result button), because that would result in
-            // weird/undefined behavior (e.g. returning "Cancel" (2) as button
+            // weird/undefined behavior (e.g. returning IDCANCEL (2) as button
             // result even though a different button has already been set as result).
             const string dialogAlreadyClosedMesssage =
                     "Cannot navigate the dialog when it has already closed.";

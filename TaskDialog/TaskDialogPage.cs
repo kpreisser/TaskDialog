@@ -23,7 +23,7 @@ namespace KPreisser.UI
         /// common button (TaskDialogResult), so we start with 100 to be safe
         /// (100 is also used as first ID in MSDN examples for the task dialog).
         /// </remarks>
-        internal const int CustomButtonStartID = 100;
+        private const int CustomButtonStartID = 100;
 
         /// <summary>
         /// The start ID for radio buttons.
@@ -31,7 +31,7 @@ namespace KPreisser.UI
         /// <remarks>
         /// This must be at least 1 because 0 already stands for "no button".
         /// </remarks>
-        internal const int RadioButtonStartID = 1;
+        private const int RadioButtonStartID = 1;
 
 
         private TaskDialogCommonButtonCollection commonButtons;
@@ -536,6 +536,35 @@ namespace KPreisser.UI
                 throw new InvalidOperationException(
                         "Cannot set this property or call this method while the " +
                         "page is bound to a task dialog.");
+        }
+
+        internal TaskDialogButton GetBoundButtonByID(int buttonID)
+        {
+            if (buttonID == 0)
+                return null;
+            
+            // Check if the button is part of the custom buttons.
+            var button = null as TaskDialogButton;
+            if (buttonID >= CustomButtonStartID)
+            {
+                button = this.customButtons[buttonID - CustomButtonStartID];
+            }
+            else
+            {
+                var result = (TaskDialogResult)buttonID;
+                if (this.commonButtons.Contains(result))
+                    button = this.commonButtons[result];
+            }
+
+            return button;
+        }
+
+        internal TaskDialogRadioButton GetBoundRadioButtonByID(int buttonID)
+        {
+            if (buttonID == 0)
+                return null;
+
+            return this.radioButtons[buttonID - RadioButtonStartID];
         }
 
         internal void Validate(TaskDialog newOwner)
