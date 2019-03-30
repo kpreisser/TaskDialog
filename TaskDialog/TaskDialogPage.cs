@@ -540,6 +540,9 @@ namespace KPreisser.UI
 
         internal TaskDialogButton GetBoundButtonByID(int buttonID)
         {
+            if (this.boundTaskDialog == null)
+                throw new InvalidOperationException();
+
             if (buttonID == 0)
                 return null;
             
@@ -561,6 +564,9 @@ namespace KPreisser.UI
 
         internal TaskDialogRadioButton GetBoundRadioButtonByID(int buttonID)
         {
+            if (this.boundTaskDialog == null)
+                throw new InvalidOperationException();
+
             if (buttonID == 0)
                 return null;
 

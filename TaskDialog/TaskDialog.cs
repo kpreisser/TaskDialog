@@ -459,8 +459,7 @@ namespace KPreisser.UI
             // cannot change the properties, like it is the
             // case with the regular buttons added to the
             // collections.
-            return new TaskDialogCommonButton(
-                    result)
+            return new TaskDialogCommonButton(result)
             {
                 Visible = false
             };
@@ -561,14 +560,11 @@ namespace KPreisser.UI
                     // dialog is displayed), the dialog returns IDCANCEL (2) without
                     // priorly raising the TDN_BUTTON_CLICKED notification.
                     // Therefore, in that case we need to retrieve the button ourselves.
-                    TaskDialogButton resultButton;
                     if (resultButtonID == this.resultButton.buttonID)
-                        resultButton = this.resultButton.button;
+                        return this.resultButton.button;
                     else
-                        resultButton = this.boundPage.GetBoundButtonByID(resultButtonID) ??
+                        return this.boundPage.GetBoundButtonByID(resultButtonID) ??
                                 CreatePlaceholderButton((TaskDialogResult)resultButtonID);
-
-                    return resultButton;
                 }
                 finally
                 {
@@ -913,7 +909,7 @@ namespace KPreisser.UI
                     //// would raise the Created event for the new page from the
                     //// TDN_NAVIGATED notification and then the Opened event returns),
                     //// but we consider this to be OK.
-                    
+
                     if (!this.raisedOpened)
                     {
                         this.raisedOpened = true;
@@ -1416,8 +1412,8 @@ namespace KPreisser.UI
                         // Align the pointer to the next align size. If not specified, we
                         // will use the pointer (register) size.
                         uint add = (uint)(alignment ?? IntPtr.Size) - 1;
-                        // TODO: Use nint (IntN) once available to avoid the separate code
-                        // for 32-bit and 64-bit pointer sizes.
+                        // TODO: Use nuint (System.UIntN) once available to avoid the separate
+                        // code for 32-bit and 64-bit pointer sizes.
                         if (IntPtr.Size == 8)
                             // Note: The latter cast is not redundant, even if VS says so!
                             currentPtr = (byte*)(((ulong)currentPtr + add) & ~(ulong)add);
