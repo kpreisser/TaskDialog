@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using TaskDialogButtonStruct = KPreisser.UI.TaskDialogNativeMethods.TASKDIALOG_BUTTON;
 using TaskDialogCallbackDelegate = KPreisser.UI.TaskDialogNativeMethods.PFTASKDIALOGCALLBACK;
 using TaskDialogConfig = KPreisser.UI.TaskDialogNativeMethods.TASKDIALOGCONFIG;
+using TaskDialogFlags = KPreisser.UI.TaskDialogNativeMethods.TASKDIALOG_FLAGS;
 using TaskDialogIconElement = KPreisser.UI.TaskDialogNativeMethods.TASKDIALOG_ICON_ELEMENTS;
 using TaskDialogMessage = KPreisser.UI.TaskDialogNativeMethods.TASKDIALOG_MESSAGES;
 using TaskDialogNotification = KPreisser.UI.TaskDialogNativeMethods.TASKDIALOG_NOTIFICATIONS;
@@ -47,6 +48,8 @@ namespace KPreisser.UI
         /// </summary>
         private static readonly IntPtr callbackProcDelegatePtr;
 
+
+        private TaskDialogStartupLocation startupLocation;
 
         /// <summary>
         /// Window handle of the task dialog when it is being shown.
@@ -234,6 +237,9 @@ namespace KPreisser.UI
             // TaskDialog is only supported on Windows.
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 throw new PlatformNotSupportedException();
+
+            // Set default properties.
+            this.startupLocation = TaskDialogStartupLocation.CenterParent;
         }
 
         /// <summary>
@@ -301,6 +307,23 @@ namespace KPreisser.UI
                 }
             }
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        [DefaultValue(TaskDialogStartupLocation.CenterParent)]
+        public TaskDialogStartupLocation StartupLocation
+        {
+            get => this.startupLocation;
+
+            set
+            {
+                DenyIfBound();
+
+                this.startupLocation = value;
+            }
+        }
+
 
         /// <summary>
         /// Gets a value that indicates whether <see cref="Show(IntPtr)"/> is
@@ -523,6 +546,7 @@ namespace KPreisser.UI
                 // Bind the page and allocate the memory.
                 BindAndAllocateConfig(
                        hwndOwner,
+                       this.startupLocation,
                        out var ptrToFree,
                        out var ptrTaskDialogConfig);
                 try
@@ -1182,6 +1206,7 @@ namespace KPreisser.UI
                 // navigating.
                 BindAndAllocateConfig(
                         IntPtr.Zero,
+                        default,
                         out var ptrToFree,
                         out var ptrTaskDialogConfig);
                 try
@@ -1218,6 +1243,7 @@ namespace KPreisser.UI
 
         private unsafe void BindAndAllocateConfig(
                 IntPtr hwndOwner,
+                TaskDialogStartupLocation startupLocation,
                 out IntPtr ptrToFree,
                 out IntPtr ptrTaskDialogConfig)
         {
@@ -1233,6 +1259,9 @@ namespace KPreisser.UI
             this.boundPage = page;
             try
             {
+                if (startupLocation == TaskDialogStartupLocation.CenterParent)
+                    flags |= TaskDialogFlags.TDF_POSITION_RELATIVE_TO_WINDOW;
+
                 checked
                 {
                     // First, calculate the necessary memory size we need to allocate for
@@ -1435,6 +1464,14 @@ namespace KPreisser.UI
 
                 throw;
             }
+        }
+
+        private void DenyIfBound()
+        {
+            if (this.boundPage != null)
+                throw new InvalidOperationException(
+                        "Cannot set this property or call this method while the " +
+                        "task dialog is shown.");
         }
 
         private void DenyIfDialogNotUpdatable()

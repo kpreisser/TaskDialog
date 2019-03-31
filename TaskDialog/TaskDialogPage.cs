@@ -56,7 +56,6 @@ namespace KPreisser.UI
         private IntPtr iconHandle;
         private int width;
         private TaskDialogCommandLinkMode commandLinkMode;
-        private TaskDialogStartupLocation startupLocation;
 
         private TaskDialog boundTaskDialog;
 
@@ -100,9 +99,6 @@ namespace KPreisser.UI
         /// </summary>
         public TaskDialogPage()
         {
-            // Set default flags/properties.
-            this.startupLocation = TaskDialogStartupLocation.CenterParent;
-
             // Create empty (hidden) controls.
             this.checkBox = new TaskDialogCheckBox();
             this.expander = new TaskDialogExpander();
@@ -408,22 +404,6 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
-        [DefaultValue(TaskDialogStartupLocation.CenterParent)]
-        public TaskDialogStartupLocation StartupLocation
-        {
-            get => this.startupLocation;
-
-            set
-            {
-                this.DenyIfBound();
-
-                this.startupLocation = value;
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
         [DefaultValue(false)]
         public bool EnableHyperlinks
         {
@@ -695,9 +675,6 @@ namespace KPreisser.UI
             {
                 iconValue = (IntPtr)this.icon;
             }
-
-            if (this.startupLocation == TaskDialogStartupLocation.CenterParent)
-                flags |= TaskDialogFlags.TDF_POSITION_RELATIVE_TO_WINDOW;
 
             // Only specify the command link flags if there actually are custom buttons;
             // otherwise the dialog will not work.
