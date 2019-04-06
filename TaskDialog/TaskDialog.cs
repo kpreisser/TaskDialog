@@ -1444,8 +1444,12 @@ namespace KPreisser.UI
                         // TODO: Use nuint (System.UIntN) once available to avoid the separate
                         // code for 32-bit and 64-bit pointer sizes.
                         if (IntPtr.Size == 8)
-                            // Note: The latter cast is not redundant, even if VS says so!
+                            // Disable incorrect IDE warning as the latter cast is
+                            // actually not redundant.
+                            // See: https://github.com/dotnet/roslyn/issues/20617
+#pragma warning disable IDE0004 // Remove Unnecessary Cast
                             currentPtr = (byte*)(((ulong)currentPtr + add) & ~(ulong)add);
+#pragma warning restore IDE0004 // Remove Unnecessary Cast
                         else
                             currentPtr = (byte*)(((uint)currentPtr + add) & ~add);
                     }
