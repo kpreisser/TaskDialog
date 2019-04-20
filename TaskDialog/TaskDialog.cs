@@ -51,6 +51,10 @@ namespace KPreisser.UI
 
         private TaskDialogStartupLocation startupLocation;
 
+        private TaskDialogPage page;
+
+        private TaskDialogPage boundPage;
+
         /// <summary>
         /// Window handle of the task dialog when it is being shown.
         /// </summary>
@@ -62,9 +66,7 @@ namespace KPreisser.UI
         /// </summary>
         private IntPtr instanceHandlePtr;
 
-        private TaskDialogPage page;
-
-        private TaskDialogPage boundPage;
+        private WindowSubclassHandler windowSubclassHandler;
 
         private bool waitingForNavigatedEvent;
 
@@ -135,7 +137,6 @@ namespace KPreisser.UI
         /// returned <see cref="TaskDialogNativeMethods.S_OK"/>, so that further
         /// handles will return <see cref="TaskDialogNativeMethods.S_FALSE"/> to
         /// not override the previously set result.
-        /// 
         /// </remarks>
         private (TaskDialogButton button, int buttonID) resultButton;
 
@@ -183,7 +184,8 @@ namespace KPreisser.UI
         /// that dialog will be called only after the second dialog is also closed.
         /// 
         /// Note: This event might not always be called, e.g. if navigation of the
-        /// dialog fails.
+        /// dialog fails; however, the <see cref="Closed"/> event will always be
+        /// called.
         /// </remarks>
         public event EventHandler<TaskDialogClosingEventArgs> Closing;
 
@@ -595,8 +597,26 @@ namespace KPreisser.UI
                     // Free the memory.
                     FreeConfig(ptrToFree);
 
+                    // The window handle should already have been cleared from the
+                    // TDN_DESTROYED notification. Otherwise, this would mean that
+                    // TaskDialogIndirect() returned due to an exception being
+                    // thrown (which means the native task dialog is still showing),
+                    // which we should avoid as it is not supported.
+                    // TODO: Maybe FailFast() in that case to prevent future errors.
+                    Debug.Assert(this.hwndDialog == IntPtr.Zero);
+
+                    // Ensure to keep the callback delegate alive until
+                    // TaskDialogIndirect() returns in case we could not undo the
+                    // subclassing. See comment in UnsubclassWindow().
+                    this.windowSubclassHandler?.KeepCallbackDelegateAlive();
+                    // Then, clear the subclass handler. Note that this only works
+                    // correctly if we did not return from TaskDialogIndirect()
+                    // due to an exception being thrown (as mentioned above).
+                    this.windowSubclassHandler = null;
+
                     // Ensure to clear the flag if a navigation did not complete.
                     this.waitingForNavigatedEvent = false;
+
                     // Also, ensure the window handle and the
                     // raiseClosed/raisePageDestroyed flags are is cleared even if
                     // the TDN_DESTROYED notification did not occur (although that
@@ -920,7 +940,15 @@ namespace KPreisser.UI
                 IntPtr lParam)
         {
             // Set the hWnd as this may be the first time that we get it.
+            bool isFirstNotification = this.hwndDialog == IntPtr.Zero;
             this.hwndDialog = hWnd;
+
+            if (isFirstNotification)
+            {
+                // Subclass the window as early as possible after the window handle
+                // is available.
+                this.SubclassWindow();
+            }
 
             switch (notification)
             {
@@ -964,24 +992,39 @@ namespace KPreisser.UI
                     //// times in the call stack) and a previously opened dialog is closed,
                     //// the Destroyed notification for the closed dialog will only occur
                     //// after the newer dialogs are also closed.
-
-                    if (this.raisedPageCreated)
+                    try
                     {
-                        this.raisedPageCreated = false;
-                        this.boundPage.OnDestroyed(EventArgs.Empty);
-                    }
+                        // Only raise the destroyed/closed events if the corresponding
+                        // created/opened events have been called. For example, when
+                        // trying to show the dialog with an invalid configuration
+                        // (so an error HResult will be returned), the callback is
+                        // invoked only one time with the TDN_DESTROYED
+                        // notification without being invoked with the TDN_CREATED
+                        // notification.
+                        if (this.raisedPageCreated)
+                        {
+                            this.raisedPageCreated = false;
+                            this.boundPage.OnDestroyed(EventArgs.Empty);
+                        }
 
-                    if (this.raisedOpened)
+                        if (this.raisedOpened)
+                        {
+                            this.raisedOpened = false;
+                            this.OnClosed(EventArgs.Empty);
+                        }
+                    }
+                    finally
                     {
-                        this.raisedOpened = false;
-                        this.OnClosed(EventArgs.Empty);
-                    }
+                        // Undo the subclassing as the window handle is about to
+                        // be destroyed.
+                        this.UnsubclassWindow();
 
-                    // Clear the dialog handle, because according to the docs, we must not
-                    // continue to send any notifications to the dialog after the callback
-                    // function has returned from being called with the 'Destroyed'
-                    // notification.                    
-                    this.hwndDialog = IntPtr.Zero;
+                        // Clear the dialog handle, because according to the docs, we must not
+                        // continue to send any notifications to the dialog after the callback
+                        // function has returned from being called with the 'Destroyed'
+                        // notification.                    
+                        this.hwndDialog = IntPtr.Zero;
+                    }
                     break;
 
                 case TaskDialogNotification.TDN_HYPERLINK_CLICKED:
@@ -1467,6 +1510,36 @@ namespace KPreisser.UI
                 this.boundPage = null;
 
                 throw;
+            }
+        }
+
+        private void SubclassWindow()
+        {
+            if (this.windowSubclassHandler != null)
+                throw new InvalidOperationException();
+
+            // Subclass the window.
+            this.windowSubclassHandler = new WindowSubclassHandler(this);
+            this.windowSubclassHandler.Open();
+        }
+
+        private void UnsubclassWindow()
+        {
+            if (this.windowSubclassHandler != null)
+            {
+                try
+                {
+                    this.windowSubclassHandler.Dispose();
+                    this.windowSubclassHandler = null;
+                }
+                catch (Exception ex) when (ex is InvalidOperationException || ex is Win32Exception)
+                {
+                    // Ignore. This could happen for example if some other code
+                    // also subclassed the window after us but didn't correctly
+                    // revert it. However, this can mean that the callback can
+                    // still be called until TaskDialogIndirect() returns, so we
+                    // need to keep the delegate alive until that happens.
+                }
             }
         }
 
