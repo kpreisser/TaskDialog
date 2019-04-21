@@ -153,6 +153,8 @@ namespace KPreisser.UI
         /// </remarks>
         private bool isInNavigate;
 
+        private bool isWindowActive;
+
 
         /// <summary>
         /// Occurs after the task dialog has been created but before it is displayed.
@@ -198,6 +200,16 @@ namespace KPreisser.UI
         /// <see cref="Handle"/> is available.
         /// </remarks>
         public event EventHandler Closed;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public event EventHandler Activated;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public event EventHandler Deactivate;
 
         //// These events were removed since they are also available in the
         //// TaskDialogPage, and are specific to the page (not to the dialog).
@@ -624,6 +636,7 @@ namespace KPreisser.UI
                     this.hwndDialog = IntPtr.Zero;
                     this.raisedOpened = false;
                     this.raisedPageCreated = false;
+                    this.isWindowActive = false;
 
                     // Clear the cached objects.
                     this.resultButton = default;
@@ -914,6 +927,24 @@ namespace KPreisser.UI
             this.Closed?.Invoke(this, e);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="e"></param>
+        protected void OnActivated(EventArgs e)
+        {
+            this.Activated?.Invoke(this, e);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="e"></param>
+        protected void OnDeactivate(EventArgs e)
+        {
+            this.Deactivate?.Invoke(this, e);
+        }
+
         ///// <summary>
         ///// 
         ///// </summary>
@@ -955,6 +986,23 @@ namespace KPreisser.UI
                 case TaskDialogNotification.TDN_CREATED:
                     this.boundPage.ApplyInitialization();
 
+                    // Check if the dialog was already activated before we subclassed the
+                    // window, which means we don't get the WM_ACTIVATE message. However,
+                    // because the function returns the active window at the current time
+                    // instead of the current thread's point of view (as described by the
+                    // processed messages), it could happen that e.g. the dialog was
+                    // initially active, but got inactive before the call to
+                    // GetForegroundWindow(), which would mean that even though we
+                    // determined we are not active, we might later get an WM_ACTIVATE
+                    // message indicating that the window is now inactive (and vice versa).
+                    // Therefore, we need to maintain the current active state.
+                    bool isActive = TaskDialogNativeMethods.GetForegroundWindow() == hWnd;
+                    if (isActive)
+                    {
+                        this.isWindowActive = true;
+                        this.OnActivated(EventArgs.Empty);
+                    }
+
                     //// Note: If the user navigates the dialog within the Opened event
                     //// and then runs the event loop, the Created and Destroyed events
                     //// for the original page would never be called (because the callback
@@ -988,12 +1036,23 @@ namespace KPreisser.UI
                     break;
 
                 case TaskDialogNotification.TDN_DESTROYED:
-                    //// Note: When multiple dialogs are shown (so Show() will occur multiple
-                    //// times in the call stack) and a previously opened dialog is closed,
-                    //// the Destroyed notification for the closed dialog will only occur
-                    //// after the newer dialogs are also closed.
+                    //// Note: When multiple dialogs are shown (so Show() will occur
+                    //// multiple times in the call stack) and a previously opened
+                    //// dialog is closed, the Destroyed notification for the closed
+                    //// dialog will only occur after the newer dialogs are also
+                    //// closed.
                     try
                     {
+                        // Raise the Deactivate event because it seems we don't get a
+                        // WM_ACTIVATE message before the TDN_DESTROYED notification
+                        // even though the task dialog already lost focus at this
+                        // stage.
+                        if (this.isWindowActive)
+                        {
+                            this.isWindowActive = false;
+                            this.OnDeactivate(EventArgs.Empty);
+                        }
+
                         // Only raise the destroyed/closed events if the corresponding
                         // created/opened events have been called. For example, when
                         // trying to show the dialog with an invalid configuration
@@ -1019,10 +1078,10 @@ namespace KPreisser.UI
                         // be destroyed.
                         this.UnsubclassWindow();
 
-                        // Clear the dialog handle, because according to the docs, we must not
-                        // continue to send any notifications to the dialog after the callback
-                        // function has returned from being called with the 'Destroyed'
-                        // notification.                    
+                        // Clear the dialog handle, because according to the docs, we
+                        // must not continue to send any notifications to the dialog
+                        // after the callback function has returned from being called
+                        // with the 'Destroyed' notification.                    
                         this.hwndDialog = IntPtr.Zero;
                     }
                     break;

@@ -5,7 +5,13 @@ namespace KPreisser.UI
 {
     internal static class TaskDialogNativeMethods
     {
-        public const int WM_USER = 0x400;
+        public const int WM_USER = 0x0400;
+
+        public const int WM_ACTIVATE = 0x0006;
+
+        public const int WM_NCACTIVATE = 0x0086;
+
+        public const int WA_INACTIVE = 0;
 
         //// HResult codes
 
@@ -320,5 +326,10 @@ namespace KPreisser.UI
         public static extern bool SetWindowText(
                 IntPtr hWnd,
                 string lpString);
+
+        [DllImport("user32",
+                EntryPoint = "GetForegroundWindow",
+                ExactSpelling = true)]
+        public static extern IntPtr GetForegroundWindow();
     }
 }
