@@ -40,7 +40,7 @@ namespace KPreisser.UI
                     else if (!active && this.taskDialog.isWindowActive)
                     {
                         this.taskDialog.isWindowActive = false;
-                        this.taskDialog.OnDeactivate(EventArgs.Empty);
+                        this.taskDialog.OnDeactivated(EventArgs.Empty);
                     }
                 }
 

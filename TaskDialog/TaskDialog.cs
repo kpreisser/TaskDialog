@@ -209,7 +209,7 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
-        public event EventHandler Deactivate;
+        public event EventHandler Deactivated;
 
         //// These events were removed since they are also available in the
         //// TaskDialogPage, and are specific to the page (not to the dialog).
@@ -940,9 +940,9 @@ namespace KPreisser.UI
         /// 
         /// </summary>
         /// <param name="e"></param>
-        protected void OnDeactivate(EventArgs e)
+        protected void OnDeactivated(EventArgs e)
         {
-            this.Deactivate?.Invoke(this, e);
+            this.Deactivated?.Invoke(this, e);
         }
 
         ///// <summary>
@@ -1048,14 +1048,14 @@ namespace KPreisser.UI
                     //// closed.
                     try
                     {
-                        // Raise the Deactivate event because it seems we don't get a
+                        // Raise the Deactivated event because it seems we don't get a
                         // WM_ACTIVATE message before the TDN_DESTROYED notification
                         // even though the task dialog already lost focus at this
                         // stage.
                         if (this.isWindowActive)
                         {
                             this.isWindowActive = false;
-                            this.OnDeactivate(EventArgs.Empty);
+                            this.OnDeactivated(EventArgs.Empty);
                         }
 
                         // Only raise the destroyed/closed events if the corresponding
