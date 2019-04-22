@@ -996,6 +996,11 @@ namespace KPreisser.UI
                     // determined we are not active, we might later get an WM_ACTIVATE
                     // message indicating that the window is now inactive (and vice versa).
                     // Therefore, we need to maintain the current active state.
+                    // TODO: Maybe raise the Activated event after the
+                    // PageCreated/DialogOpened events. But that would require the
+                    // logic of Control.BeginInvoke(), to ensure when running the
+                    // message loop in those events, the Activated event is correctly
+                    // raised within that other events.
                     bool isActive = TaskDialogNativeMethods.GetForegroundWindow() == hWnd;
                     if (isActive)
                     {
