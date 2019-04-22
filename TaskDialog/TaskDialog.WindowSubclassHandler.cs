@@ -23,12 +23,13 @@ namespace KPreisser.UI
                 // with flag TDF_NO_SET_FOREGROUND while no window of the the app
                 // currently has focus, then when you activate the TaskDialog, it
                 // doesn't get a WM_ACTIVATE message but it gets a WM_NCACTIVATE
-                // message. Also, when you e.g. run the event loop in the TDN_CREATED
-                // notification (while the TaskDialog window has focus), and during
-                // that time you activate another window, then the TaskDialog gets a
-                // WM_ACTIVATE message indicating the window is active even though it
-                // isn't. However, a System.Windows.Forms apparently has the same
-                // problem.
+                // message (it probably got already a WM_ACTIVATE message specifying
+                // the window is active before we subclassed it). Also, when you e.g.
+                // run the event loop in the TDN_CREATED notification (while the
+                // TaskDialog window has focus), and during that time you activate
+                // another window, then the TaskDialog gets a WM_ACTIVATE message
+                // indicating the window is active even though it isn't. However, a
+                // System.Windows.Forms apparently has the same problem.
                 if (msg == TaskDialogNativeMethods.WM_NCACTIVATE)
                 {
                     bool active = ((long)wParam & 0xFFFF) != 0;
