@@ -1016,7 +1016,12 @@ namespace KPreisser.UI
                         this.OnOpened(EventArgs.Empty);
                     }
 
-                    if (!this.raisedPageCreated)
+                    // Don't raise the Created event of the bound page if we are
+                    // waiting for the TDN_NAVIGATED notification, because that means
+                    // the user has already navigated the dialog in one of the
+                    // previous events (so the bound page is the navigated one), and
+                    // so we must wait for the TDN_NAVIGATED notification to occur.
+                    if (!this.raisedPageCreated && !this.waitingForNavigatedEvent)
                     {
                         this.raisedPageCreated = true;
                         this.boundPage.OnCreated(EventArgs.Empty);
