@@ -33,6 +33,13 @@ namespace KPreisser.UI
 #endif
     {
         /// <summary>
+        /// A message that is used to cause a check if the task dialog window is currently
+        /// active, so that the <see cref="Activated"/> event can be raised.
+        /// </summary>
+        private const int CheckActiveWindowMessage = TaskDialogNativeMethods.WM_APP + 100;
+
+
+        /// <summary>
         /// The delegate for the callback handler (that calls
         /// <see cref="HandleTaskDialogCallback"/>) from which the native function
         /// pointer <see cref="callbackProcDelegatePtr"/> is created. 
@@ -572,7 +579,7 @@ namespace KPreisser.UI
                             out bool resultCheckBoxChecked);
 
                     //// Note: If a exception occurs here when hwndDialog is not 0, it means the TaskDialogIndirect
-                    //// run the event loop and called a WndProc e.g. from a window, whose event handler threw an
+                    //// run the message loop and called a WndProc e.g. from a window, whose event handler threw an
                     //// exception. In that case we cannot catch and marshal it to a HResult, so the CLR will
                     //// manipulate the managed stack so that it doesn't contain the transition to and from native
                     //// code. However, the TaskDialog still calls our TaskDialogCallbackProc (by dispatching
@@ -986,30 +993,26 @@ namespace KPreisser.UI
                 case TaskDialogNotification.TDN_CREATED:
                     this.boundPage.ApplyInitialization();
 
-                    // Check if the dialog was already activated before we subclassed the
-                    // window, which means we don't get the WM_ACTIVATE message. However,
-                    // because the function returns the active window at the current time
-                    // instead of the current thread's point of view (as described by the
-                    // processed messages), it could happen that e.g. the dialog was
-                    // initially active, but got inactive before the call to
-                    // GetForegroundWindow(), which would mean that even though we
-                    // determined we are not active, we might later get an WM_ACTIVATE
-                    // message indicating that the window is now inactive (and vice versa).
-                    // Therefore, we need to maintain the current active state.
-                    // TODO: Maybe raise the Activated event after the
-                    // PageCreated/DialogOpened events. But that would require the
-                    // logic of Control.BeginInvoke(), to ensure when running the
-                    // message loop in those events, the Activated event is correctly
-                    // raised within that other events.
-                    bool isActive = TaskDialogNativeMethods.GetForegroundWindow() == hWnd;
-                    if (isActive)
-                    {
-                        this.isWindowActive = true;
-                        this.OnActivated(EventArgs.Empty);
-                    }
+                    // When showing the dialog, its (hidden) window may already have
+                    // focus, but we don't get a WM_ACTIVATE message in that case after
+                    // subclassing the window (presumably because it already received
+                    // one before we subclassed it).
+                    // Therefore, post a message so that we can check if the task dialog
+                    // window is currently active when continuing with the message loop.
+                    // Otherwise, we would need to raise the Activated event here after
+                    // raising the Opened/Created events, but this would not be correct
+                    // since the task dialog window already has focus, but then when you
+                    // run the message loop within the Opened/Created events, the
+                    // Activated event would not occur, but that wouldn't match the
+                    // behavior of the WM_ACTIVATED messages which do occur there.
+                    TaskDialogNativeMethods.PostMessage(
+                            hWnd,
+                            CheckActiveWindowMessage,
+                            IntPtr.Zero,
+                            IntPtr.Zero);
 
                     //// Note: If the user navigates the dialog within the Opened event
-                    //// and then runs the event loop, the Created and Destroyed events
+                    //// and then runs the message loop, the Created and Destroyed events
                     //// for the original page would never be called (because the callback
                     //// would raise the Created event for the new page from the
                     //// TDN_NAVIGATED notification and then the Opened event returns),
@@ -1250,7 +1253,7 @@ namespace KPreisser.UI
 
             // Don't allow to navigate the dialog when we are in a RadioButtonClicked
             // notification, because the dialog doesn't seem to correctly handle this
-            // (e.g. when running the event loop after navigation, an
+            // (e.g. when running the message loop after navigation, an
             // AccessViolationException would occur after the handler returns).
             // See: https://github.com/dotnet/winforms/issues/146#issuecomment-466784079
             if (this.RadioButtonClickedStackCount > 0)

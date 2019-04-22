@@ -7,6 +7,8 @@ namespace KPreisser.UI
     {
         public const int WM_USER = 0x0400;
 
+        public const int WM_APP = 0x8000;
+
         public const int WM_ACTIVATE = 0x0006;
 
         public const int WM_NCACTIVATE = 0x0086;
@@ -298,7 +300,7 @@ namespace KPreisser.UI
                 IntPtr lParam,
                 IntPtr lpRefData);
 
-        [DllImport("comctl32.dll",
+        [DllImport("comctl32",
                 EntryPoint = "TaskDialogIndirect",
                 ExactSpelling = true,
                 SetLastError = true)]
@@ -308,11 +310,21 @@ namespace KPreisser.UI
                 [Out] out int pnRadioButton,
                 [MarshalAs(UnmanagedType.Bool), Out] out bool pfVerificationFlagChecked);
 
-        [DllImport("user32.dll",
+        [DllImport("user32",
                 EntryPoint = "SendMessageW",
                 ExactSpelling = true,
                 SetLastError = true)]
         public static extern IntPtr SendMessage(
+                IntPtr hWnd,
+                int Msg,
+                IntPtr wParam,
+                IntPtr lParam);
+
+        [DllImport("user32",
+                EntryPoint = "PostMessageW",
+                ExactSpelling = true,
+                SetLastError = true)]
+        public static extern bool PostMessage(
                 IntPtr hWnd,
                 int Msg,
                 IntPtr wParam,
