@@ -22,33 +22,18 @@ namespace KPreisser.UI
             {
                 switch (msg)
                 {
-                    case CheckActiveWindowMessage:
-                        // Check if the dialog was already activated before we subclassed
-                        // the window, which means we don't get the WM_[NC]ACTIVATE message.
-                        // However, because the function returns the active window at the
-                        // current time instead of the current thread's point of view (as
-                        // described by the processed messages), it could happen that e.g.
-                        // the dialog was initially active, but got inactive before the
-                        // call to GetForegroundWindow(), which would mean that even
-                        // though we determined we are not active, we might later get an
-                        // WM_ACTIVATE message indicating that the window is now inactive
-                        // (and vice versa). Therefore, we need to maintain the current
-                        // active state.
+                    case HandleActiveWindowMessage:
+                        // The task dialog callback determined that the window was
+                        // initially active, so we need to raise the Activated event.
                         // However, we don't do the check if we already processed
                         // WM_[NC]ACTIVATE messages because that means we have already
-                        // taken their viewpoint about the active state, and therefore
-                        // there is no need to check the foreground window anymore.
-                        if (!this.processedWmActivateMessage)
-                        {
-                            var foregroundWindowHandle = TaskDialogNativeMethods.GetForegroundWindow();
-                            bool isActive = foregroundWindowHandle != IntPtr.Zero &&
-                                    foregroundWindowHandle == this.taskDialog.hwndDialog;
-
-                            if (isActive && !this.taskDialog.isWindowActive)
-                            {
-                                this.taskDialog.isWindowActive = true;
-                                this.taskDialog.OnActivated(EventArgs.Empty);
-                            }
+                        // taken their viewpoint about the active state, so processing
+                        // our message in that case might get the state out-of-sync.
+                        if (!this.processedWmActivateMessage &&
+                                !this.taskDialog.isWindowActive) {
+                            
+                            this.taskDialog.isWindowActive = true;
+                            this.taskDialog.OnActivated(EventArgs.Empty);
                         }
 
                         // Do not forward the message to the base class.
