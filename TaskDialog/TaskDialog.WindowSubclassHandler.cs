@@ -54,6 +54,9 @@ namespace KPreisser.UI
                     case TaskDialogNativeMethods.WM_NCACTIVATE:
                         this.processedWmActivateMessage = true;
 
+                        // Call the base window procedure before raising our events.
+                        var result = base.WndProc(msg, wParam, lParam);
+
                         bool active = ((long)wParam & 0xFFFF) != 0;
                         if (active && !this.taskDialog.isWindowActive)
                         {
@@ -66,10 +69,11 @@ namespace KPreisser.UI
                             this.taskDialog.OnDeactivated(EventArgs.Empty);
                         }
 
-                        break;
-                }
+                        return result;
 
-                return base.WndProc(msg, wParam, lParam);
+                    default:
+                        return base.WndProc(msg, wParam, lParam);
+                }
             }
         }
     }
