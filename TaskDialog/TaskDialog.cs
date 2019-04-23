@@ -36,6 +36,9 @@ namespace KPreisser.UI
         /// A message that is used to cause a check if the task dialog window is currently
         /// active, so that the <see cref="Activated"/> event can be raised.
         /// </summary>
+        // TODO: Is it OK to define a WM_APP message in this component? It means that when
+        // the user also tries to subclass our task dialog window (like we already do), he
+        // needs to be aware that he shouldn't use a WM_APP+100 message for his own logic.
         private const int CheckActiveWindowMessage = TaskDialogNativeMethods.WM_APP + 100;
 
 

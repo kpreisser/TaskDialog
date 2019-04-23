@@ -8,6 +8,8 @@ namespace KPreisser.UI
         {
             private readonly TaskDialog taskDialog;
 
+            private bool processedWmActivateMessage;
+
 
             public WindowSubclassHandler(TaskDialog taskDialog)
                 : base(taskDialog?.hwndDialog ?? throw new ArgumentNullException(nameof(taskDialog)))
@@ -22,7 +24,7 @@ namespace KPreisser.UI
                 {
                     case CheckActiveWindowMessage:
                         // Check if the dialog was already activated before we subclassed
-                        // the window, which means we don't get the WM_ACTIVATE message.
+                        // the window, which means we don't get the WM_[NC]ACTIVATE message.
                         // However, because the function returns the active window at the
                         // current time instead of the current thread's point of view (as
                         // described by the processed messages), it could happen that e.g.
@@ -30,16 +32,23 @@ namespace KPreisser.UI
                         // call to GetForegroundWindow(), which would mean that even
                         // though we determined we are not active, we might later get an
                         // WM_ACTIVATE message indicating that the window is now inactive
-                        // (and vice versa).
-                        // Therefore, we need to maintain the current active state.
-                        var foregroundWindowHandle = TaskDialogNativeMethods.GetForegroundWindow();
-                        bool isActive = foregroundWindowHandle != IntPtr.Zero &&
-                                foregroundWindowHandle == this.taskDialog.hwndDialog;
-
-                        if (isActive && !this.taskDialog.isWindowActive)
+                        // (and vice versa). Therefore, we need to maintain the current
+                        // active state.
+                        // However, we don't do the check if we already processed
+                        // WM_[NC]ACTIVATE messages because that means we have already
+                        // taken their viewpoint about the active state, and therefore
+                        // there is no need to check the foreground window anymore.
+                        if (!this.processedWmActivateMessage)
                         {
-                            this.taskDialog.isWindowActive = true;
-                            this.taskDialog.OnActivated(EventArgs.Empty);
+                            var foregroundWindowHandle = TaskDialogNativeMethods.GetForegroundWindow();
+                            bool isActive = foregroundWindowHandle != IntPtr.Zero &&
+                                    foregroundWindowHandle == this.taskDialog.hwndDialog;
+
+                            if (isActive && !this.taskDialog.isWindowActive)
+                            {
+                                this.taskDialog.isWindowActive = true;
+                                this.taskDialog.OnActivated(EventArgs.Empty);
+                            }
                         }
 
                         // Do not forward the message to the base class.
@@ -58,6 +67,8 @@ namespace KPreisser.UI
                     // indicating the window is active even though it isn't. However, a
                     // System.Windows.Forms apparently has the same problem.
                     case TaskDialogNativeMethods.WM_NCACTIVATE:
+                        this.processedWmActivateMessage = true;
+
                         bool active = ((long)wParam & 0xFFFF) != 0;
                         if (active && !this.taskDialog.isWindowActive)
                         {
