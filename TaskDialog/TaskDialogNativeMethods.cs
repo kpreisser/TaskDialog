@@ -343,5 +343,10 @@ namespace KPreisser.UI
                 EntryPoint = "GetForegroundWindow",
                 ExactSpelling = true)]
         public static extern IntPtr GetForegroundWindow();
+
+        [DllImport("user32",
+                EntryPoint = "GetActiveWindow",
+                ExactSpelling = true)]
+        public static extern IntPtr GetActiveWindow();
     }
 }

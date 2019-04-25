@@ -1010,11 +1010,11 @@ namespace KPreisser.UI
                     // since the task dialog window already has focus, but then when you
                     // run the message loop within the Opened/Created events, the
                     // Activated event would not occur, but that wouldn't match the
-                    // behavior of the WM_ACTIVATED messages which do occur there.
+                    // behavior of the WM_ACTIVATE messages which do occur there.
                     // 
                     // Note however, that because the function returns the active window
                     // at the current time instead of the current thread's point of view
-                    // (as described by the WM_[NC]ACTIVATED messages), it could happen
+                    // (as described by the WM_ACTIVATE messages), it could happen
                     // that e.g. the dialog was initially active, but got inactive
                     // before the call to GetForegroundWindow(), which would mean that
                     // the initial Activated+Deactvated events will not be raised
@@ -1022,9 +1022,9 @@ namespace KPreisser.UI
                     // get WM_ACTIVATE message indicating that the window is now inactive
                     // (which already deterimined) (and vice versa).
                     // Therefore, we need to maintain the current active state.
-                    var foregroundWindowHandle = TaskDialogNativeMethods.GetForegroundWindow();
-                    bool isActive = foregroundWindowHandle != IntPtr.Zero &&
-                            foregroundWindowHandle == hWnd;
+                    var activeWindowHandle = TaskDialogNativeMethods.GetActiveWindow();
+                    bool isActive = activeWindowHandle != IntPtr.Zero &&
+                            activeWindowHandle == hWnd;
 
                     if (isActive)
                     {
