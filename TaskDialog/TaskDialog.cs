@@ -1082,10 +1082,19 @@ namespace KPreisser.UI
                     //// closed.
                     try
                     {
-                        // Raise the Deactivated event because it seems we don't get a
-                        // WM_ACTIVATE message before the TDN_DESTROYED notification
+                        // Raise the Deactivated event because it seems we don't get
+                        // a WM_ACTIVATE message before the TDN_DESTROYED notification
                         // even though the task dialog already lost focus at this
                         // stage.
+                        // NOTE: Unfortunately, this has the effect that the window
+                        // that is being activated (e.g. a normal Form) already raised
+                        // the Activated event before we raise the Deactivated event
+                        // of the task dialog here.
+                        // Alternatively, we could raise the Deactivated event in the
+                        // WM_WINDOWPOSCHANGED message (with flag SWP_HIDEWINDOW) that
+                        // occurs after the task dialog window was hidden, but that
+                        // would not be completely correct because at that time the
+                        // task dialog window (though invisible) still has focus.
                         if (this.isWindowActive)
                         {
                             this.isWindowActive = false;

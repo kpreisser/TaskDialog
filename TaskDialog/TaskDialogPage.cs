@@ -533,7 +533,7 @@ namespace KPreisser.UI
 
             if (buttonID == 0)
                 return null;
-            
+
             // Check if the button is part of the custom buttons.
             var button = null as TaskDialogButton;
             if (buttonID >= CustomButtonStartID)
@@ -809,7 +809,7 @@ namespace KPreisser.UI
             this.checkBox?.ApplyInitialization();
             this.expander?.ApplyInitialization();
             this.footer?.ApplyInitialization();
-            this.progressBar?.ApplyInitialization();            
+            this.progressBar?.ApplyInitialization();
         }
 
 
