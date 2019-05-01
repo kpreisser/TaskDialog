@@ -13,6 +13,10 @@ namespace KPreisser.UI
 
         public const int WM_NCACTIVATE = 0x0086;
 
+        public const int WM_WINDOWPOSCHANGING = 0x0046;
+
+        public const int WM_WINDOWPOSCHANGED = 0x0047;
+
         public const int WA_INACTIVE = 0;
 
         //// HResult codes
@@ -53,11 +57,53 @@ namespace KPreisser.UI
 
         public const int IDCONTINUE = 11;
 
+        [StructLayout(LayoutKind.Sequential)]
+        public struct WINDOWPOS
+        {
+            public IntPtr hwnd;
+            public IntPtr hwndInsertAfter;
+            public int x;
+            public int y;
+            public int cx;
+            public int cy;
+            public WINDOWPOS_FLAGS flags;
+        }
+
+        [Flags]
+        public enum WINDOWPOS_FLAGS : int
+        {
+            SWP_NOSIZE = 0x0001,
+
+            SWP_NOMOVE = 0x0002,
+
+            SWP_NOZORDER = 0x0004,
+
+            SWP_NOREDRAW = 0x0008,
+
+            SWP_NOACTIVATE = 0x0010,
+
+            SWP_FRAMECHANGED = 0x0020,  /* The frame changed: send WM_NCCALCSIZE */
+
+            SWP_SHOWWINDOW = 0x0040,
+
+            SWP_HIDEWINDOW = 0x0080,
+
+            SWP_NOCOPYBITS = 0x0100,
+
+            SWP_NOOWNERZORDER = 0x0200,  /* Don't do owner Z ordering */
+
+            SWP_NOSENDCHANGING = 0x0400,  /* Don't send WM_WINDOWPOSCHANGING */
+
+            SWP_DEFERERASE = 0x2000,
+
+            SWP_ASYNCWINDOWPOS = 0x4000
+        }
+
         //// Note: The TaskDialog declarations (including quoted comments)
         //// were taken from CommCtrl.h.
 
         [Flags]
-        internal enum TASKDIALOG_FLAGS : int
+        public enum TASKDIALOG_FLAGS : int
         {
             TDF_ENABLE_HYPERLINKS = 0x0001,
 

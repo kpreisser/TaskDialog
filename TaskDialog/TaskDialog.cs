@@ -180,6 +180,11 @@ namespace KPreisser.UI
         public event EventHandler Opened;
 
         /// <summary>
+        /// Occurs when the task dialog is first displayed.
+        /// </summary>
+        public event EventHandler Shown;
+
+        /// <summary>
         /// Occurs when the task dialog closing.
         /// </summary>
         /// <remarks>
@@ -923,6 +928,15 @@ namespace KPreisser.UI
         /// 
         /// </summary>
         /// <param name="e"></param>
+        protected void OnShown(EventArgs e)
+        {
+            this.Shown?.Invoke(this, e);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="e"></param>
         protected void OnClosing(TaskDialogClosingEventArgs e)
         {
             this.Closing?.Invoke(this, e);
@@ -1082,32 +1096,12 @@ namespace KPreisser.UI
                     //// closed.
                     try
                     {
-                        // Raise the Deactivated event because it seems we don't get
-                        // a WM_ACTIVATE message before the TDN_DESTROYED notification
-                        // even though the task dialog already lost focus at this
-                        // stage.
-                        // NOTE: Unfortunately, this has the effect that the window
-                        // that is being activated (e.g. a normal Form) already raised
-                        // the Activated event before we raise the Deactivated event
-                        // of the task dialog here.
-                        // Alternatively, we could raise the Deactivated event in the
-                        // WM_WINDOWPOSCHANGED message (with flag SWP_HIDEWINDOW) that
-                        // occurs after the task dialog window was hidden, but that
-                        // would not be completely correct because at that time the
-                        // task dialog window (though invisible) still has focus.
-                        if (this.isWindowActive)
-                        {
-                            this.isWindowActive = false;
-                            this.OnDeactivated(EventArgs.Empty);
-                        }
-
                         // Only raise the destroyed/closed events if the corresponding
                         // created/opened events have been called. For example, when
                         // trying to show the dialog with an invalid configuration
                         // (so an error HResult will be returned), the callback is
-                        // invoked only one time with the TDN_DESTROYED
-                        // notification without being invoked with the TDN_CREATED
-                        // notification.
+                        // invoked only one time with the TDN_DESTROYED notification
+                        // without being invoked with the TDN_CREATED notification.
                         if (this.raisedPageCreated)
                         {
                             this.raisedPageCreated = false;

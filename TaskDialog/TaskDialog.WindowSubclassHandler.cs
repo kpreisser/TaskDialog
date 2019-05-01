@@ -10,6 +10,10 @@ namespace KPreisser.UI
 
             private bool processedWmActivateMessage;
 
+            private bool processedShowWindowMessage;
+
+            private bool processedHideWindowMessage;
+
 
             public WindowSubclassHandler(TaskDialog taskDialog)
                 : base(taskDialog?.hwndDialog ?? throw new ArgumentNullException(nameof(taskDialog)))
@@ -18,10 +22,59 @@ namespace KPreisser.UI
             }
 
 
-            protected override IntPtr WndProc(int msg, IntPtr wParam, IntPtr lParam)
+            protected override unsafe IntPtr WndProc(int msg, IntPtr wParam, IntPtr lParam)
             {
                 switch (msg)
                 {
+                    case TaskDialogNativeMethods.WM_WINDOWPOSCHANGED:
+                        var result = base.WndProc(msg, wParam, lParam);
+
+                        ref var windowPos = ref *(TaskDialogNativeMethods.WINDOWPOS*)lParam;
+
+                        if ((windowPos.flags & TaskDialogNativeMethods.WINDOWPOS_FLAGS.SWP_SHOWWINDOW) ==
+                                TaskDialogNativeMethods.WINDOWPOS_FLAGS.SWP_SHOWWINDOW &&
+                                !this.processedShowWindowMessage)
+                        {
+                            this.processedShowWindowMessage = true;
+
+                            // The task dialog window has been shown for the first time.
+                            this.taskDialog.OnShown(EventArgs.Empty);
+                        }
+                        else if ((windowPos.flags & TaskDialogNativeMethods.WINDOWPOS_FLAGS.SWP_HIDEWINDOW) ==
+                                 TaskDialogNativeMethods.WINDOWPOS_FLAGS.SWP_HIDEWINDOW &&
+                                 !this.processedHideWindowMessage)
+                        {
+                            this.processedHideWindowMessage = true;
+
+                            // The task dialog window was hidden. We now raise the
+                            // Deactivated event because unfortunately it seems we
+                            // don't get a WM_ACTIVATE or WM_NCACTIVATE message
+                            // when the dialog is closing. Note that this is not
+                            // technically correct because the (hidden) task dialog
+                            // window still has focus at this stage.
+                            // (Note that this assumes that the window will be hidden
+                            // only in the case when the task dialog is closing.)
+                            //
+                            // The other alternative would be to raise the Deactivated
+                            // event in the WM_DESTROY/TDN_DESTROYED notification, but
+                            // that would mean that e.g. another form in the same
+                            // message queue already received its Activated event,
+                            // which might be unexpected to the user. Also, if the
+                            // Show() call cannot return because another inner dialog
+                            // is shown when the outer dialog is closed (in which case
+                            // there is no other window of the same message queue
+                            // automatically activated), the Deactivated event of the
+                            // outer dialog would not be raised when you activate
+                            // another window.
+                            if (this.taskDialog.isWindowActive)
+                            {
+                                this.taskDialog.isWindowActive = false;
+                                this.taskDialog.OnDeactivated(EventArgs.Empty);
+                            }
+                        }
+
+                        return result;
+
                     case HandleActiveWindowMessage:
                         // The task dialog callback determined that the window was
                         // initially active, so we need to raise the Activated event.
@@ -73,19 +126,26 @@ namespace KPreisser.UI
                         this.processedWmActivateMessage = true;
 
                         // Call the base window procedure before raising our events.
-                        var result = base.WndProc(msg, wParam, lParam);
+                        // (This is probably not required for WM_ACTIVATE, but it
+                        // is required for WM_NCACTIVATE).
+                        result = base.WndProc(msg, wParam, lParam);
 
-                        bool active = ((long)wParam & 0xFFFF) !=
-                                TaskDialogNativeMethods.WA_INACTIVE;
-                        if (active && !this.taskDialog.isWindowActive)
+                        // Don't process the message if we already raised the
+                        // Deactivated event due to the dialog closing.
+                        if (!this.processedHideWindowMessage)
                         {
-                            this.taskDialog.isWindowActive = true;
-                            this.taskDialog.OnActivated(EventArgs.Empty);
-                        }
-                        else if (!active && this.taskDialog.isWindowActive)
-                        {
-                            this.taskDialog.isWindowActive = false;
-                            this.taskDialog.OnDeactivated(EventArgs.Empty);
+                            bool active = ((long)wParam & 0xFFFF) !=
+                                    TaskDialogNativeMethods.WA_INACTIVE;
+                            if (active && !this.taskDialog.isWindowActive)
+                            {
+                                this.taskDialog.isWindowActive = true;
+                                this.taskDialog.OnActivated(EventArgs.Empty);
+                            }
+                            else if (!active && this.taskDialog.isWindowActive)
+                            {
+                                this.taskDialog.isWindowActive = false;
+                                this.taskDialog.OnDeactivated(EventArgs.Empty);
+                            }
                         }
 
                         return result;
