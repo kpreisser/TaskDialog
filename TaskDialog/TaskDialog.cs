@@ -32,14 +32,14 @@ namespace KPreisser.UI
         , System.Windows.Forms.IWin32Window
 #endif
     {
-        /// <summary>
-        /// A self-defined message that is used to raise the <see cref="Activated"/> 
-        /// event when the message loop is continued.
-        /// </summary>
-        // TODO: Is it OK to define a WM_APP message in this component? It means that when
-        // the user also tries to subclass our task dialog window (like we already do), he
-        // needs to be aware that he shouldn't use a WM_APP+100 message for his own logic.
-        private const int HandleActiveWindowMessage = TaskDialogNativeMethods.WM_APP + 100;
+        ///// <summary>
+        ///// A self-defined message that is used to raise the <see cref="Activated"/> 
+        ///// event when the message loop is continued.
+        ///// </summary>
+        //// TODO: Is it OK to define a WM_APP message in this component? It means that when
+        //// the user also tries to subclass our task dialog window (like we already do), he
+        //// needs to be aware that he shouldn't use a WM_APP+100 message for his own logic.
+        //private const int HandleActiveWindowMessage = TaskDialogNativeMethods.WM_APP + 100;
 
 
         /// <summary>
@@ -163,7 +163,7 @@ namespace KPreisser.UI
         /// </remarks>
         private bool isInNavigate;
 
-        private bool isWindowActive;
+        //private bool isWindowActive;
 
 
         /// <summary>
@@ -216,15 +216,15 @@ namespace KPreisser.UI
         /// </remarks>
         public event EventHandler Closed;
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public event EventHandler Activated;
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        //public event EventHandler Activated;
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public event EventHandler Deactivated;
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        //public event EventHandler Deactivated;
 
         //// These events were removed since they are also available in the
         //// TaskDialogPage, and are specific to the page (not to the dialog).
@@ -651,7 +651,7 @@ namespace KPreisser.UI
                     this.hwndDialog = IntPtr.Zero;
                     this.raisedOpened = false;
                     this.raisedPageCreated = false;
-                    this.isWindowActive = false;
+                    //this.isWindowActive = false;
 
                     // Clear the cached objects.
                     this.resultButton = default;
@@ -951,23 +951,23 @@ namespace KPreisser.UI
             this.Closed?.Invoke(this, e);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="e"></param>
-        protected void OnActivated(EventArgs e)
-        {
-            this.Activated?.Invoke(this, e);
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="e"></param>
+        //protected void OnActivated(EventArgs e)
+        //{
+        //    this.Activated?.Invoke(this, e);
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="e"></param>
-        protected void OnDeactivated(EventArgs e)
-        {
-            this.Deactivated?.Invoke(this, e);
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="e"></param>
+        //protected void OnDeactivated(EventArgs e)
+        //{
+        //    this.Deactivated?.Invoke(this, e);
+        //}
 
         ///// <summary>
         ///// 
@@ -1010,46 +1010,46 @@ namespace KPreisser.UI
                 case TaskDialogNotification.TDN_CREATED:
                     this.boundPage.ApplyInitialization();
 
-                    // When showing the dialog, its (hidden) window may already have
-                    // focus, but we don't get a WM_ACTIVATE message in that case after
-                    // subclassing the window (presumably because it already received
-                    // one before we subclassed it).
-                    // 
-                    // Therefore, we check here as early as possible if the dialog is
-                    // already active, and in that case handle it by posting a
-                    // self-defined message, so that the Activated event will be raised
-                    // when continuing with the message loop.
-                    // Otherwise, we would need to raise the Activated event here after
-                    // raising the Opened/Created events, but this would not be correct
-                    // since the task dialog window already has focus, but then when you
-                    // run the message loop within the Opened/Created events, the
-                    // Activated event would not occur, but that wouldn't match the
-                    // behavior of the WM_ACTIVATE messages which do occur there.
-                    // 
-                    // Note however, that because the function returns the active window
-                    // at the current time instead of the current thread's point of view
-                    // (as described by the WM_ACTIVATE messages), it could happen
-                    // that e.g. the dialog was initially active, but got inactive
-                    // before the call to GetForegroundWindow(), which would mean that
-                    // the initial Activated+Deactvated events will not be raised
-                    // (although that should be negligible), but additionally we later
-                    // get WM_ACTIVATE message indicating that the window is now inactive
-                    // (which already deterimined) (and vice versa).
-                    // Therefore, we need to maintain the current active state.
-                    var activeWindowHandle = TaskDialogNativeMethods.GetActiveWindow();
-                    bool isActive = activeWindowHandle != IntPtr.Zero &&
-                            activeWindowHandle == hWnd;
+                    //// When showing the dialog, its (hidden) window may already have
+                    //// focus, but we don't get a WM_ACTIVATE message in that case after
+                    //// subclassing the window (presumably because it already received
+                    //// one before we subclassed it).
+                    //// 
+                    //// Therefore, we check here as early as possible if the dialog is
+                    //// already active, and in that case handle it by posting a
+                    //// self-defined message, so that the Activated event will be raised
+                    //// when continuing with the message loop.
+                    //// Otherwise, we would need to raise the Activated event here after
+                    //// raising the Opened/Created events, but this would not be correct
+                    //// since the task dialog window already has focus, but then when you
+                    //// run the message loop within the Opened/Created events, the
+                    //// Activated event would not occur, but that wouldn't match the
+                    //// behavior of the WM_ACTIVATE messages which do occur there.
+                    //// 
+                    //// Note however, that because the function returns the active window
+                    //// at the current time instead of the current thread's point of view
+                    //// (as described by the WM_ACTIVATE messages), it could happen
+                    //// that e.g. the dialog was initially active, but got inactive
+                    //// before the call to GetForegroundWindow(), which would mean that
+                    //// the initial Activated+Deactvated events will not be raised
+                    //// (although that should be negligible), but additionally we later
+                    //// get WM_ACTIVATE message indicating that the window is now inactive
+                    //// (which already deterimined) (and vice versa).
+                    //// Therefore, we need to maintain the current active state.
+                    //var activeWindowHandle = TaskDialogNativeMethods.GetActiveWindow();
+                    //bool isActive = activeWindowHandle != IntPtr.Zero &&
+                    //        activeWindowHandle == hWnd;
 
-                    if (isActive)
-                    {
-                        // Post the message so that the Activated event will be raised
-                        // later.
-                        TaskDialogNativeMethods.PostMessage(
-                                hWnd,
-                                HandleActiveWindowMessage,
-                                IntPtr.Zero,
-                                IntPtr.Zero);
-                    }
+                    //if (isActive)
+                    //{
+                    //    // Post the message so that the Activated event will be raised
+                    //    // later.
+                    //    TaskDialogNativeMethods.PostMessage(
+                    //            hWnd,
+                    //            HandleActiveWindowMessage,
+                    //            IntPtr.Zero,
+                    //            IntPtr.Zero);
+                    //}
 
                     //// Note: If the user navigates the dialog within the Opened event
                     //// and then runs the message loop, the Created and Destroyed events

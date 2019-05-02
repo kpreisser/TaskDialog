@@ -75,14 +75,14 @@ namespace TaskDialogExample
                 {
                     Console.WriteLine("Dialog closed!");
                 };
-                dialog.Activated += (s, e) =>
-                {
-                    Console.WriteLine("Dialog activated!");
-                };
-                dialog.Deactivated += (s, e) =>
-                {
-                    Console.WriteLine("Dialog deactivated!");
-                };
+                //dialog.Activated += (s, e) =>
+                //{
+                //    Console.WriteLine("Dialog activated!");
+                //};
+                //dialog.Deactivated += (s, e) =>
+                //{
+                //    Console.WriteLine("Dialog deactivated!");
+                //};
 
                 dialogPage.ProgressBar.Value = 1;
 
