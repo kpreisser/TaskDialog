@@ -46,8 +46,9 @@ namespace KPreisser.UI
         /// </summary>
         /// <remarks>
         /// This property can be set while the dialog is shown. However, it is
-        /// not possible to change the state from <see cref="TaskDialogProgressBarState.None"/>
-        /// to any other state, and vice versa.
+        /// not possible to change the state from
+        /// <see cref="TaskDialogProgressBarState.None"/> to any other state,
+        /// and vice versa.
         /// </remarks>
         public TaskDialogProgressBarState State
         {
@@ -71,13 +72,15 @@ namespace KPreisser.UI
                     {
                         var taskDialog = this.BoundPage.BoundTaskDialog;
 
-                        // Check if we need to switch between a marquee and a non-marquee bar.
+                        // Check if we need to switch between a marquee and a
+                        // non-marquee bar.
                         bool newStateIsMarquee = ProgressBarStateIsMarquee(this.state);
                         bool switchMode = ProgressBarStateIsMarquee(previousState) != newStateIsMarquee;
                         if (switchMode)
                         {
-                            // When switching from non-marquee to marquee mode, we first need to
-                            // set the state to "Normal"; otherwise the marquee will not show.
+                            // When switching from non-marquee to marquee mode, we
+                            // first need to set the state to "Normal"; otherwise
+                            // the marquee will not show.
                             if (newStateIsMarquee && previousState != TaskDialogProgressBarState.Normal)
                                 taskDialog.SetProgressBarState(TaskDialogNativeMethods.PBST_NORMAL);
 
@@ -105,12 +108,13 @@ namespace KPreisser.UI
                                 taskDialog.SetProgressBarPosition(
                                         this.value);
 
-                                // We need to set the position a second time to work reliably
-                                // if the state is not "Normal".
-                                // See this comment in the TaskDialog implementation of the
-                                // Windows API Code Pack 1.1:
-                                // "Due to a bug that wasn't fixed in time for RTM of Vista,
-                                // second SendMessage is required if the state is non-Normal."
+                                // We need to set the position a second time to work
+                                // reliably if the state is not "Normal".
+                                // See this comment in the TaskDialog implementation
+                                // of the Windows API Code Pack 1.1:
+                                // "Due to a bug that wasn't fixed in time for RTM of
+                                // Vista, second SendMessage is required if the state
+                                // is non-Normal."
                                 // Apparently, this bug is still present in Win10 V1803.
                                 if (this.state != TaskDialogProgressBarState.Normal)
                                     taskDialog.SetProgressBarPosition(
@@ -147,7 +151,8 @@ namespace KPreisser.UI
 
                 this.DenyIfBoundAndNotCreated();
 
-                // We only update the TaskDialog if the current state is a non-marquee progress bar.
+                // We only update the TaskDialog if the current state is a
+                // non-marquee progress bar.
                 if (this.BoundPage != null && !ProgressBarStateIsMarquee(this.state))
                 {
                     this.BoundPage.BoundTaskDialog.SetProgressBarRange(
@@ -176,7 +181,8 @@ namespace KPreisser.UI
 
                 this.DenyIfBoundAndNotCreated();
 
-                // We only update the TaskDialog if the current state is a non-marquee progress bar.
+                // We only update the TaskDialog if the current state is a
+                // non-marquee progress bar.
                 if (this.BoundPage != null && !ProgressBarStateIsMarquee(this.state))
                 {
                     this.BoundPage.BoundTaskDialog.SetProgressBarRange(
@@ -205,7 +211,8 @@ namespace KPreisser.UI
 
                 this.DenyIfBoundAndNotCreated();
 
-                // We only update the TaskDialog if the current state is a non-marquee progress bar.
+                // We only update the TaskDialog if the current state is a
+                // non-marquee progress bar.
                 if (this.BoundPage != null && !ProgressBarStateIsMarquee(this.state))
                 {
                     this.BoundPage.BoundTaskDialog.SetProgressBarPosition(
@@ -234,7 +241,8 @@ namespace KPreisser.UI
                 this.marqueeSpeed = value;
                 try
                 {
-                    // We only update the TaskDialog if the current state is a marquee progress bar.
+                    // We only update the TaskDialog if the current state is a
+                    // marquee progress bar.
                     if (this.BoundPage != null && ProgressBarStateIsMarquee(this.state))
                         this.State = this.state;
                 }
@@ -253,7 +261,8 @@ namespace KPreisser.UI
         }
 
 
-        private static bool ProgressBarStateIsMarquee(TaskDialogProgressBarState state)
+        private static bool ProgressBarStateIsMarquee(
+                TaskDialogProgressBarState state)
         {
             return state == TaskDialogProgressBarState.Marquee ||
                     state == TaskDialogProgressBarState.MarqueePaused;
@@ -262,24 +271,17 @@ namespace KPreisser.UI
         private static int GetNativeProgressBarState(
                 TaskDialogProgressBarState state)
         {
-            int nativeState;
-
             switch (state)
             {
                 case TaskDialogProgressBarState.Normal:
-                    nativeState = TaskDialogNativeMethods.PBST_NORMAL;
-                    break;
+                    return TaskDialogNativeMethods.PBST_NORMAL;
                 case TaskDialogProgressBarState.Paused:
-                    nativeState = TaskDialogNativeMethods.PBST_PAUSED;
-                    break;
+                    return TaskDialogNativeMethods.PBST_PAUSED;
                 case TaskDialogProgressBarState.Error:
-                    nativeState = TaskDialogNativeMethods.PBST_ERROR;
-                    break;
+                    return TaskDialogNativeMethods.PBST_ERROR;
                 default:
-                    throw new InvalidOperationException();
+                    throw new ArgumentException();
             }
-
-            return nativeState;
         }
 
 
@@ -297,8 +299,6 @@ namespace KPreisser.UI
 
         private protected override void ApplyInitializationCore()
         {
-            var taskDialog = this.BoundPage.BoundTaskDialog;
-
             if (this.state == TaskDialogProgressBarState.Marquee)
             {
                 this.State = this.state;
