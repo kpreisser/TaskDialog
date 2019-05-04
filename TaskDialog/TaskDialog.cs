@@ -580,30 +580,35 @@ namespace KPreisser.UI
                        out var ptrTaskDialogConfig);
                 try
                 {
+                    //// Note: When an uncaught exception occurs in the callback or a
+                    //// WndProc handler, the CLR will manipulate the managed stack
+                    //// ("unwind") so that it doesn't contain the transition to and
+                    //// from native code. However, the TaskDialog still calls our
+                    //// callback when the message loop continues, but as we already
+                    //// freed the GCHandle, a NRE will occur (or other memory access
+                    //// problems because the callback delegate for the subclassed
+                    //// WndProc might already have been freed).
+                    ////
+                    //// Maybe we need to catch all exceptions in the native -> managed
+                    //// transition, and when one occurs, either use the WinForms
+                    //// ThreadExceptionDialog, or do something like FailFast() to
+                    //// terminate the application.
+                    ////
+                    //// Note: The same issue can occur when using a message box with
+                    //// WPF or WinForms: If you do MessageBox.Show() wrapped in a
+                    //// try/catch on a button click, and before calling .Show() create
+                    //// and start a timer which stops and throws an exception on its
+                    //// Tick event, the application will crash with an
+                    //// AccessViolationException as soon as you close the MessageBox.
+
                     int returnValue = TaskDialogNativeMethods.TaskDialogIndirect(
                             ptrTaskDialogConfig,
                             out int resultButtonID,
                             out int resultRadioButtonID,
                             out bool resultCheckBoxChecked);
 
-                    //// Note: If a exception occurs here when hwndDialog is not 0, it means the TaskDialogIndirect
-                    //// run the message loop and called a WndProc e.g. from a window, whose event handler threw an
-                    //// exception. In that case we cannot catch and marshal it to a HResult, so the CLR will
-                    //// manipulate the managed stack so that it doesn't contain the transition to and from native
-                    //// code. However, the TaskDialog still calls our TaskDialogCallbackProc (by dispatching
-                    //// messages to the WndProc) when the current event handler from WndProc returns, but as
-                    //// we already freed the GCHandle, a NRE will occur.
-
-                    //// This is OK because the same issue occurs when using a message box with WPF or WinForms:
-                    //// If you do MessageBox.Show() wrapped in a try/catch on a button click, and before calling
-                    //// .Show() create and start a timer which stops and throws an exception on its Tick event,
-                    //// the application will crash with an AccessViolationException as soon as you close
-                    //// the MessageBox.
-
                     // Marshal.ThrowExceptionForHR will use the IErrorInfo on the
-                    // current thread if it exists, in which case it ignores the
-                    // error code. Therefore we only call it if the HResult is not
-                    // a success code.
+                    // current thread if it exists.
                     if (returnValue < 0)
                         Marshal.ThrowExceptionForHR(returnValue);
 
