@@ -542,6 +542,9 @@ namespace KPreisser.UI
             }
             else
             {
+                // Note: We deliberately return null instead of throwing when
+                // the common button ID is not part of the collection, because
+                // the caller might not know if such a button exists.
                 var result = (TaskDialogResult)buttonID;
                 if (this.commonButtons.Contains(result))
                     button = this.commonButtons[result];
