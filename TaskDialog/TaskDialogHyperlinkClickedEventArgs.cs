@@ -14,9 +14,8 @@ namespace KPreisser.UI
         internal TaskDialogHyperlinkClickedEventArgs(string hyperlink)
             : base()
         {
-            this.Hyperlink = hyperlink;
+            Hyperlink = hyperlink;
         }
-
 
         /// <summary>
         /// 

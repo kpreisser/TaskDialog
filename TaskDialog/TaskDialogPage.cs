@@ -33,34 +33,32 @@ namespace KPreisser.UI
         /// </remarks>
         private const int RadioButtonStartID = 1;
 
+        private TaskDialogCommonButtonCollection _commonButtons;
 
-        private TaskDialogCommonButtonCollection commonButtons;
+        private TaskDialogCustomButtonCollection _customButtons;
 
-        private TaskDialogCustomButtonCollection customButtons;
+        private TaskDialogRadioButtonCollection _radioButtons;
 
-        private TaskDialogRadioButtonCollection radioButtons;
+        private TaskDialogCheckBox _checkBox;
 
-        private TaskDialogCheckBox checkBox;
+        private TaskDialogExpander _expander;
 
-        private TaskDialogExpander expander;
+        private TaskDialogFooter _footer;
 
-        private TaskDialogFooter footer;
+        private TaskDialogProgressBar _progressBar;
 
-        private TaskDialogProgressBar progressBar;
+        private TaskDialogFlags _flags;
+        private string _title;
+        private string _instruction;
+        private string _text;
+        private TaskDialogIcon _icon;
+        private IntPtr _iconHandle;
+        private int _width;
+        private TaskDialogCommandLinkMode _commandLinkMode;
 
-        private TaskDialogFlags flags;
-        private string title;
-        private string instruction;
-        private string text;
-        private TaskDialogIcon icon;
-        private IntPtr iconHandle;
-        private int width;
-        private TaskDialogCommandLinkMode commandLinkMode;
+        private TaskDialog _boundTaskDialog;
 
-        private TaskDialog boundTaskDialog;
-
-        private bool boundIconIsFromHandle;
-
+        private bool _boundIconIsFromHandle;
 
         /// <summary>
         /// Occurs after this instance is bound to a task dialog and the task dialog
@@ -93,19 +91,17 @@ namespace KPreisser.UI
         /// </summary>
         public event EventHandler<TaskDialogHyperlinkClickedEventArgs> HyperlinkClicked;
 
-
         /// <summary>
         /// 
         /// </summary>
         public TaskDialogPage()
         {
             // Create empty (hidden) controls.
-            this.checkBox = new TaskDialogCheckBox();
-            this.expander = new TaskDialogExpander();
-            this.footer = new TaskDialogFooter();
-            this.progressBar = new TaskDialogProgressBar(TaskDialogProgressBarState.None);
+            _checkBox = new TaskDialogCheckBox();
+            _expander = new TaskDialogExpander();
+            _footer = new TaskDialogFooter();
+            _progressBar = new TaskDialogProgressBar(TaskDialogProgressBarState.None);
         }
-
 
         /// <summary>
         /// 
@@ -113,16 +109,16 @@ namespace KPreisser.UI
         [Category("Controls")]
         public TaskDialogCommonButtonCollection CommonButtons
         {
-            get => this.commonButtons ??
-                    (this.commonButtons = new TaskDialogCommonButtonCollection());
+            get => _commonButtons ??
+                    (_commonButtons = new TaskDialogCommonButtonCollection());
 
             set
             {
                 // We must deny this if we are bound because we need to be able to
                 // access the controls from the task dialog's callback.
-                this.DenyIfBound();
+                DenyIfBound();
 
-                this.commonButtons = value ?? throw new ArgumentNullException(nameof(value));
+                _commonButtons = value ?? throw new ArgumentNullException(nameof(value));
             }
         }
 
@@ -132,16 +128,16 @@ namespace KPreisser.UI
         [Category("Controls")]
         public TaskDialogCustomButtonCollection CustomButtons
         {
-            get => this.customButtons ??
-                    (this.customButtons = new TaskDialogCustomButtonCollection());
+            get => _customButtons ??
+                    (_customButtons = new TaskDialogCustomButtonCollection());
 
             set
             {
                 // We must deny this if we are bound because we need to be able to
                 // access the controls from the task dialog's callback.
-                this.DenyIfBound();
+                DenyIfBound();
 
-                this.customButtons = value ?? throw new ArgumentNullException(nameof(value));
+                _customButtons = value ?? throw new ArgumentNullException(nameof(value));
             }
         }
 
@@ -151,16 +147,16 @@ namespace KPreisser.UI
         [Category("Controls")]
         public TaskDialogRadioButtonCollection RadioButtons
         {
-            get => this.radioButtons ??
-                    (this.radioButtons = new TaskDialogRadioButtonCollection());
+            get => _radioButtons ??
+                    (_radioButtons = new TaskDialogRadioButtonCollection());
 
             set
             {
                 // We must deny this if we are bound because we need to be able to
                 // access the controls from the task dialog's callback.
-                this.DenyIfBound();
+                DenyIfBound();
 
-                this.radioButtons = value ?? throw new ArgumentNullException(nameof(value));
+                _radioButtons = value ?? throw new ArgumentNullException(nameof(value));
             }
         }
 
@@ -171,15 +167,15 @@ namespace KPreisser.UI
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
         public TaskDialogCheckBox CheckBox
         {
-            get => this.checkBox;
+            get => _checkBox;
 
             set
             {
                 // We must deny this if we are bound because we need to be able to
                 // access the control from the task dialog's callback.
-                this.DenyIfBound();
+                DenyIfBound();
 
-                this.checkBox = value;
+                _checkBox = value;
             }
         }
 
@@ -190,15 +186,15 @@ namespace KPreisser.UI
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
         public TaskDialogExpander Expander
         {
-            get => this.expander;
+            get => _expander;
 
             set
             {
                 // We must deny this if we are bound because we need to be able to
                 // access the control from the task dialog's callback.
-                this.DenyIfBound();
+                DenyIfBound();
 
-                this.expander = value;
+                _expander = value;
             }
         }
 
@@ -209,15 +205,15 @@ namespace KPreisser.UI
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
         public TaskDialogFooter Footer
         {
-            get => this.footer;
+            get => _footer;
 
             set
             {
                 // We must deny this if we are bound because we need to be able to
                 // access the control from the task dialog's callback.
-                this.DenyIfBound();
+                DenyIfBound();
 
-                this.footer = value;
+                _footer = value;
             }
         }
 
@@ -228,15 +224,15 @@ namespace KPreisser.UI
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
         public TaskDialogProgressBar ProgressBar
         {
-            get => this.progressBar;
+            get => _progressBar;
 
             set
             {
                 // We must deny this if we are bound because we need to be able to
                 // access the control from the task dialog's callback.
-                this.DenyIfBound();
+                DenyIfBound();
 
-                this.progressBar = value;
+                _progressBar = value;
             }
         }
 
@@ -248,15 +244,15 @@ namespace KPreisser.UI
         /// </remarks>
         public string Title
         {
-            get => this.title;
+            get => _title;
 
             set
             {
                 // Note: We set the field values after calling the method to ensure
                 // it still has the previous value it the method throws.
-                this.boundTaskDialog?.UpdateTitle(value);
+                _boundTaskDialog?.UpdateTitle(value);
 
-                this.title = value;
+                _title = value;
             }
         }
 
@@ -268,15 +264,15 @@ namespace KPreisser.UI
         /// </remarks>
         public string Instruction
         {
-            get => this.instruction;
+            get => _instruction;
 
             set
             {
-                this.boundTaskDialog?.UpdateTextElement(
+                _boundTaskDialog?.UpdateTextElement(
                         TaskDialogTextElement.TDE_MAIN_INSTRUCTION,
                         value);
 
-                this.instruction = value;
+                _instruction = value;
             }
         }
 
@@ -288,15 +284,15 @@ namespace KPreisser.UI
         /// </remarks>
         public string Text
         {
-            get => this.text;
+            get => _text;
 
             set
             {
-                this.boundTaskDialog?.UpdateTextElement(
+                _boundTaskDialog?.UpdateTextElement(
                         TaskDialogTextElement.TDE_CONTENT,
                         value);
 
-                this.text = value;
+                _text = value;
             }
         }
 
@@ -310,7 +306,7 @@ namespace KPreisser.UI
         [DefaultValue(TaskDialogIcon.None)]
         public TaskDialogIcon Icon
         {
-            get => this.icon;
+            get => _icon;
 
             set
             {
@@ -324,15 +320,15 @@ namespace KPreisser.UI
                 if (value < ushort.MinValue || (int)value > ushort.MaxValue)
                     throw new ArgumentOutOfRangeException(nameof(value));
 
-                if (this.boundTaskDialog != null &&
-                        this.boundIconIsFromHandle)
+                if (_boundTaskDialog != null &&
+                        _boundIconIsFromHandle)
                     throw new InvalidOperationException();
 
-                this.boundTaskDialog?.UpdateIconElement(
+                _boundTaskDialog?.UpdateIconElement(
                         TaskDialogIconElement.TDIE_ICON_MAIN,
                         (IntPtr)value);
 
-                this.icon = value;
+                _icon = value;
             }
         }
 
@@ -347,19 +343,19 @@ namespace KPreisser.UI
         [Browsable(false)]
         public IntPtr IconHandle
         {
-            get => this.iconHandle;
+            get => _iconHandle;
 
             set
             {
-                if (this.boundTaskDialog != null &&
-                        !this.boundIconIsFromHandle)
+                if (_boundTaskDialog != null &&
+                        !_boundIconIsFromHandle)
                     throw new InvalidOperationException();
 
-                this.boundTaskDialog?.UpdateIconElement(
+                _boundTaskDialog?.UpdateIconElement(
                         TaskDialogIconElement.TDIE_ICON_MAIN,
                         value);
 
-                this.iconHandle = value;
+                _iconHandle = value;
             }
         }
 
@@ -371,16 +367,16 @@ namespace KPreisser.UI
         [DefaultValue(0)]
         public int Width
         {
-            get => this.width;
+            get => _width;
 
             set
             {
                 if (value < 0)
                     throw new ArgumentOutOfRangeException(nameof(value));
 
-                this.DenyIfBound();
+                DenyIfBound();
 
-                this.width = value;
+                _width = value;
             }
         }
 
@@ -391,13 +387,13 @@ namespace KPreisser.UI
         [DefaultValue(TaskDialogCommandLinkMode.None)]
         public TaskDialogCommandLinkMode CommandLinkMode
         {
-            get => this.commandLinkMode;
+            get => _commandLinkMode;
 
             set
             {
-                this.DenyIfBound();
+                DenyIfBound();
 
-                this.commandLinkMode = value;
+                _commandLinkMode = value;
             }
         }
 
@@ -503,12 +499,10 @@ namespace KPreisser.UI
             set => SetFlag(TaskDialogFlags.TDF_SIZE_TO_CONTENT, value);
         }
 
-
         internal TaskDialog BoundTaskDialog
         {
-            get => this.boundTaskDialog;
+            get => _boundTaskDialog;
         }
-
 
         internal static bool IsNativeStringNullOrEmpty(string str)
         {
@@ -517,10 +511,9 @@ namespace KPreisser.UI
             return string.IsNullOrEmpty(str) || str[0] == '\0';
         }
 
-
         internal void DenyIfBound()
         {
-            if (this.boundTaskDialog != null)
+            if (_boundTaskDialog != null)
                 throw new InvalidOperationException(
                         "Cannot set this property or call this method while the " +
                         "page is bound to a task dialog.");
@@ -528,7 +521,7 @@ namespace KPreisser.UI
 
         internal TaskDialogButton GetBoundButtonByID(int buttonID)
         {
-            if (this.boundTaskDialog == null)
+            if (_boundTaskDialog == null)
                 throw new InvalidOperationException();
 
             if (buttonID == 0)
@@ -538,7 +531,7 @@ namespace KPreisser.UI
             var button = null as TaskDialogButton;
             if (buttonID >= CustomButtonStartID)
             {
-                button = this.customButtons[buttonID - CustomButtonStartID];
+                button = _customButtons[buttonID - CustomButtonStartID];
             }
             else
             {
@@ -546,8 +539,8 @@ namespace KPreisser.UI
                 // the common button ID is not part of the collection, because
                 // the caller might not know if such a button exists.
                 var result = (TaskDialogResult)buttonID;
-                if (this.commonButtons.Contains(result))
-                    button = this.commonButtons[result];
+                if (_commonButtons.Contains(result))
+                    button = _commonButtons[result];
             }
 
             return button;
@@ -555,13 +548,13 @@ namespace KPreisser.UI
 
         internal TaskDialogRadioButton GetBoundRadioButtonByID(int buttonID)
         {
-            if (this.boundTaskDialog == null)
+            if (_boundTaskDialog == null)
                 throw new InvalidOperationException();
 
             if (buttonID == 0)
                 return null;
 
-            return this.radioButtons[buttonID - RadioButtonStartID];
+            return _radioButtons[buttonID - RadioButtonStartID];
         }
 
         internal void Validate(TaskDialog newOwner)
@@ -577,7 +570,7 @@ namespace KPreisser.UI
             // TaskDialog instance. We don't throw if it is already bound to the
             // same TaskDialog instane that wants to bind now, because that should
             // be OK.
-            if (this.boundTaskDialog != null && this.boundTaskDialog != newOwner)
+            if (_boundTaskDialog != null && _boundTaskDialog != newOwner)
                 throw new InvalidOperationException(
                         $"This {nameof(TaskDialogPage)} instance is already bound to " +
                         $"another {nameof(TaskDialog)} instance.");
@@ -585,41 +578,29 @@ namespace KPreisser.UI
             // We also need to validate the controls since they could also be assigned to
             // another (bound) TaskDialogPage at the same time.
             // Access the collections using the property to ensure they exist.
-            if (this.CommonButtons.BoundPage != null && this.CommonButtons.BoundPage != this ||
-                    this.CustomButtons.BoundPage != null && this.CustomButtons.BoundPage != this ||
-                    this.RadioButtons.BoundPage != null && this.RadioButtons.BoundPage != this ||
-                    this.checkBox?.BoundPage != null && this.checkBox.BoundPage != this ||
-                    this.expander?.BoundPage != null && this.expander.BoundPage != this ||
-                    this.footer?.BoundPage != null && this.footer.BoundPage != this ||
-                    this.progressBar?.BoundPage != null && this.progressBar.BoundPage != this)
+            if (CommonButtons.BoundPage != null && CommonButtons.BoundPage != this ||
+                    CustomButtons.BoundPage != null && CustomButtons.BoundPage != this ||
+                    RadioButtons.BoundPage != null && RadioButtons.BoundPage != this ||
+                    _checkBox?.BoundPage != null && _checkBox.BoundPage != this ||
+                    _expander?.BoundPage != null && _expander.BoundPage != this ||
+                    _footer?.BoundPage != null && _footer.BoundPage != this ||
+                    _progressBar?.BoundPage != null && _progressBar.BoundPage != this)
                 throw new InvalidOperationException();
 
-            foreach (var control in (this.CommonButtons as IEnumerable<TaskDialogControl>)
-                    .Concat(this.CustomButtons)
-                    .Concat(this.RadioButtons))
+            foreach (TaskDialogControl control in (CommonButtons as IEnumerable<TaskDialogControl>)
+                    .Concat(CustomButtons)
+                    .Concat(RadioButtons))
                 if (control.BoundPage != null && control.BoundPage != this)
                     throw new InvalidOperationException();
 
-            if (this.CustomButtons.Count > int.MaxValue - CustomButtonStartID + 1 ||
-                     this.RadioButtons.Count > int.MaxValue - RadioButtonStartID + 1)
+            if (CustomButtons.Count > int.MaxValue - CustomButtonStartID + 1 ||
+                     RadioButtons.Count > int.MaxValue - RadioButtonStartID + 1)
                 throw new InvalidOperationException(
                         "Too many custom buttons or radio buttons have been added.");
 
-            //// Note: This is no longer needed, because we allow non-createable
-            //// controls to be added, and the control will check the state by
-            //// itself.
-            //// Ensure that if we have a checkbox, its text is not null/empty.
-            //// Otherwise we will get AccessViolationExceptions when sending a Click
-            //// message.
-            //if (this.checkBox != null &&
-            //        IsNativeStringNullOrEmpty(this.checkBox.Text))
-            //    throw new InvalidOperationException(
-            //        $"When a {nameof(this.CheckBox)} is set, its " +
-            //        $"{nameof(this.CheckBox.Text)} must not be null or empty.");
-
             bool foundDefaultButton = false;
-            foreach (var button in (this.CommonButtons as IEnumerable<TaskDialogButton>)
-                    .Concat(this.CustomButtons))
+            foreach (TaskDialogButton button in (CommonButtons as IEnumerable<TaskDialogButton>)
+                    .Concat(CustomButtons))
             {
                 if (button.DefaultButton)
                 {
@@ -634,7 +615,7 @@ namespace KPreisser.UI
             // For custom and radio buttons, we need to ensure the strings are
             // not null or empty, as otherwise an error would occur when
             // showing/navigating the dialog.
-            foreach (var button in this.customButtons)
+            foreach (TaskDialogCustomButton button in _customButtons)
             {
                 if (!button.IsCreatable)
                     throw new InvalidOperationException(
@@ -642,7 +623,7 @@ namespace KPreisser.UI
             }
 
             bool foundCheckedRadioButton = false;
-            foreach (var button in this.radioButtons)
+            foreach (TaskDialogRadioButton button in _radioButtons)
             {
                 if (!button.IsCreatable)
                     throw new InvalidOperationException(
@@ -668,38 +649,38 @@ namespace KPreisser.UI
                 out int defaultButtonID,
                 out int defaultRadioButtonID)
         {
-            if (this.boundTaskDialog != null)
+            if (_boundTaskDialog != null)
                 throw new InvalidOperationException();
 
             //// This method assumes Validate() has already been called.
 
-            this.boundTaskDialog = owner;
-            flags = this.flags;
+            _boundTaskDialog = owner;
+            flags = _flags;
 
-            this.boundIconIsFromHandle = this.iconHandle != IntPtr.Zero;
-            if (this.boundIconIsFromHandle)
+            _boundIconIsFromHandle = _iconHandle != IntPtr.Zero;
+            if (_boundIconIsFromHandle)
             {
                 flags |= TaskDialogFlags.TDF_USE_HICON_MAIN;
-                iconValue = this.iconHandle;
+                iconValue = _iconHandle;
             }
             else
             {
-                iconValue = (IntPtr)this.icon;
+                iconValue = (IntPtr)_icon;
             }
 
             // Only specify the command link flags if there actually are custom buttons;
             // otherwise the dialog will not work.
-            if (this.customButtons.Count > 0)
+            if (_customButtons.Count > 0)
             {
-                if (this.commandLinkMode == TaskDialogCommandLinkMode.CommandLinks)
+                if (_commandLinkMode == TaskDialogCommandLinkMode.CommandLinks)
                     flags |= TaskDialogFlags.TDF_USE_COMMAND_LINKS;
-                else if (this.commandLinkMode == TaskDialogCommandLinkMode.CommandLinksNoIcon)
+                else if (_commandLinkMode == TaskDialogCommandLinkMode.CommandLinksNoIcon)
                     flags |= TaskDialogFlags.TDF_USE_COMMAND_LINKS_NO_ICON;
             }
 
-            var commonButtons = this.CommonButtons;
-            var customButtons = this.CustomButtons;
-            var radioButtons = this.RadioButtons;
+            TaskDialogCommonButtonCollection commonButtons = CommonButtons;
+            TaskDialogCustomButtonCollection customButtons = CustomButtons;
+            TaskDialogRadioButtonCollection radioButtons = RadioButtons;
 
             commonButtons.BoundPage = this;
             customButtons.BoundPage = this;
@@ -710,7 +691,7 @@ namespace KPreisser.UI
             // don't need to copy them here.
             defaultButtonID = 0;
             buttonFlags = default;
-            foreach (var commonButton in commonButtons)
+            foreach (TaskDialogCommonButton commonButton in commonButtons)
             {
                 flags |= commonButton.Bind(this);
 
@@ -725,7 +706,7 @@ namespace KPreisser.UI
 
             for (int i = 0; i < customButtons.Count; i++)
             {
-                var customButton = customButtons[i];
+                TaskDialogCustomButton customButton = customButtons[i];
                 flags |= customButton.Bind(this, CustomButtonStartID + i);
 
                 if (customButton.IsCreated)
@@ -738,7 +719,7 @@ namespace KPreisser.UI
             defaultRadioButtonID = 0;
             for (int i = 0; i < radioButtons.Count; i++)
             {
-                var radioButton = radioButtons[i];
+                TaskDialogRadioButton radioButton = radioButtons[i];
                 flags |= radioButton.Bind(this, RadioButtonStartID + i);
 
                 if (radioButton.IsCreated)
@@ -753,68 +734,67 @@ namespace KPreisser.UI
             if (defaultRadioButtonID == 0)
                 flags |= TaskDialogFlags.TDF_NO_DEFAULT_RADIO_BUTTON;
 
-            if (this.checkBox != null)
-                flags |= this.checkBox.Bind(this);
+            if (_checkBox != null)
+                flags |= _checkBox.Bind(this);
 
-            if (this.expander != null)
-                flags |= this.expander.Bind(this);
+            if (_expander != null)
+                flags |= _expander.Bind(this);
 
-            if (this.footer != null)
-                flags |= this.footer.Bind(this, out footerIconValue);
+            if (_footer != null)
+                flags |= _footer.Bind(this, out footerIconValue);
             else
                 footerIconValue = default;
 
-            if (this.progressBar != null)
-                flags |= this.progressBar.Bind(this);
+            if (_progressBar != null)
+                flags |= _progressBar.Bind(this);
         }
 
         internal void Unbind()
         {
-            if (this.boundTaskDialog == null)
+            if (_boundTaskDialog == null)
                 throw new InvalidOperationException();
 
-            var commonButtons = this.CommonButtons;
-            var customButtons = this.CustomButtons;
-            var radioButtons = this.RadioButtons;
+            TaskDialogCommonButtonCollection commonButtons = CommonButtons;
+            TaskDialogCustomButtonCollection customButtons = CustomButtons;
+            TaskDialogRadioButtonCollection radioButtons = RadioButtons;
 
-            foreach (var commonButton in commonButtons)
+            foreach (TaskDialogCommonButton commonButton in commonButtons)
                 commonButton.Unbind();
 
-            foreach (var customButton in customButtons)
+            foreach (TaskDialogCustomButton customButton in customButtons)
                 customButton.Unbind();
 
-            foreach (var radioButton in radioButtons)
+            foreach (TaskDialogRadioButton radioButton in radioButtons)
                 radioButton.Unbind();
 
             commonButtons.BoundPage = null;
             customButtons.BoundPage = null;
             radioButtons.BoundPage = null;
 
-            this.checkBox?.Unbind();
-            this.expander?.Unbind();
-            this.footer?.Unbind();
-            this.progressBar?.Unbind();
+            _checkBox?.Unbind();
+            _expander?.Unbind();
+            _footer?.Unbind();
+            _progressBar?.Unbind();
 
-            this.boundTaskDialog = null;
+            _boundTaskDialog = null;
         }
 
         internal void ApplyInitialization()
         {
-            foreach (var button in this.CommonButtons)
+            foreach (TaskDialogCommonButton button in CommonButtons)
                 button.ApplyInitialization();
 
-            foreach (var button in this.CustomButtons)
+            foreach (TaskDialogCustomButton button in CustomButtons)
                 button.ApplyInitialization();
 
-            foreach (var button in this.RadioButtons)
+            foreach (TaskDialogRadioButton button in RadioButtons)
                 button.ApplyInitialization();
 
-            this.checkBox?.ApplyInitialization();
-            this.expander?.ApplyInitialization();
-            this.footer?.ApplyInitialization();
-            this.progressBar?.ApplyInitialization();
+            _checkBox?.ApplyInitialization();
+            _expander?.ApplyInitialization();
+            _footer?.ApplyInitialization();
+            _progressBar?.ApplyInitialization();
         }
-
 
         /// <summary>
         /// 
@@ -822,7 +802,7 @@ namespace KPreisser.UI
         /// <param name="e"></param>
         internal protected void OnCreated(EventArgs e)
         {
-            this.Created?.Invoke(this, e);
+            Created?.Invoke(this, e);
         }
 
         /// <summary>
@@ -831,7 +811,7 @@ namespace KPreisser.UI
         /// <param name="e"></param>
         internal protected void OnDestroyed(EventArgs e)
         {
-            this.Destroyed?.Invoke(this, e);
+            Destroyed?.Invoke(this, e);
         }
 
         /// <summary>
@@ -840,7 +820,7 @@ namespace KPreisser.UI
         /// <param name="e"></param>
         internal protected void OnHelp(EventArgs e)
         {
-            this.Help?.Invoke(this, e);
+            Help?.Invoke(this, e);
         }
 
         /// <summary>
@@ -849,13 +829,12 @@ namespace KPreisser.UI
         /// <param name="e"></param>
         internal protected void OnHyperlinkClicked(TaskDialogHyperlinkClickedEventArgs e)
         {
-            this.HyperlinkClicked?.Invoke(this, e);
+            HyperlinkClicked?.Invoke(this, e);
         }
-
 
         private bool GetFlag(TaskDialogFlags flag)
         {
-            return (this.flags & flag) == flag;
+            return (_flags & flag) == flag;
         }
 
         private void SetFlag(TaskDialogFlags flag, bool value)
@@ -863,9 +842,9 @@ namespace KPreisser.UI
             DenyIfBound();
 
             if (value)
-                this.flags |= flag;
+                _flags |= flag;
             else
-                this.flags &= ~flag;
+                _flags &= ~flag;
         }
     }
 }

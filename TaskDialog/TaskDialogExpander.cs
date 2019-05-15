@@ -12,22 +12,20 @@ namespace KPreisser.UI
     [TypeConverter(typeof(ExpandableObjectConverter))]
     public sealed class TaskDialogExpander : TaskDialogControl
     {
-        private string text;
+        private string _text;
 
-        private string expandedButtonText;
+        private string _expandedButtonText;
 
-        private string collapsedButtonText;
+        private string _collapsedButtonText;
 
-        private bool expandFooterArea;
+        private bool _expandFooterArea;
 
-        private bool expanded;
-
+        private bool _expanded;
 
         /// <summary>
         /// 
         /// </summary>
         public event EventHandler ExpandedChanged;
-
 
         /// <summary>
         /// 
@@ -44,9 +42,8 @@ namespace KPreisser.UI
         public TaskDialogExpander(string text)
             : this()
         {
-            this.text = text;
+            _text = text;
         }
-
 
         /// <summary>
         /// Gets or sets the text to be displayed in the dialog's expanded area.
@@ -56,18 +53,18 @@ namespace KPreisser.UI
         /// </remarks>
         public string Text
         {
-            get => this.text;
+            get => _text;
 
             set
             {
-                this.DenyIfBoundAndNotCreated();
+                DenyIfBoundAndNotCreated();
 
                 // Update the text if we are bound.
-                this.BoundPage?.BoundTaskDialog.UpdateTextElement(
+                BoundPage?.BoundTaskDialog.UpdateTextElement(
                         TaskDialogTextElement.TDE_EXPANDED_INFORMATION,
                         value);
 
-                this.text = value;
+                _text = value;
             }
         }
 
@@ -76,13 +73,13 @@ namespace KPreisser.UI
         /// </summary>
         public string ExpandedButtonText
         {
-            get => this.expandedButtonText;
+            get => _expandedButtonText;
 
             set
             {
-                this.DenyIfBound();
+                DenyIfBound();
 
-                this.expandedButtonText = value;
+                _expandedButtonText = value;
             }
         }
 
@@ -91,13 +88,13 @@ namespace KPreisser.UI
         /// </summary>
         public string CollapsedButtonText
         {
-            get => this.collapsedButtonText;
+            get => _collapsedButtonText;
 
             set
             {
-                this.DenyIfBound();
+                DenyIfBound();
 
-                this.collapsedButtonText = value;
+                _collapsedButtonText = value;
             }
         }
 
@@ -106,7 +103,7 @@ namespace KPreisser.UI
         /// </summary>
         public bool Expanded
         {
-            get => this.expanded;
+            get => _expanded;
 
             set
             {
@@ -115,9 +112,9 @@ namespace KPreisser.UI
                 // be updated when we receive an ExpandoButtonClicked notification).
                 // TODO: Should we throw only if the new value is different than the
                 // old one?
-                this.DenyIfBound();
+                DenyIfBound();
 
-                this.expanded = value;
+                _expanded = value;
             }
         }
 
@@ -126,22 +123,20 @@ namespace KPreisser.UI
         /// </summary>
         public bool ExpandFooterArea
         {
-            get => this.expandFooterArea;
+            get => _expandFooterArea;
 
             set
             {
-                this.DenyIfBound();
+                DenyIfBound();
 
-                this.expandFooterArea = value;
+                _expandFooterArea = value;
             }
         }
 
-
         internal override bool IsCreatable
         {
-            get => base.IsCreatable && !TaskDialogPage.IsNativeStringNullOrEmpty(this.text);
+            get => base.IsCreatable && !TaskDialogPage.IsNativeStringNullOrEmpty(_text);
         }
-
 
         /// <summary>
         /// 
@@ -149,33 +144,30 @@ namespace KPreisser.UI
         /// <returns></returns>
         public override string ToString()
         {
-            return this.text ?? base.ToString();
+            return _text ?? base.ToString();
         }
-
 
         internal void HandleExpandoButtonClicked(bool expanded)
         {
-            this.expanded = expanded;
-            this.OnExpandedChanged(EventArgs.Empty);
+            _expanded = expanded;
+            OnExpandedChanged(EventArgs.Empty);
         }
-
 
         private protected override TaskDialogFlags BindCore()
         {
-            var flags = base.BindCore();
+            TaskDialogFlags flags = base.BindCore();
 
-            if (this.expanded)
+            if (_expanded)
                 flags |= TaskDialogFlags.TDF_EXPANDED_BY_DEFAULT;
-            if (this.expandFooterArea)
+            if (_expandFooterArea)
                 flags |= TaskDialogFlags.TDF_EXPAND_FOOTER_AREA;
 
             return flags;
         }
 
-
         private void OnExpandedChanged(EventArgs e)
         {
-            this.ExpandedChanged?.Invoke(this, e);
+            ExpandedChanged?.Invoke(this, e);
         }
     }
 }

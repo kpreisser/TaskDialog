@@ -7,7 +7,7 @@ namespace TaskDialogExample
     class Program
     {
         [STAThread]
-        static void Main(string[] args)
+        static void Main()
         {
             ShowTaskDialogExample();
 
@@ -86,14 +86,14 @@ namespace TaskDialogExample
 
                 dialogPage.ProgressBar.Value = 1;
 
-                var buttonYes = dialogPage.CommonButtons.Add(TaskDialogResult.Yes);
+                TaskDialogCommonButton buttonYes = dialogPage.CommonButtons.Add(TaskDialogResult.Yes);
                 buttonYes.Enabled = false;
-                var buttonNo = dialogPage.CommonButtons.Add(TaskDialogResult.No);
+                TaskDialogCommonButton buttonNo = dialogPage.CommonButtons.Add(TaskDialogResult.No);
 
                 // Add a hidden "Cancel" button so that we can get notified when the user 
                 // closes the dialog through the window's X button or with ESC (and could
                 // cancel the close operation).
-                var buttonCancelHidden = dialogPage.CommonButtons.Add(TaskDialogResult.Cancel);
+                TaskDialogCommonButton buttonCancelHidden = dialogPage.CommonButtons.Add(TaskDialogResult.Cancel);
                 buttonCancelHidden.Visible = false;
                 buttonCancelHidden.Click += (s, e) =>
                 {
@@ -137,9 +137,9 @@ namespace TaskDialogExample
                 };
 
                 // Create custom buttons that are shown as command links.
-                var button1 = dialogPage.CustomButtons.Add("Change Icon + Enable Buttons  ✔");
-                var button2 = dialogPage.CustomButtons.Add("Disabled Button 🎵🎶", "After enabling, can show a new dialog.");
-                var button3 = dialogPage.CustomButtons.Add("Some Admin Action…", "Navigates to a new dialog page.");
+                TaskDialogCustomButton button1 = dialogPage.CustomButtons.Add("Change Icon + Enable Buttons  ✔");
+                TaskDialogCustomButton button2 = dialogPage.CustomButtons.Add("Disabled Button 🎵🎶", "After enabling, can show a new dialog.");
+                TaskDialogCustomButton button3 = dialogPage.CustomButtons.Add("Some Admin Action…", "Navigates to a new dialog page.");
                 button3.ElevationRequired = true;
 
                 TaskDialogIcon nextIcon = 0;
@@ -176,8 +176,8 @@ namespace TaskDialogExample
                         Icon = TaskDialogIcon.Information,
                     };
 
-                    var buttonClose = newPage.CommonButtons.Add(TaskDialogResult.Close);
-                    var buttonContinue = newPage.CommonButtons.Add(TaskDialogResult.Continue);
+                    TaskDialogCommonButton buttonClose = newPage.CommonButtons.Add(TaskDialogResult.Close);
+                    TaskDialogCommonButton buttonContinue = newPage.CommonButtons.Add(TaskDialogResult.Continue);
 
                     int number = 0;
                     void UpdateNumberText(bool callUpdate = true)
@@ -218,7 +218,7 @@ namespace TaskDialogExample
 
                     using (var innerDialog = new TaskDialog(newPage))
                     {
-                        var innerResult = innerDialog.Show();
+                        TaskDialogButton innerResult = innerDialog.Show();
                         Console.WriteLine("Result of new dialog: " + innerResult);
                     }
                 };
@@ -260,16 +260,16 @@ namespace TaskDialogExample
                         Console.WriteLine("New Contents destroyed!");
                     };
 
-                    var buttonCancel = newContents.CommonButtons.Add(TaskDialogResult.Cancel);
+                    TaskDialogCommonButton buttonCancel = newContents.CommonButtons.Add(TaskDialogResult.Cancel);
                     buttonCancel.Enabled = false;
                     buttonCancel.ElevationRequired = true;
 
                     // Create a custom button that will be shown as regular button.
-                    var customButton = newContents.CustomButtons.Add("My Button :)");
+                    TaskDialogCustomButton customButton = newContents.CustomButtons.Add("My Button :)");
 
                     // Add radio buttons.
-                    var radioButton1 = newContents.RadioButtons.Add("My Radio Button 1");
-                    var radioButton2 = newContents.RadioButtons.Add("My Radio Button 2");
+                    TaskDialogRadioButton radioButton1 = newContents.RadioButtons.Add("My Radio Button 1");
+                    TaskDialogRadioButton radioButton2 = newContents.RadioButtons.Add("My Radio Button 2");
                     radioButton2.Checked = true;
 
                     radioButton1.CheckedChanged += (s2, e2) => Console.WriteLine(
@@ -288,7 +288,7 @@ namespace TaskDialogExample
                     dialog.Page = newContents;
                 };
 
-                var result = dialog.Show();
+                TaskDialogButton result = dialog.Show();
 
                 Console.WriteLine("Result of main dialog: " + result);
             }

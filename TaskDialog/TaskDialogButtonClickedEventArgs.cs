@@ -15,7 +15,6 @@ namespace KPreisser.UI
         {
         }
 
-
         /// <summary>
         /// Gets or sets a value that indicates if the dialog should not be closed
         /// after the event handler returns.

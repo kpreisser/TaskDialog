@@ -13,14 +13,13 @@ namespace KPreisser.UI
     [TypeConverter(typeof(ExpandableObjectConverter))]
     public sealed class TaskDialogFooter : TaskDialogControl
     {
-        private string text;
+        private string _text;
 
-        private TaskDialogIcon icon;
+        private TaskDialogIcon _icon;
 
-        private IntPtr iconHandle;
+        private IntPtr _iconHandle;
 
-        private bool boundFooterIconIsFromHandle;
-
+        private bool _boundFooterIconIsFromHandle;
 
         /// <summary>
         /// 
@@ -37,9 +36,8 @@ namespace KPreisser.UI
         public TaskDialogFooter(string text)
             : this()
         {
-            this.text = text;
+            _text = text;
         }
-
 
         /// <summary>
         /// Gets or sets the text to be displayed in the dialog's footer area.
@@ -49,18 +47,18 @@ namespace KPreisser.UI
         /// </remarks>
         public string Text
         {
-            get => this.text;
+            get => _text;
 
             set
             {
-                this.DenyIfBoundAndNotCreated();
+                DenyIfBoundAndNotCreated();
 
                 // Update the text if we are bound.
-                this.BoundPage?.BoundTaskDialog.UpdateTextElement(
+                BoundPage?.BoundTaskDialog.UpdateTextElement(
                         TaskDialogTextElement.TDE_FOOTER,
                         value);
 
-                this.text = value;
+                _text = value;
             }
         }
 
@@ -74,7 +72,7 @@ namespace KPreisser.UI
         [DefaultValue(TaskDialogIcon.None)]
         public TaskDialogIcon Icon
         {
-            get => this.icon;
+            get => _icon;
 
             set
             {
@@ -82,17 +80,17 @@ namespace KPreisser.UI
                 if (value < ushort.MinValue || (int)value > ushort.MaxValue)
                     throw new ArgumentOutOfRangeException(nameof(value));
 
-                this.DenyIfBoundAndNotCreated();
+                DenyIfBoundAndNotCreated();
 
-                if (this.BoundPage != null &&
-                        this.boundFooterIconIsFromHandle)
+                if (BoundPage != null &&
+                        _boundFooterIconIsFromHandle)
                     throw new InvalidOperationException();
 
-                this.BoundPage?.BoundTaskDialog.UpdateIconElement(
+                BoundPage?.BoundTaskDialog.UpdateIconElement(
                         TaskDialogIconElement.TDIE_ICON_FOOTER,
                         (IntPtr)value);
 
-                this.icon = value;
+                _icon = value;
             }
         }
 
@@ -107,30 +105,28 @@ namespace KPreisser.UI
         [Browsable(false)]
         public IntPtr IconHandle
         {
-            get => this.iconHandle;
+            get => _iconHandle;
 
             set
             {
-                this.DenyIfBoundAndNotCreated();
+                DenyIfBoundAndNotCreated();
 
-                if (this.BoundPage != null &&
-                        !this.boundFooterIconIsFromHandle)
+                if (BoundPage != null &&
+                        !_boundFooterIconIsFromHandle)
                     throw new InvalidOperationException();
 
-                this.BoundPage?.BoundTaskDialog.UpdateIconElement(
+                BoundPage?.BoundTaskDialog.UpdateIconElement(
                         TaskDialogIconElement.TDIE_ICON_FOOTER,
                         value);
 
-                this.iconHandle = value;
+                _iconHandle = value;
             }
         }
 
-
         internal override bool IsCreatable
         {
-            get => base.IsCreatable && !TaskDialogPage.IsNativeStringNullOrEmpty(this.text);
+            get => base.IsCreatable && !TaskDialogPage.IsNativeStringNullOrEmpty(_text);
         }
-
 
         /// <summary>
         /// 
@@ -138,29 +134,27 @@ namespace KPreisser.UI
         /// <returns></returns>
         public override string ToString()
         {
-            return this.text ?? base.ToString();
+            return _text ?? base.ToString();
         }
-
 
         internal TaskDialogFlags Bind(TaskDialogPage page, out IntPtr footerIconValue)
         {
-            var result = base.Bind(page);
+            TaskDialogFlags result = base.Bind(page);
 
-            footerIconValue = this.boundFooterIconIsFromHandle ?
-                    this.iconHandle :
-                    (IntPtr)this.icon;
+            footerIconValue = _boundFooterIconIsFromHandle ?
+                    _iconHandle :
+                    (IntPtr)_icon;
 
             return result;
         }
 
-
         private protected override TaskDialogFlags BindCore()
         {
-            var flags = base.BindCore();
+            TaskDialogFlags flags = base.BindCore();
 
-            this.boundFooterIconIsFromHandle = this.iconHandle != IntPtr.Zero;
+            _boundFooterIconIsFromHandle = _iconHandle != IntPtr.Zero;
 
-            if (this.boundFooterIconIsFromHandle)
+            if (_boundFooterIconIsFromHandle)
                 flags |= TaskDialogFlags.TDF_USE_HICON_FOOTER;
 
             return flags;
@@ -168,7 +162,7 @@ namespace KPreisser.UI
 
         private protected override void UnbindCore()
         {
-            this.boundFooterIconIsFromHandle = false;
+            _boundFooterIconIsFromHandle = false;
 
             base.UnbindCore();
         }

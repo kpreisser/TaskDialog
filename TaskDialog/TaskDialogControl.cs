@@ -17,7 +17,6 @@ namespace KPreisser.UI
         {
         }
 
-
         /// <summary>
         /// Gets or sets the object that contains data about the control.
         /// </summary>
@@ -27,7 +26,6 @@ namespace KPreisser.UI
             get;
             set;
         }
-
 
         internal TaskDialogPage BoundPage
         {
@@ -54,27 +52,26 @@ namespace KPreisser.UI
             private set;
         }
 
-
         internal TaskDialogFlags Bind(TaskDialogPage page)
         {
-            this.BoundPage = page ??
+            BoundPage = page ??
                     throw new ArgumentNullException(nameof(page));
 
             // Use the current value of IsCreatable to determine if the control is
             // created. This is important because IsCreatable can change while the
             // control is displayed (e.g. if it depends on the Text property).
-            this.IsCreated = this.IsCreatable;
+            IsCreated = IsCreatable;
 
-            return this.IsCreated ? this.BindCore() : default;
+            return IsCreated ? BindCore() : default;
         }
 
         internal void Unbind()
         {
-            if (this.IsCreated)
-                this.UnbindCore();
+            if (IsCreated)
+                UnbindCore();
 
-            this.IsCreated = false;
-            this.BoundPage = null;
+            IsCreated = false;
+            BoundPage = null;
         }
 
         /// <summary>
@@ -83,10 +80,9 @@ namespace KPreisser.UI
         internal void ApplyInitialization()
         {
             // Only apply the initialization if the control is actually created.
-            if (this.IsCreated)
-                this.ApplyInitializationCore();
+            if (IsCreated)
+                ApplyInitializationCore();
         }
-
 
         /// <summary>
         /// When overridden in a subclass, runs additional binding logic and returns
@@ -124,19 +120,19 @@ namespace KPreisser.UI
 
         private protected void DenyIfBound()
         {
-            this.BoundPage?.DenyIfBound();
+            BoundPage?.DenyIfBound();
         }
 
         private protected void DenyIfNotBound()
         {
-            if (this.BoundPage == null)
+            if (BoundPage == null)
                 throw new InvalidOperationException(
                         "This control is not currently bound to a task dialog.");
         }
 
         private protected void DenyIfBoundAndNotCreated()
         {
-            if (this.BoundPage != null && !this.IsCreated)
+            if (BoundPage != null && !IsCreated)
                 throw new InvalidOperationException("The control has not been created.");
         }
     }

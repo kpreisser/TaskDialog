@@ -7,12 +7,11 @@ namespace KPreisser.UI
     /// </summary>
     public sealed class TaskDialogCustomButton : TaskDialogButton
     {
-        private string text;
+        private string _text;
 
-        private string descriptionText;
+        private string _descriptionText;
 
-        private int buttonID;
-
+        private int _buttonID;
 
         /// <summary>
         /// 
@@ -28,23 +27,22 @@ namespace KPreisser.UI
         public TaskDialogCustomButton(string text, string descriptionText = null)
             : this()
         {
-            this.text = text;
-            this.descriptionText = descriptionText;
+            _text = text;
+            _descriptionText = descriptionText;
         }
-
 
         /// <summary>
         /// 
         /// </summary>
         public string Text
         {
-            get => this.text;
+            get => _text;
 
             set
             {
-                this.DenyIfBound();
+                DenyIfBound();
 
-                this.text = value;
+                _text = value;
             }
         }
 
@@ -57,25 +55,24 @@ namespace KPreisser.UI
         /// </summary>
         public string DescriptionText
         {
-            get => this.descriptionText;
+            get => _descriptionText;
 
             set
             {
-                this.DenyIfBound();
+                DenyIfBound();
 
-                this.descriptionText = value;
+                _descriptionText = value;
             }
         }
 
-
         internal override bool IsCreatable
         {
-            get => base.IsCreatable && !TaskDialogPage.IsNativeStringNullOrEmpty(this.text);
+            get => base.IsCreatable && !TaskDialogPage.IsNativeStringNullOrEmpty(_text);
         }
 
         internal override int ButtonID
         {
-            get => this.buttonID;
+            get => _buttonID;
         }
 
         internal new TaskDialogCustomButtonCollection Collection
@@ -90,21 +87,20 @@ namespace KPreisser.UI
         /// <returns></returns>
         public override string ToString()
         {
-            return this.text ?? base.ToString();
+            return _text ?? base.ToString();
         }
-
 
         internal TaskDialogFlags Bind(TaskDialogPage page, int buttonID)
         {
-            var result = this.Bind(page);
-            this.buttonID = buttonID;
+            TaskDialogFlags result = Bind(page);
+            _buttonID = buttonID;
 
             return result;
         }
 
         internal string GetResultingText()
         {
-            var page = this.BoundPage;
+            TaskDialogPage page = BoundPage;
 
             // Remove LFs from the text. Otherwise, the dialog would display the
             // part of the text after the LF in the command link note, but for
@@ -113,20 +109,19 @@ namespace KPreisser.UI
             // property are not displayed in the command link note.
             // Therefore, we replace a combined CR+LF with CR, and then also single
             // LFs with CR, because CR is treated as a line break.
-            string text = this.text?.Replace("\r\n", "\r").Replace("\n", "\r");
+            string text = _text?.Replace("\r\n", "\r").Replace("\n", "\r");
 
             if ((page?.CommandLinkMode == TaskDialogCommandLinkMode.CommandLinks ||
                     page?.CommandLinkMode == TaskDialogCommandLinkMode.CommandLinksNoIcon) &&
-                    text != null && this.descriptionText != null)
-                text += '\n' + this.descriptionText;
+                    text != null && _descriptionText != null)
+                text += '\n' + _descriptionText;
 
             return text;
         }
 
-
         private protected override void UnbindCore()
         {
-            this.buttonID = 0;
+            _buttonID = 0;
 
             base.UnbindCore();
         }

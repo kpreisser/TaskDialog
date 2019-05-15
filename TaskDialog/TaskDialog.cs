@@ -41,44 +41,42 @@ namespace KPreisser.UI
         //// needs to be aware that he shouldn't use a WM_APP+100 message for his own logic.
         //private const int HandleActiveWindowMessage = TaskDialogNativeMethods.WM_APP + 100;
 
-
         /// <summary>
         /// The delegate for the callback handler (that calls
         /// <see cref="HandleTaskDialogCallback"/>) from which the native function
-        /// pointer <see cref="callbackProcDelegatePtr"/> is created. 
+        /// pointer <see cref="s_callbackProcDelegatePtr"/> is created. 
         /// </summary>
         /// <remarks>
         /// We must store this delegate (and prevent it from being garbage-collected)
         /// to ensure the function pointer doesn't become invalid.
         /// </remarks>
-        private static readonly TaskDialogCallbackDelegate callbackProcDelegate;
+        private static readonly TaskDialogCallbackDelegate s_callbackProcDelegate;
 
         /// <summary>
-        /// The function pointer created from <see cref="callbackProcDelegate"/>.
+        /// The function pointer created from <see cref="s_callbackProcDelegate"/>.
         /// </summary>
-        private static readonly IntPtr callbackProcDelegatePtr;
+        private static readonly IntPtr s_callbackProcDelegatePtr;
 
+        private TaskDialogStartupLocation _startupLocation;
 
-        private TaskDialogStartupLocation startupLocation;
+        private TaskDialogPage _page;
 
-        private TaskDialogPage page;
-
-        private TaskDialogPage boundPage;
+        private TaskDialogPage _boundPage;
 
         /// <summary>
         /// Window handle of the task dialog when it is being shown.
         /// </summary>
-        private IntPtr hwndDialog;
+        private IntPtr _hwndDialog;
 
         /// <summary>
         /// The <see cref="IntPtr"/> of a <see cref="GCHandle"/> that represents this
         /// <see cref="TaskDialog"/> instance.
         /// </summary>
-        private IntPtr instanceHandlePtr;
+        private IntPtr _instanceHandlePtr;
 
-        private WindowSubclassHandler windowSubclassHandler;
+        private WindowSubclassHandler _windowSubclassHandler;
 
-        private bool waitingForNavigatedEvent;
+        private bool _waitingForNavigatedEvent;
 
         /// <summary>
         /// Stores a value that indicates if the
@@ -91,7 +89,7 @@ namespace KPreisser.UI
         /// <see cref="Opened"/> event first (e.g. if the dialog cannot be shown
         /// due to an invalid icon).
         /// </remarks>
-        private bool raisedOpened;
+        private bool _raisedOpened;
 
         /// <summary>
         /// Stores a value that indicates if the
@@ -105,7 +103,7 @@ namespace KPreisser.UI
         /// <see cref="TaskDialogPage.Created"/> event first (e.g. if navigation
         /// fails).
         /// </remarks>
-        private bool raisedPageCreated;
+        private bool _raisedPageCreated;
 
         /// <summary>
         /// A counter which is used to determine whether the dialog has been navigated
@@ -129,7 +127,7 @@ namespace KPreisser.UI
         /// if a ButtonClicked handler runs the message loop so that new click events
         /// can be processed.
         /// </remarks>
-        private (int stackCount, int navigationIndex) buttonClickNavigationCounter;
+        private (int stackCount, int navigationIndex) _buttonClickNavigationCounter;
 
         /// <summary>
         /// The button designated as the dialog result by the handler for the
@@ -148,9 +146,9 @@ namespace KPreisser.UI
         /// handles will return <see cref="TaskDialogNativeMethods.S_FALSE"/> to
         /// not override the previously set result.
         /// </remarks>
-        private (TaskDialogButton button, int buttonID) resultButton;
+        private (TaskDialogButton button, int buttonID) _resultButton;
 
-        private bool suppressButtonClickedEvent;
+        private bool _suppressButtonClickedEvent;
 
         /// <summary>
         /// Specifies if the current code is called from within
@@ -161,10 +159,7 @@ namespace KPreisser.UI
         /// from within an event raised by <see cref="Navigate(TaskDialogPage)"/>,
         /// which is not supported.
         /// </remarks>
-        private bool isInNavigate;
-
-        //private bool isWindowActive;
-
+        private bool _isInNavigate;
 
         /// <summary>
         /// Occurs after the task dialog has been created but before it is displayed.
@@ -216,31 +211,6 @@ namespace KPreisser.UI
         /// </remarks>
         public event EventHandler Closed;
 
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        //public event EventHandler Activated;
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        //public event EventHandler Deactivated;
-
-        //// These events were removed since they are also available in the
-        //// TaskDialogPage, and are specific to the page (not to the dialog).
-
-        ///// <summary>
-        ///// Occurs when the user presses F1 while the dialog has focus, or when the
-        ///// user clicks the <see cref="TaskDialogButtons.Help"/> button.
-        ///// </summary>
-        //public event EventHandler Help;
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        //public event EventHandler<TaskDialogHyperlinkClickedEventArgs> HyperlinkClicked;
-
-
         static TaskDialog()
         {
             // Create a delegate for the callback, and get a function pointer for it.
@@ -248,14 +218,13 @@ namespace KPreisser.UI
             // code for the function pointer, we only do this once by using a static
             // function, and then identify the actual TaskDialog instance by using a
             // GCHandle in the reference data field (like an object pointer).
-            callbackProcDelegate = (hWnd, notification, wParam, lParam, referenceData) =>
+            s_callbackProcDelegate = (hWnd, notification, wParam, lParam, referenceData) =>
                     ((TaskDialog)GCHandle.FromIntPtr(referenceData).Target)
                     .HandleTaskDialogCallback(hWnd, notification, wParam, lParam);
 
-            callbackProcDelegatePtr = Marshal.GetFunctionPointerForDelegate(
-                    callbackProcDelegate);
+            s_callbackProcDelegatePtr = Marshal.GetFunctionPointerForDelegate(
+                    s_callbackProcDelegate);
         }
-
 
         /// <summary>
         /// 
@@ -268,7 +237,7 @@ namespace KPreisser.UI
                 throw new PlatformNotSupportedException();
 
             // Set default properties.
-            this.startupLocation = TaskDialogStartupLocation.CenterParent;
+            _startupLocation = TaskDialogStartupLocation.CenterParent;
         }
 
         /// <summary>
@@ -277,10 +246,9 @@ namespace KPreisser.UI
         public TaskDialog(TaskDialogPage page)
             : this()
         {
-            this.page = page ??
+            _page = page ??
                     throw new ArgumentNullException(nameof(page));
         }
-
 
         /// <summary>
         /// Gets the window handle of the task dialog window, or <see cref="IntPtr.Zero"/>
@@ -294,7 +262,7 @@ namespace KPreisser.UI
         [Browsable(false)]
         public IntPtr Handle
         {
-            get => this.hwndDialog;
+            get => _hwndDialog;
         }
 
         /// <summary>
@@ -316,15 +284,15 @@ namespace KPreisser.UI
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
         public TaskDialogPage Page
         {
-            get => this.page ??
-                    (this.page = new TaskDialogPage());
+            get => _page ??
+                    (_page = new TaskDialogPage());
 
             set
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
 
-                if (this.DialogIsShown)
+                if (DialogIsShown)
                 {
                     // Try to navigate the dialog. This will validate the new page
                     // and assign it only if it is OK.
@@ -332,7 +300,7 @@ namespace KPreisser.UI
                 }
                 else
                 {
-                    this.page = value;
+                    _page = value;
                 }
             }
         }
@@ -343,16 +311,15 @@ namespace KPreisser.UI
         [DefaultValue(TaskDialogStartupLocation.CenterParent)]
         public TaskDialogStartupLocation StartupLocation
         {
-            get => this.startupLocation;
+            get => _startupLocation;
 
             set
             {
                 DenyIfBound();
 
-                this.startupLocation = value;
+                _startupLocation = value;
             }
         }
-
 
         /// <summary>
         /// Gets a value that indicates whether <see cref="Show(IntPtr)"/> is
@@ -360,7 +327,7 @@ namespace KPreisser.UI
         /// </summary>
         internal bool DialogIsShown
         {
-            get => this.instanceHandlePtr != IntPtr.Zero;
+            get => _instanceHandlePtr != IntPtr.Zero;
         }
 
         /// <summary>
@@ -376,12 +343,12 @@ namespace KPreisser.UI
         /// </remarks>
         internal bool HandleAvailable
         {
-            get => this.hwndDialog != IntPtr.Zero;
+            get => _hwndDialog != IntPtr.Zero;
         }
 
         internal bool WaitingForNavigatedEvent
         {
-            get => this.waitingForNavigatedEvent;
+            get => _waitingForNavigatedEvent;
         }
 
         /// <summary>
@@ -400,7 +367,6 @@ namespace KPreisser.UI
             get;
             set;
         }
-
 
         /// <summary>
         /// 
@@ -440,7 +406,7 @@ namespace KPreisser.UI
                 TaskDialogButtons buttons = TaskDialogButtons.OK,
                 TaskDialogIcon icon = TaskDialogIcon.None)
         {
-            return Show(GetWindowHandle(owner), text, instruction, title, buttons, icon);
+            return Show(owner.Handle, text, instruction, title, buttons, icon);
         }
 #endif
 
@@ -478,18 +444,10 @@ namespace KPreisser.UI
             }
         }
 
-
         private static void FreeConfig(IntPtr ptrToFree)
         {
             Marshal.FreeHGlobal(ptrToFree);
         }
-
-#if !NET_STANDARD
-        private static IntPtr GetWindowHandle(System.Windows.Forms.IWin32Window window)
-        {
-            return window.Handle;
-        }
-#endif
 
         private static bool IsTaskDialogButtonCommitting(TaskDialogButton button)
         {
@@ -517,7 +475,6 @@ namespace KPreisser.UI
             };
         }
 
-
         /// <summary>
         /// Shows the task dialog.
         /// </summary>
@@ -541,7 +498,7 @@ namespace KPreisser.UI
         /// <param name="owner">The owner window, or <c>null</c> to show a modeless dialog.</param>
         public TaskDialogButton Show(System.Windows.Forms.IWin32Window owner)
         {
-            return Show(GetWindowHandle(owner));
+            return Show(owner.Handle);
         }
 #endif
 
@@ -560,24 +517,24 @@ namespace KPreisser.UI
         {
             // Recursive Show() is not possible because a TaskDialog instance can only
             // represent a single native dialog.
-            if (this.DialogIsShown)
+            if (DialogIsShown)
                 throw new InvalidOperationException(
                         $"This {nameof(TaskDialog)} instance is already being shown.");
 
-            this.Page.Validate(this);
+            Page.Validate(this);
 
             // Allocate a GCHandle which we will use for the callback data.
             var instanceHandle = GCHandle.Alloc(this);
             try
             {
-                this.instanceHandlePtr = GCHandle.ToIntPtr(instanceHandle);
+                _instanceHandlePtr = GCHandle.ToIntPtr(instanceHandle);
 
                 // Bind the page and allocate the memory.
                 BindAndAllocateConfig(
                        hwndOwner,
-                       this.startupLocation,
-                       out var ptrToFree,
-                       out var ptrTaskDialogConfig);
+                       _startupLocation,
+                       out IntPtr ptrToFree,
+                       out IntPtr ptrTaskDialogConfig);
                 try
                 {
                     //// Note: When an uncaught exception occurs in the callback or a
@@ -618,10 +575,10 @@ namespace KPreisser.UI
                     // dialog is displayed), the dialog returns IDCANCEL (2) without
                     // priorly raising the TDN_BUTTON_CLICKED notification.
                     // Therefore, in that case we need to retrieve the button ourselves.
-                    if (resultButtonID == this.resultButton.buttonID)
-                        return this.resultButton.button;
+                    if (resultButtonID == _resultButton.buttonID)
+                        return _resultButton.button;
                     else
-                        return this.boundPage.GetBoundButtonByID(resultButtonID) ??
+                        return _boundPage.GetBoundButtonByID(resultButtonID) ??
                                 CreatePlaceholderButton((TaskDialogResult)resultButtonID);
                 }
                 finally
@@ -635,36 +592,36 @@ namespace KPreisser.UI
                     // thrown (which means the native task dialog is still showing),
                     // which we should avoid as it is not supported.
                     // TODO: Maybe FailFast() in that case to prevent future errors.
-                    Debug.Assert(this.hwndDialog == IntPtr.Zero);
+                    Debug.Assert(_hwndDialog == IntPtr.Zero);
 
                     // Ensure to keep the callback delegate alive until
                     // TaskDialogIndirect() returns in case we could not undo the
                     // subclassing. See comment in UnsubclassWindow().
-                    this.windowSubclassHandler?.KeepCallbackDelegateAlive();
+                    _windowSubclassHandler?.KeepCallbackDelegateAlive();
                     // Then, clear the subclass handler. Note that this only works
                     // correctly if we did not return from TaskDialogIndirect()
                     // due to an exception being thrown (as mentioned above).
-                    this.windowSubclassHandler = null;
+                    _windowSubclassHandler = null;
 
                     // Ensure to clear the flag if a navigation did not complete.
-                    this.waitingForNavigatedEvent = false;
+                    _waitingForNavigatedEvent = false;
 
                     // Also, ensure the window handle and the
                     // raiseClosed/raisePageDestroyed flags are is cleared even if
                     // the TDN_DESTROYED notification did not occur (although that
                     // should only happen when there was an exception).
-                    this.hwndDialog = IntPtr.Zero;
-                    this.raisedOpened = false;
-                    this.raisedPageCreated = false;
+                    _hwndDialog = IntPtr.Zero;
+                    _raisedOpened = false;
+                    _raisedPageCreated = false;
                     //this.isWindowActive = false;
 
                     // Clear the cached objects.
-                    this.resultButton = default;
+                    _resultButton = default;
 
                     // Unbind the page. The 'Destroyed' event of the TaskDialogPage
                     // will already have been called from the callback.
-                    this.boundPage.Unbind();
-                    this.boundPage = null;
+                    _boundPage.Unbind();
+                    _boundPage = null;
 
                     // We need to ensure the callback delegate is not garbage-collected
                     // as long as TaskDialogIndirect doesn't return, by calling
@@ -679,12 +636,12 @@ namespace KPreisser.UI
                     //
                     // Note: As this is a static field, in theory we would not need to
                     // call GC.KeepAlive() here, but we still do it to be safe.
-                    GC.KeepAlive(callbackProcDelegate);
+                    GC.KeepAlive(s_callbackProcDelegate);
                 }
             }
             finally
             {
-                this.instanceHandlePtr = IntPtr.Zero;
+                _instanceHandlePtr = IntPtr.Zero;
                 instanceHandle.Free();
             }
         }
@@ -702,7 +659,7 @@ namespace KPreisser.UI
         /// </remarks>
         public void Close()
         {
-            this.suppressButtonClickedEvent = true;
+            _suppressButtonClickedEvent = true;
             try
             {
                 // Send a click button message with the cancel result.
@@ -710,10 +667,9 @@ namespace KPreisser.UI
             }
             finally
             {
-                this.suppressButtonClickedEvent = false;
+                _suppressButtonClickedEvent = false;
             }
         }
-
 
         /// <summary>
         /// While the dialog is being shown, switches the progress bar mode to either a
@@ -868,7 +824,7 @@ namespace KPreisser.UI
 
             // Note: Instead of null, we must specify the empty string; otherwise
             // the update would be ignored.
-            var textPtr = Marshal.StringToHGlobalUni(text ?? string.Empty);
+            IntPtr textPtr = Marshal.StringToHGlobalUni(text ?? string.Empty);
             try
             {
                 // Note: SetElementText will resize the dialog while UpdateElementText
@@ -915,10 +871,9 @@ namespace KPreisser.UI
             // (or null) with this method causes the window title to be empty.
             // We could replicate the Task Dialog behavior by also using the
             // executable's name as title if the string is null or empty.
-            if (!TaskDialogNativeMethods.SetWindowText(this.hwndDialog, title))
+            if (!TaskDialogNativeMethods.SetWindowText(_hwndDialog, title))
                 Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
         }
-
 
         /// <summary>
         /// 
@@ -926,7 +881,7 @@ namespace KPreisser.UI
         /// <param name="e"></param>
         protected void OnOpened(EventArgs e)
         {
-            this.Opened?.Invoke(this, e);
+            Opened?.Invoke(this, e);
         }
 
         /// <summary>
@@ -935,7 +890,7 @@ namespace KPreisser.UI
         /// <param name="e"></param>
         protected void OnShown(EventArgs e)
         {
-            this.Shown?.Invoke(this, e);
+            Shown?.Invoke(this, e);
         }
 
         /// <summary>
@@ -944,7 +899,7 @@ namespace KPreisser.UI
         /// <param name="e"></param>
         protected void OnClosing(TaskDialogClosingEventArgs e)
         {
-            this.Closing?.Invoke(this, e);
+            Closing?.Invoke(this, e);
         }
 
         /// <summary>
@@ -953,45 +908,8 @@ namespace KPreisser.UI
         /// <param name="e"></param>
         protected void OnClosed(EventArgs e)
         {
-            this.Closed?.Invoke(this, e);
+            Closed?.Invoke(this, e);
         }
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <param name="e"></param>
-        //protected void OnActivated(EventArgs e)
-        //{
-        //    this.Activated?.Invoke(this, e);
-        //}
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <param name="e"></param>
-        //protected void OnDeactivated(EventArgs e)
-        //{
-        //    this.Deactivated?.Invoke(this, e);
-        //}
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <param name="e"></param>
-        //protected void OnHelp(EventArgs e)
-        //{
-        //    this.Help?.Invoke(this, e);
-        //}
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <param name="e"></param>
-        //protected void OnHyperlinkClicked(TaskDialogHyperlinkClickedEventArgs e)
-        //{
-        //    this.HyperlinkClicked?.Invoke(this, e);
-        //}
-
 
         private int HandleTaskDialogCallback(
                 IntPtr hWnd,
@@ -1000,61 +918,20 @@ namespace KPreisser.UI
                 IntPtr lParam)
         {
             // Set the hWnd as this may be the first time that we get it.
-            bool isFirstNotification = this.hwndDialog == IntPtr.Zero;
-            this.hwndDialog = hWnd;
+            bool isFirstNotification = _hwndDialog == IntPtr.Zero;
+            _hwndDialog = hWnd;
 
             if (isFirstNotification)
             {
                 // Subclass the window as early as possible after the window handle
                 // is available.
-                this.SubclassWindow();
+                SubclassWindow();
             }
 
             switch (notification)
             {
                 case TaskDialogNotification.TDN_CREATED:
-                    this.boundPage.ApplyInitialization();
-
-                    //// When showing the dialog, its (hidden) window may already have
-                    //// focus, but we don't get a WM_ACTIVATE message in that case after
-                    //// subclassing the window (presumably because it already received
-                    //// one before we subclassed it).
-                    //// 
-                    //// Therefore, we check here as early as possible if the dialog is
-                    //// already active, and in that case handle it by posting a
-                    //// self-defined message, so that the Activated event will be raised
-                    //// when continuing with the message loop.
-                    //// Otherwise, we would need to raise the Activated event here after
-                    //// raising the Opened/Created events, but this would not be correct
-                    //// since the task dialog window already has focus, but then when you
-                    //// run the message loop within the Opened/Created events, the
-                    //// Activated event would not occur, but that wouldn't match the
-                    //// behavior of the WM_ACTIVATE messages which do occur there.
-                    //// 
-                    //// Note however, that because the function returns the active window
-                    //// at the current time instead of the current thread's point of view
-                    //// (as described by the WM_ACTIVATE messages), it could happen
-                    //// that e.g. the dialog was initially active, but got inactive
-                    //// before the call to GetForegroundWindow(), which would mean that
-                    //// the initial Activated+Deactvated events will not be raised
-                    //// (although that should be negligible), but additionally we later
-                    //// get WM_ACTIVATE message indicating that the window is now inactive
-                    //// (which already deterimined) (and vice versa).
-                    //// Therefore, we need to maintain the current active state.
-                    //var activeWindowHandle = TaskDialogNativeMethods.GetActiveWindow();
-                    //bool isActive = activeWindowHandle != IntPtr.Zero &&
-                    //        activeWindowHandle == hWnd;
-
-                    //if (isActive)
-                    //{
-                    //    // Post the message so that the Activated event will be raised
-                    //    // later.
-                    //    TaskDialogNativeMethods.PostMessage(
-                    //            hWnd,
-                    //            HandleActiveWindowMessage,
-                    //            IntPtr.Zero,
-                    //            IntPtr.Zero);
-                    //}
+                    _boundPage.ApplyInitialization();
 
                     //// Note: If the user navigates the dialog within the Opened event
                     //// and then runs the message loop, the Created and Destroyed events
@@ -1063,10 +940,10 @@ namespace KPreisser.UI
                     //// TDN_NAVIGATED notification and then the Opened event returns),
                     //// but we consider this to be OK.
 
-                    if (!this.raisedOpened)
+                    if (!_raisedOpened)
                     {
-                        this.raisedOpened = true;
-                        this.OnOpened(EventArgs.Empty);
+                        _raisedOpened = true;
+                        OnOpened(EventArgs.Empty);
                     }
 
                     // Don't raise the Created event of the bound page if we are
@@ -1074,22 +951,22 @@ namespace KPreisser.UI
                     // the user has already navigated the dialog in one of the
                     // previous events (so the bound page is the navigated one), and
                     // so we must wait for the TDN_NAVIGATED notification to occur.
-                    if (!this.raisedPageCreated && !this.waitingForNavigatedEvent)
+                    if (!_raisedPageCreated && !_waitingForNavigatedEvent)
                     {
-                        this.raisedPageCreated = true;
-                        this.boundPage.OnCreated(EventArgs.Empty);
+                        _raisedPageCreated = true;
+                        _boundPage.OnCreated(EventArgs.Empty);
                     }
                     break;
 
                 case TaskDialogNotification.TDN_NAVIGATED:
-                    this.waitingForNavigatedEvent = false;
-                    this.boundPage.ApplyInitialization();
+                    _waitingForNavigatedEvent = false;
+                    _boundPage.ApplyInitialization();
 
-                    Debug.Assert(!this.raisedPageCreated);
-                    if (!this.raisedPageCreated)
+                    Debug.Assert(!_raisedPageCreated);
+                    if (!_raisedPageCreated)
                     {
-                        this.raisedPageCreated = true;
-                        this.boundPage.OnCreated(EventArgs.Empty);
+                        _raisedPageCreated = true;
+                        _boundPage.OnCreated(EventArgs.Empty);
                     }
                     break;
 
@@ -1107,29 +984,29 @@ namespace KPreisser.UI
                         // (so an error HResult will be returned), the callback is
                         // invoked only one time with the TDN_DESTROYED notification
                         // without being invoked with the TDN_CREATED notification.
-                        if (this.raisedPageCreated)
+                        if (_raisedPageCreated)
                         {
-                            this.raisedPageCreated = false;
-                            this.boundPage.OnDestroyed(EventArgs.Empty);
+                            _raisedPageCreated = false;
+                            _boundPage.OnDestroyed(EventArgs.Empty);
                         }
 
-                        if (this.raisedOpened)
+                        if (_raisedOpened)
                         {
-                            this.raisedOpened = false;
-                            this.OnClosed(EventArgs.Empty);
+                            _raisedOpened = false;
+                            OnClosed(EventArgs.Empty);
                         }
                     }
                     finally
                     {
                         // Undo the subclassing as the window handle is about to
                         // be destroyed.
-                        this.UnsubclassWindow();
+                        UnsubclassWindow();
 
                         // Clear the dialog handle, because according to the docs, we
                         // must not continue to send any notifications to the dialog
                         // after the callback function has returned from being called
                         // with the 'Destroyed' notification.                    
-                        this.hwndDialog = IntPtr.Zero;
+                        _hwndDialog = IntPtr.Zero;
                     }
                     break;
 
@@ -1137,16 +1014,15 @@ namespace KPreisser.UI
                     string link = Marshal.PtrToStringUni(lParam);
 
                     var eventArgs = new TaskDialogHyperlinkClickedEventArgs(link);
-                    //this.OnHyperlinkClicked(eventArgs);
-                    this.boundPage.OnHyperlinkClicked(eventArgs);
+                    _boundPage.OnHyperlinkClicked(eventArgs);
                     break;
 
                 case TaskDialogNotification.TDN_BUTTON_CLICKED:
                     int buttonID = (int)wParam;
-                    var button = this.boundPage.GetBoundButtonByID(buttonID);
+                    TaskDialogButton button = _boundPage.GetBoundButtonByID(buttonID);
 
                     bool handlerResult = true;
-                    if (button != null && !this.suppressButtonClickedEvent)
+                    if (button != null && !_suppressButtonClickedEvent)
                     {
                         // Note: When the event handler returns true but the dialog was
                         // navigated within the handler, the buttonID of the handler
@@ -1163,7 +1039,7 @@ namespace KPreisser.UI
                         // event handler.
                         checked
                         {
-                            this.buttonClickNavigationCounter.stackCount++;
+                            _buttonClickNavigationCounter.stackCount++;
                         }
                         try
                         {
@@ -1174,16 +1050,16 @@ namespace KPreisser.UI
                             // the handler. In that case we need to return S_FALSE
                             // to prevent the dialog from closing (and applying the
                             // previous ButtonID and RadioButtonID as results).
-                            if (this.buttonClickNavigationCounter.navigationIndex >=
-                                    this.buttonClickNavigationCounter.stackCount)
+                            if (_buttonClickNavigationCounter.navigationIndex >=
+                                    _buttonClickNavigationCounter.stackCount)
                                 handlerResult = false;
                         }
                         finally
                         {
-                            this.buttonClickNavigationCounter.stackCount--;
-                            this.buttonClickNavigationCounter.navigationIndex = Math.Min(
-                                    this.buttonClickNavigationCounter.navigationIndex,
-                                    this.buttonClickNavigationCounter.stackCount);
+                            _buttonClickNavigationCounter.stackCount--;
+                            _buttonClickNavigationCounter.navigationIndex = Math.Min(
+                                    _buttonClickNavigationCounter.navigationIndex,
+                                    _buttonClickNavigationCounter.stackCount);
                         }
                     }
 
@@ -1199,7 +1075,7 @@ namespace KPreisser.UI
                         // override the previously set result, which would mean the
                         // button returned from Show() would not match one specified
                         // in the "Closing" event's args.
-                        if (this.resultButton != default)
+                        if (_resultButton != default)
                         {
                             handlerResult = false;
                         }
@@ -1217,13 +1093,13 @@ namespace KPreisser.UI
 
                             // The button would close the dialog, so raise the event.
                             var closingEventArgs = new TaskDialogClosingEventArgs(button);
-                            this.OnClosing(closingEventArgs);
+                            OnClosing(closingEventArgs);
 
                             handlerResult = !closingEventArgs.Cancel;
 
                             // Cache the result button if we return S_OK.
                             if (handlerResult)
-                                this.resultButton = (button, buttonID);
+                                _resultButton = (button, buttonID);
                         }
                     }
 
@@ -1233,24 +1109,23 @@ namespace KPreisser.UI
 
                 case TaskDialogNotification.TDN_RADIO_BUTTON_CLICKED:
                     int radioButtonID = (int)wParam;
-                    var radioButton = this.boundPage.GetBoundRadioButtonByID(radioButtonID);
+                    TaskDialogRadioButton radioButton = _boundPage.GetBoundRadioButtonByID(radioButtonID);
 
                     radioButton.HandleRadioButtonClicked();
                     break;
 
                 case TaskDialogNotification.TDN_EXPANDO_BUTTON_CLICKED:
-                    this.boundPage.Expander.HandleExpandoButtonClicked(
+                    _boundPage.Expander.HandleExpandoButtonClicked(
                             wParam != IntPtr.Zero);
                     break;
 
                 case TaskDialogNotification.TDN_VERIFICATION_CLICKED:
-                    this.boundPage.CheckBox.HandleCheckBoxClicked(
+                    _boundPage.CheckBox.HandleCheckBoxClicked(
                             wParam != IntPtr.Zero);
                     break;
 
                 case TaskDialogNotification.TDN_HELP:
-                    //this.OnHelp(EventArgs.Empty);
-                    this.boundPage.OnHelp(EventArgs.Empty);
+                    _boundPage.OnHelp(EventArgs.Empty);
                     break;
             }
 
@@ -1290,7 +1165,7 @@ namespace KPreisser.UI
             // (e.g. when running the message loop after navigation, an
             // AccessViolationException would occur after the handler returns).
             // See: https://github.com/dotnet/winforms/issues/146#issuecomment-466784079
-            if (this.RadioButtonClickedStackCount > 0)
+            if (RadioButtonClickedStackCount > 0)
                 throw new InvalidOperationException(
                         $"Cannot navigate the dialog from within the " +
                         $"{nameof(TaskDialogRadioButton)}.{nameof(TaskDialogRadioButton.CheckedChanged)} " +
@@ -1298,7 +1173,7 @@ namespace KPreisser.UI
 
             // Don't allow to navigate the dialog if called from an event handler
             // (TaskDialogPage.Destroyed) that is raised from within this method.
-            if (this.isInNavigate)
+            if (_isInNavigate)
                 throw new InvalidOperationException(
                         "Cannot navigate the dialog from an event handler that is" +
                         "called from within navigation.");
@@ -1309,10 +1184,10 @@ namespace KPreisser.UI
             // result even though a different button has already been set as result).
             const string dialogAlreadyClosedMesssage =
                     "Cannot navigate the dialog when it has already closed.";
-            if (this.resultButton != default)
+            if (_resultButton != default)
                 throw new InvalidOperationException(dialogAlreadyClosedMesssage);
 
-            this.isInNavigate = true;
+            _isInNavigate = true;
             try
             {
                 page.Validate(this);
@@ -1322,17 +1197,17 @@ namespace KPreisser.UI
                 // Need to raise the "Destroyed" event for the current page. The
                 // "Created" event for the new page will occur from the callback.
                 // Note: "this.raisedPageCreated" should always be true here.
-                if (this.raisedPageCreated)
+                if (_raisedPageCreated)
                 {
-                    this.raisedPageCreated = false;
-                    this.boundPage.OnDestroyed(EventArgs.Empty);
+                    _raisedPageCreated = false;
+                    _boundPage.OnDestroyed(EventArgs.Empty);
 
                     // Need to check again if the dialog has not already been closed, since
                     // the Destroyed event handler could have performed a button click that
                     // closed the dialog.
                     // TODO: Another option would be to disallow button clicks while within
                     // the event handler.
-                    if (this.resultButton != default)
+                    if (_resultButton != default)
                         throw new InvalidOperationException(dialogAlreadyClosedMesssage);
 
                     // Also, we need to validate the page again. For example, the user
@@ -1343,10 +1218,10 @@ namespace KPreisser.UI
                     page.Validate(this);
                 }
 
-                this.boundPage.Unbind();
-                this.boundPage = null;
+                _boundPage.Unbind();
+                _boundPage = null;
 
-                this.page = page;
+                _page = page;
 
                 // Note: If this throws an OutOfMemoryException, we leave the previous
                 // page in the unbound state. We could solve this by re-binding the
@@ -1356,8 +1231,8 @@ namespace KPreisser.UI
                 BindAndAllocateConfig(
                         IntPtr.Zero,
                         default,
-                        out var ptrToFree,
-                        out var ptrTaskDialogConfig);
+                        out IntPtr ptrToFree,
+                        out IntPtr ptrTaskDialogConfig);
                 try
                 {
                     // Note: If the task dialog cannot be recreated with the new page,
@@ -1377,16 +1252,16 @@ namespace KPreisser.UI
 
                 // After sending the navigation message, disallow updates until we
                 // received the Navigated event because that messages would be lost.
-                this.waitingForNavigatedEvent = true;
+                _waitingForNavigatedEvent = true;
 
                 // Indicate to the ButtonClicked handlers currently on the stack that
                 // the dialog was navigated.
-                this.buttonClickNavigationCounter.navigationIndex =
-                        this.buttonClickNavigationCounter.stackCount;
+                _buttonClickNavigationCounter.navigationIndex =
+                        _buttonClickNavigationCounter.stackCount;
             }
             finally
             {
-                this.isInNavigate = false;
+                _isInNavigate = false;
             }
         }
 
@@ -1396,16 +1271,16 @@ namespace KPreisser.UI
                 out IntPtr ptrToFree,
                 out IntPtr ptrTaskDialogConfig)
         {
-            var page = this.Page;
+            TaskDialogPage page = Page;
             page.Bind(
                     this,
-                    out var flags,
-                    out var commonButtonFlags,
-                    out var iconValue,
-                    out var footerIconValue,
+                    out TaskDialogFlags flags,
+                    out TaskDialogButtons commonButtonFlags,
+                    out IntPtr iconValue,
+                    out IntPtr footerIconValue,
                     out int defaultButtonID,
                     out int defaultRadioButtonID);
-            this.boundPage = page;
+            _boundPage = page;
             try
             {
                 if (startupLocation == TaskDialogStartupLocation.CenterParent)
@@ -1475,7 +1350,7 @@ namespace KPreisser.UI
                         Align(ref currentPtr);
                         ptrTaskDialogConfig = (IntPtr)currentPtr;
 
-                        ref var taskDialogConfig = ref *(TaskDialogConfig*)currentPtr;
+                        ref TaskDialogConfig taskDialogConfig = ref *(TaskDialogConfig*)currentPtr;
                         currentPtr += sizeof(TaskDialogConfig);
 
                         // Assign the structure with the constructor syntax, which will
@@ -1500,8 +1375,8 @@ namespace KPreisser.UI
                             pszFooter = MarshalString(page.Footer?.Text),
                             nDefaultButton = defaultButtonID,
                             nDefaultRadioButton = defaultRadioButtonID,
-                            pfCallback = callbackProcDelegatePtr,
-                            lpCallbackData = this.instanceHandlePtr,
+                            pfCallback = s_callbackProcDelegatePtr,
+                            lpCallbackData = _instanceHandlePtr,
                             cxWidth = checked((uint)page.Width)
                         };
 
@@ -1517,7 +1392,7 @@ namespace KPreisser.UI
                             Align(ref currentPtr, sizeof(char));
                             for (int i = 0; i < page.CustomButtons.Count; i++)
                             {
-                                var currentCustomButton = page.CustomButtons[i];
+                                TaskDialogCustomButton currentCustomButton = page.CustomButtons[i];
                                 customButtonStructs[i] = new TaskDialogButtonStruct()
                                 {
                                     nButtonID = currentCustomButton.ButtonID,
@@ -1538,7 +1413,7 @@ namespace KPreisser.UI
                             Align(ref currentPtr, sizeof(char));
                             for (int i = 0; i < page.RadioButtons.Count; i++)
                             {
-                                var currentCustomButton = page.RadioButtons[i];
+                                TaskDialogRadioButton currentCustomButton = page.RadioButtons[i];
                                 customRadioButtonStructs[i] = new TaskDialogButtonStruct()
                                 {
                                     nButtonID = currentCustomButton.RadioButtonID,
@@ -1548,7 +1423,6 @@ namespace KPreisser.UI
                         }
 
                         Debug.Assert(currentPtr == (long)ptrTaskDialogConfig + sizeToAllocate);
-
 
                         IntPtr MarshalString(string str)
                         {
@@ -1581,7 +1455,6 @@ namespace KPreisser.UI
                         throw;
                     }
 
-
                     void Align(ref byte* currentPtr, int? alignment = null)
                     {
                         if (alignment <= 0)
@@ -1612,8 +1485,8 @@ namespace KPreisser.UI
             catch
             {
                 // Unbind the page, then rethrow the exception.
-                this.boundPage.Unbind();
-                this.boundPage = null;
+                _boundPage.Unbind();
+                _boundPage = null;
 
                 throw;
             }
@@ -1621,22 +1494,22 @@ namespace KPreisser.UI
 
         private void SubclassWindow()
         {
-            if (this.windowSubclassHandler != null)
+            if (_windowSubclassHandler != null)
                 throw new InvalidOperationException();
 
             // Subclass the window.
-            this.windowSubclassHandler = new WindowSubclassHandler(this);
-            this.windowSubclassHandler.Open();
+            _windowSubclassHandler = new WindowSubclassHandler(this);
+            _windowSubclassHandler.Open();
         }
 
         private void UnsubclassWindow()
         {
-            if (this.windowSubclassHandler != null)
+            if (_windowSubclassHandler != null)
             {
                 try
                 {
-                    this.windowSubclassHandler.Dispose();
-                    this.windowSubclassHandler = null;
+                    _windowSubclassHandler.Dispose();
+                    _windowSubclassHandler = null;
                 }
                 catch (Exception ex) when (ex is InvalidOperationException || ex is Win32Exception)
                 {
@@ -1651,7 +1524,7 @@ namespace KPreisser.UI
 
         private void DenyIfBound()
         {
-            if (this.boundPage != null)
+            if (_boundPage != null)
                 throw new InvalidOperationException(
                         "Cannot set this property or call this method while the " +
                         "task dialog is shown.");
@@ -1659,11 +1532,11 @@ namespace KPreisser.UI
 
         private void DenyIfDialogNotUpdatable()
         {
-            if (!this.HandleAvailable)
+            if (!HandleAvailable)
                 throw new InvalidOperationException(
                         "Can only update the state of a task dialog while it is shown.");
 
-            if (this.waitingForNavigatedEvent)
+            if (_waitingForNavigatedEvent)
                 throw new InvalidOperationException(
                         "Cannot update the task dialog directly after navigating it. " +
                         $"Please wait for the " +
@@ -1679,7 +1552,7 @@ namespace KPreisser.UI
             DenyIfDialogNotUpdatable();
 
             TaskDialogNativeMethods.SendMessage(
-                    this.hwndDialog,
+                    _hwndDialog,
                     (int)message,
                     // Note: When a negative 32-bit integer is converted to a
                     // 64-bit pointer, the high dword will be set to 0xFFFFFFFF.
@@ -1701,7 +1574,7 @@ namespace KPreisser.UI
             // (and therefore there is no risk that one of the links loses focus).
             UpdateTextElement(
                     TaskDialogTextElement.TDE_MAIN_INSTRUCTION,
-                    this.boundPage.Instruction);
+                    _boundPage.Instruction);
         }
     }
 }

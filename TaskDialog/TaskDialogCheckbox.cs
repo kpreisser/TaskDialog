@@ -11,16 +11,14 @@ namespace KPreisser.UI
     [TypeConverter(typeof(ExpandableObjectConverter))]
     public sealed class TaskDialogCheckBox : TaskDialogControl
     {
-        private string text;
+        private string _text;
 
-        private bool @checked;
-
+        private bool _checked;
 
         /// <summary>
         /// 
         /// </summary>
         public event EventHandler CheckedChanged;
-
 
         /// <summary>
         /// 
@@ -37,22 +35,21 @@ namespace KPreisser.UI
         public TaskDialogCheckBox(string text)
             : this()
         {
-            this.text = text;
+            _text = text;
         }
-
 
         /// <summary>
         /// 
         /// </summary>
         public string Text
         {
-            get => this.text;
+            get => _text;
 
             set
             {
-                this.DenyIfBound();
+                DenyIfBound();
 
-                this.text = value;
+                _text = value;
             }
         }
 
@@ -64,44 +61,42 @@ namespace KPreisser.UI
         /// </remarks>
         public bool Checked
         {
-            get => this.@checked;
+            get => _checked;
 
             set
             {
-                this.DenyIfBoundAndNotCreated();
+                DenyIfBoundAndNotCreated();
 
-                if (this.BoundPage == null)
+                if (BoundPage == null)
                 {
-                    this.@checked = value;
+                    _checked = value;
                 }
                 else
                 {
                     // Click the checkbox which should cause a call to
                     // HandleCheckBoxClicked(), where we will update the checked
                     // state.
-                    this.BoundPage.BoundTaskDialog.ClickCheckBox(
+                    BoundPage.BoundTaskDialog.ClickCheckBox(
                             value);
                 }
             }
         }
 
-
         internal override bool IsCreatable
         {
-            get => base.IsCreatable && !TaskDialogPage.IsNativeStringNullOrEmpty(this.text);
+            get => base.IsCreatable && !TaskDialogPage.IsNativeStringNullOrEmpty(_text);
         }
-
 
         /// <summary>
         /// 
         /// </summary>
         public void Focus()
         {
-            this.DenyIfNotBound();
-            this.DenyIfBoundAndNotCreated();
+            DenyIfNotBound();
+            DenyIfBoundAndNotCreated();
 
-            this.BoundPage.BoundTaskDialog.ClickCheckBox(
-                    this.@checked,
+            BoundPage.BoundTaskDialog.ClickCheckBox(
+                    _checked,
                     true);
         }
 
@@ -111,31 +106,28 @@ namespace KPreisser.UI
         /// <returns></returns>
         public override string ToString()
         {
-            return this.text ?? base.ToString();
+            return _text ?? base.ToString();
         }
-
 
         internal void HandleCheckBoxClicked(bool @checked)
         {
             // Only raise the event if the state actually changed.
-            if (@checked != this.@checked)
+            if (@checked != _checked)
             {
-                this.@checked = @checked;
-                this.OnCheckedChanged(EventArgs.Empty);
+                _checked = @checked;
+                OnCheckedChanged(EventArgs.Empty);
             }
         }
 
-
         private protected override TaskDialogFlags BindCore()
         {
-            var flags = base.BindCore();
+            TaskDialogFlags flags = base.BindCore();
 
-            if (this.@checked)
+            if (_checked)
                 flags |= TaskDialogFlags.TDF_VERIFICATION_FLAG_CHECKED;
 
             return flags;
         }
-
 
         /// <summary>
         /// 
@@ -143,7 +135,7 @@ namespace KPreisser.UI
         /// <param name="e"></param>
         private void OnCheckedChanged(EventArgs e)
         {
-            this.CheckedChanged?.Invoke(this, e);
+            CheckedChanged?.Invoke(this, e);
         }
     }
 }

@@ -7,10 +7,9 @@ namespace KPreisser.UI
     /// </summary>
     public sealed class TaskDialogCommonButton : TaskDialogButton
     {
-        private TaskDialogResult result;
+        private TaskDialogResult _result;
 
-        private bool visible = true;
-
+        private bool _visible = true;
 
         /// <summary>
         /// 
@@ -33,34 +32,33 @@ namespace KPreisser.UI
             if (!IsValidCommonButtonResult(result))
                 throw new ArgumentOutOfRangeException(nameof(result));
 
-            this.result = result;
+            _result = result;
         }
 
-
         /// <summary>
-        /// Gets or sets the <see cref="TaskDialogResult"/> which is represented by this
-        /// <see cref="TaskDialogCommonButton"/>.
+        /// Gets or sets the <see cref="TaskDialogResult"/> which is represented by
+        /// this <see cref="TaskDialogCommonButton"/>.
         /// </summary>
         public TaskDialogResult Result
         {
-            get => this.result;
+            get => _result;
 
             set
             {
                 if (!IsValidCommonButtonResult(value))
                     throw new ArgumentOutOfRangeException(nameof(value));
 
-                this.DenyIfBound();
+                DenyIfBound();
 
                 // If we are part of a CommonButtonCollection, we must now notify it
                 // that we changed our result.
-                this.Collection?.HandleKeyChange(
+                Collection?.HandleKeyChange(
                         this,
                         value);
 
                 // If this was successful or we are not part of a collection,
                 // we can now set the result.
-                this.result = value;
+                _result = value;
             }
         }
 
@@ -79,25 +77,24 @@ namespace KPreisser.UI
         /// </remarks>
         public bool Visible
         {
-            get => this.visible;
+            get => _visible;
 
             set
             {
-                this.DenyIfBound();
+                DenyIfBound();
 
-                this.visible = value;
+                _visible = value;
             }
         }
 
-
         internal override bool IsCreatable
         {
-            get => base.IsCreatable && this.visible;
+            get => base.IsCreatable && _visible;
         }
 
         internal override int ButtonID
         {
-            get => (int)this.result;
+            get => (int)_result;
         }
 
         internal new TaskDialogCommonButtonCollection Collection
@@ -105,7 +102,6 @@ namespace KPreisser.UI
             get => (TaskDialogCommonButtonCollection)base.Collection;
             set => base.Collection = value;
         }
-
 
         private static TaskDialogButtons GetButtonFlagForResult(
                 TaskDialogResult result)
@@ -145,20 +141,18 @@ namespace KPreisser.UI
             return GetButtonFlagForResult(result) != default;
         }
 
-
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
         public override string ToString()
         {
-            return this.result.ToString();
+            return _result.ToString();
         }
-
 
         internal TaskDialogButtons GetButtonFlag()
         {
-            return GetButtonFlagForResult(this.result);
+            return GetButtonFlagForResult(_result);
         }
     }
 }

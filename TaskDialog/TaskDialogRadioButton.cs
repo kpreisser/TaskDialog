@@ -9,25 +9,23 @@ namespace KPreisser.UI
     /// </summary>
     public sealed class TaskDialogRadioButton : TaskDialogControl
     {
-        private string text;
+        private string _text;
 
-        private int radioButtonID;
+        private int _radioButtonID;
 
-        private bool enabled = true;
+        private bool _enabled = true;
 
-        private bool @checked;
+        private bool _checked;
 
-        private TaskDialogRadioButtonCollection collection;
+        private TaskDialogRadioButtonCollection _collection;
 
-        private bool ignoreRadioButtonClickedNotification;
-
+        private bool _ignoreRadioButtonClickedNotification;
 
         /// <summary>
         /// Occurs when the value of the <see cref="Checked"/> property has changed
         /// while this control is bound to a task dialog.
         /// </summary>
         public event EventHandler CheckedChanged;
-
 
         /// <summary>
         /// 
@@ -43,9 +41,8 @@ namespace KPreisser.UI
         public TaskDialogRadioButton(string text)
             : this()
         {
-            this.text = text;
+            _text = text;
         }
-
 
         /// <summary>
         /// 
@@ -55,7 +52,7 @@ namespace KPreisser.UI
         /// </remarks>
         public bool Enabled
         {
-            get => this.enabled;
+            get => _enabled;
 
             set
             {
@@ -64,12 +61,12 @@ namespace KPreisser.UI
                 // Check if we can update the button.
                 if (CanUpdate())
                 {
-                    this.BoundPage?.BoundTaskDialog.SetRadioButtonEnabled(
-                            this.radioButtonID,
+                    BoundPage?.BoundTaskDialog.SetRadioButtonEnabled(
+                            _radioButtonID,
                             value);
                 }
 
-                this.enabled = value;
+                _enabled = value;
             }
         }
 
@@ -78,13 +75,13 @@ namespace KPreisser.UI
         /// </summary>
         public string Text
         {
-            get => this.text;
+            get => _text;
 
             set
             {
-                this.DenyIfBound();
+                DenyIfBound();
 
-                this.text = value;
+                _text = value;
             }
         }
 
@@ -97,31 +94,31 @@ namespace KPreisser.UI
         /// </remarks>
         public bool Checked
         {
-            get => this.@checked;
+            get => _checked;
 
             set
             {
-                this.DenyIfBoundAndNotCreated();
+                DenyIfBoundAndNotCreated();
 
                 // Unchecking a radio button is not possible in the task dialog.
                 // TODO: Should we throw only if the new value is different than the
                 // old one?
-                if (this.BoundPage != null && !value)
+                if (BoundPage != null && !value)
                     throw new InvalidOperationException(
                             "Cannot uncheck a radio button while it is bound to a task dialog.");
 
-                if (this.BoundPage == null)
+                if (BoundPage == null)
                 {
-                    this.@checked = value;
+                    _checked = value;
 
                     // If we are part of a collection, set the checked value of
                     // all other buttons to False.
                     // Note that this does not handle buttons that are added later to
                     // the collection.
-                    if (this.collection != null && value)
+                    if (_collection != null && value)
                     {
-                        foreach (var radioButton in this.collection)
-                            radioButton.@checked = radioButton == this;
+                        foreach (TaskDialogRadioButton radioButton in _collection)
+                            radioButton._checked = radioButton == this;
                     }
                 }
                 else
@@ -129,12 +126,12 @@ namespace KPreisser.UI
                     // Don't allow to click the radio button if we are currently in the
                     // RadioButtonClicked notification handler - see comments in 
                     // HandleRadioButtonClicked().
-                    if (this.BoundPage.BoundTaskDialog.RadioButtonClickedStackCount > 0)
+                    if (BoundPage.BoundTaskDialog.RadioButtonClickedStackCount > 0)
                         throw new InvalidOperationException(
                                 $"Cannot set the " +
-                                $"{nameof(TaskDialogRadioButton)}.{nameof(this.Checked)} " +
+                                $"{nameof(TaskDialogRadioButton)}.{nameof(Checked)} " +
                                 $"property from within the " +
-                                $"{nameof(TaskDialogRadioButton)}.{nameof(this.CheckedChanged)} " +
+                                $"{nameof(TaskDialogRadioButton)}.{nameof(CheckedChanged)} " +
                                 $"event of one of the radio buttons of the current task dialog.");
 
                     // Click the radio button which will (recursively) raise the
@@ -143,15 +140,15 @@ namespace KPreisser.UI
                     // the task dialog actually selects the radio button only
                     // after the notification handler returned - see comments in
                     // HandleRadioButtonClicked().
-                    this.ignoreRadioButtonClickedNotification = true;
+                    _ignoreRadioButtonClickedNotification = true;
                     try
                     {
-                        this.BoundPage.BoundTaskDialog.ClickRadioButton(
-                                this.radioButtonID);
+                        BoundPage.BoundTaskDialog.ClickRadioButton(
+                                _radioButtonID);
                     }
                     finally
                     {
-                        this.ignoreRadioButtonClickedNotification = false;
+                        _ignoreRadioButtonClickedNotification = false;
                     }
 
                     // Now raise the events.
@@ -160,23 +157,21 @@ namespace KPreisser.UI
             }
         }
 
-
         internal int RadioButtonID
         {
-            get => this.radioButtonID;
+            get => _radioButtonID;
         }
 
         internal TaskDialogRadioButtonCollection Collection
         {
-            get => this.collection;
-            set => this.collection = value;
+            get => _collection;
+            set => _collection = value;
         }
 
         internal override bool IsCreatable
         {
-            get => base.IsCreatable && !TaskDialogPage.IsNativeStringNullOrEmpty(this.text);
+            get => base.IsCreatable && !TaskDialogPage.IsNativeStringNullOrEmpty(_text);
         }
-
 
         /// <summary>
         /// 
@@ -184,14 +179,13 @@ namespace KPreisser.UI
         /// <returns></returns>
         public override string ToString()
         {
-            return this.text ?? base.ToString();
+            return _text ?? base.ToString();
         }
-
 
         internal TaskDialogFlags Bind(TaskDialogPage page, int radioButtonID)
         {
-            var result = this.Bind(page);
-            this.radioButtonID = radioButtonID;
+            TaskDialogFlags result = Bind(page);
+            _radioButtonID = radioButtonID;
 
             return result;
         }
@@ -200,7 +194,7 @@ namespace KPreisser.UI
         {
             // Check if we need to ignore the notification when it is caused by sending
             // the ClickRadioButton message.
-            if (this.ignoreRadioButtonClickedNotification)
+            if (_ignoreRadioButtonClickedNotification)
                 return;
 
             //// Note: We do not allow to set the "Checked" property of any radio button
@@ -237,26 +231,26 @@ namespace KPreisser.UI
             //// of RadioButtonClicked notifications even when we don't send any further
             //// messages to the dialog.
 
-            if (!this.@checked)
+            if (!_checked)
             {
                 // Need to copy the dialog reference because it can become null if the
                 // dialog is navigated from the event handler.
-                var boundDialog = this.BoundPage.BoundTaskDialog;
+                TaskDialog boundDialog = BoundPage.BoundTaskDialog;
                 checked
                 {
                     boundDialog.RadioButtonClickedStackCount++;
                 }
                 try
                 {
-                    this.@checked = true;
+                    _checked = true;
 
                     // Before raising the CheckedChanged event for the current button,
                     // uncheck the other radio buttons and call their events.
-                    foreach (var radioButton in this.BoundPage.RadioButtons)
+                    foreach (TaskDialogRadioButton radioButton in BoundPage.RadioButtons)
                     {
-                        if (radioButton != this && radioButton.@checked)
+                        if (radioButton != this && radioButton._checked)
                         {
-                            radioButton.@checked = false;
+                            radioButton._checked = false;
                             radioButton.OnCheckedChanged(EventArgs.Empty);
                         }
                     }
@@ -271,10 +265,9 @@ namespace KPreisser.UI
             }
         }
 
-
         private protected override void UnbindCore()
         {
-            this.radioButtonID = 0;
+            _radioButtonID = 0;
 
             base.UnbindCore();
         }
@@ -282,10 +275,9 @@ namespace KPreisser.UI
         private protected override void ApplyInitializationCore()
         {
             // Re-set the properties so they will make the necessary calls.
-            if (!this.enabled)
-                this.Enabled = this.enabled;
+            if (!_enabled)
+                Enabled = _enabled;
         }
-
 
         private bool CanUpdate()
         {
@@ -293,13 +285,13 @@ namespace KPreisser.UI
             // waiting for the Navigated event. In the latter case we don't throw
             // an exception however, because ApplyInitialization will be called in
             // the Navigated handler that does the necessary updates.
-            return this.BoundPage?.BoundTaskDialog
+            return BoundPage?.BoundTaskDialog
                     .WaitingForNavigatedEvent == false;
         }
 
         private void OnCheckedChanged(EventArgs e)
         {
-            this.CheckedChanged?.Invoke(this, e);
+            CheckedChanged?.Invoke(this, e);
         }
     }
 }

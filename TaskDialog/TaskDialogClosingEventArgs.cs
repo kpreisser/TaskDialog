@@ -13,9 +13,8 @@ namespace KPreisser.UI
         internal TaskDialogClosingEventArgs(TaskDialogButton closeButton)
             : base()
         {
-            this.CloseButton = closeButton;
+            CloseButton = closeButton;
         }
-
 
         /// <summary>
         /// Gets the <see cref="TaskDialogButton"/> that is causing the task dialog

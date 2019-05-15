@@ -19,11 +19,14 @@ namespace KPreisser.UI
 
         public const int WA_INACTIVE = 0;
 
+
         //// HResult codes
 
+#pragma warning disable IDE1006 // Naming Styles
         public const int S_OK = 0x0;
 
         public const int S_FALSE = 0x1;
+#pragma warning restore IDE1006 // Naming Styles
 
         //// Progress Bar states
 

@@ -8,14 +8,13 @@ namespace KPreisser.UI
     /// </summary>
     public abstract class TaskDialogButton : TaskDialogControl
     {
-        private bool enabled = true;
+        private bool _enabled = true;
 
-        private bool defaultButton;
+        private bool _defaultButton;
 
-        private bool elevationRequired;
+        private bool _elevationRequired;
 
-        private IReadOnlyList<TaskDialogButton> collection;
-
+        private IReadOnlyList<TaskDialogButton> _collection;
 
         /// <summary>
         /// Occurs when the button is clicked.
@@ -30,13 +29,11 @@ namespace KPreisser.UI
         /// </remarks>
         public event EventHandler<TaskDialogButtonClickedEventArgs> Click;
 
-
         // Disallow inheritance by specifying a private protected constructor.
         private protected TaskDialogButton()
             : base()
         {
         }
-
 
         /// <summary>
         /// 
@@ -46,7 +43,7 @@ namespace KPreisser.UI
         /// </remarks>
         public bool Enabled
         {
-            get => this.enabled;
+            get => _enabled;
 
             set
             {
@@ -55,12 +52,12 @@ namespace KPreisser.UI
                 // Check if we can update the button.
                 if (CanUpdate())
                 {
-                    this.BoundPage?.BoundTaskDialog.SetButtonEnabled(
-                            this.ButtonID,
+                    BoundPage?.BoundTaskDialog.SetButtonEnabled(
+                            ButtonID,
                             value);
                 }
 
-                this.enabled = value;
+                _enabled = value;
             }
         }
 
@@ -72,7 +69,7 @@ namespace KPreisser.UI
         /// </remarks>
         public bool ElevationRequired
         {
-            get => this.elevationRequired;
+            get => _elevationRequired;
 
             set
             {
@@ -80,12 +77,12 @@ namespace KPreisser.UI
 
                 if (CanUpdate())
                 {
-                    this.BoundPage?.BoundTaskDialog.SetButtonElevationRequiredState(
-                            this.ButtonID,
+                    BoundPage?.BoundTaskDialog.SetButtonElevationRequiredState(
+                            ButtonID,
                             value);
                 }
 
-                this.elevationRequired = value;
+                _elevationRequired = value;
             }
         }
 
@@ -95,30 +92,28 @@ namespace KPreisser.UI
         /// </summary>
         public bool DefaultButton
         {
-            get => this.defaultButton;
+            get => _defaultButton;
 
             set
             {
-                this.defaultButton = value;
+                _defaultButton = value;
 
                 // If we are part of a collection, set the defaultButton value of
                 // all other buttons to false.
                 // Note that this does not handle buttons that are added later to
                 // the collection.
-                if (this.collection != null && value)
+                if (_collection != null && value)
                 {
-                    foreach (var button in this.collection)
-                        button.defaultButton = button == this;
+                    foreach (TaskDialogButton button in _collection)
+                        button._defaultButton = button == this;
                 }
             }
         }
-
 
         internal abstract int ButtonID
         {
             get;
         }
-
 
         // Note: Instead of declaring an abstract Collection getter, we implement
         // the field and the property here so that the subclass doesn't have to
@@ -128,10 +123,9 @@ namespace KPreisser.UI
         // a new (internal) Collection property which has a more specific type.
         private protected IReadOnlyList<TaskDialogButton> Collection
         {
-            get => this.collection;
-            set => this.collection = value;
+            get => _collection;
+            set => _collection = value;
         }
-
 
         /// <summary>
         /// Simulates a click on this button.
@@ -141,33 +135,30 @@ namespace KPreisser.UI
             // Note: We allow a click even if the button is not visible/created.
             DenyIfNotBound();
 
-            this.BoundPage.BoundTaskDialog.ClickButton(this.ButtonID);
+            BoundPage.BoundTaskDialog.ClickButton(ButtonID);
         }
-
 
         internal bool HandleButtonClicked()
         {
             var e = new TaskDialogButtonClickedEventArgs();
-            this.OnClick(e);
+            OnClick(e);
 
             return !e.CancelClose;
         }
 
-
         private protected override void ApplyInitializationCore()
         {
             // Re-set the properties so they will make the necessary calls.
-            if (!this.enabled)
-                this.Enabled = this.enabled;
-            if (this.elevationRequired)
-                this.ElevationRequired = this.elevationRequired;
+            if (!_enabled)
+                Enabled = _enabled;
+            if (_elevationRequired)
+                ElevationRequired = _elevationRequired;
         }
 
         private protected void OnClick(TaskDialogButtonClickedEventArgs e)
         {
-            this.Click?.Invoke(this, e);
+            Click?.Invoke(this, e);
         }
-
 
         private bool CanUpdate()
         {
@@ -175,7 +166,7 @@ namespace KPreisser.UI
             // waiting for the Navigated event. In the latter case we don't throw
             // an exception however, because ApplyInitialization() will be called
             // in the Navigated handler that does the necessary updates.
-            return this.BoundPage?.BoundTaskDialog
+            return BoundPage?.BoundTaskDialog
                     .WaitingForNavigatedEvent == false;
         }
     }

@@ -11,11 +11,10 @@ namespace KPreisser.UI
         : Collection<TaskDialogRadioButton>
     {
         // HashSet to detect duplicate items.
-        private readonly HashSet<TaskDialogRadioButton> itemSet =
+        private readonly HashSet<TaskDialogRadioButton> _itemSet =
                 new HashSet<TaskDialogRadioButton>();
 
-        private TaskDialogPage boundPage;
-
+        private TaskDialogPage _boundPage;
 
         /// <summary>
         /// 
@@ -25,13 +24,11 @@ namespace KPreisser.UI
         {
         }
 
-
         internal TaskDialogPage BoundPage
         {
-            get => this.boundPage;
-            set => this.boundPage = value;
+            get => _boundPage;
+            set => _boundPage = value;
         }
-
 
         /// <summary>
         /// 
@@ -45,10 +42,9 @@ namespace KPreisser.UI
                 Text = text
             };
 
-            this.Add(button);
+            Add(button);
             return button;
         }
-
 
         /// <summary>
         /// 
@@ -59,17 +55,17 @@ namespace KPreisser.UI
         {
             // Disallow collection modification, so that we don't need to copy it
             // when binding the TaskDialogPage.
-            this.boundPage?.DenyIfBound();
+            _boundPage?.DenyIfBound();
             DenyIfHasOtherCollection(item);
 
-            var oldItem = this[index];
+            TaskDialogRadioButton oldItem = this[index];
             if (oldItem != item)
             {
                 // First, add the new item (which will throw if it is a duplicate entry),
                 // then remove the old one.
-                if (!this.itemSet.Add(item))
+                if (!_itemSet.Add(item))
                     throw new ArgumentException();
-                this.itemSet.Remove(oldItem);
+                _itemSet.Remove(oldItem);
 
                 oldItem.Collection = null;
                 item.Collection = this;
@@ -87,10 +83,10 @@ namespace KPreisser.UI
         {
             // Disallow collection modification, so that we don't need to copy it
             // when binding the TaskDialogPage.
-            this.boundPage?.DenyIfBound();
+            _boundPage?.DenyIfBound();
             DenyIfHasOtherCollection(item);
 
-            if (!this.itemSet.Add(item))
+            if (!_itemSet.Add(item))
                 throw new ArgumentException();
 
             item.Collection = this;
@@ -105,11 +101,11 @@ namespace KPreisser.UI
         {
             // Disallow collection modification, so that we don't need to copy it
             // when binding the TaskDialogPage.
-            this.boundPage?.DenyIfBound();
+            _boundPage?.DenyIfBound();
 
-            var oldItem = this[index];
+            TaskDialogRadioButton oldItem = this[index];
             oldItem.Collection = null;
-            this.itemSet.Remove(oldItem);
+            _itemSet.Remove(oldItem);
             base.RemoveItem(index);
         }
 
@@ -120,15 +116,14 @@ namespace KPreisser.UI
         {
             // Disallow collection modification, so that we don't need to copy it
             // when binding the TaskDialogPage.
-            this.boundPage?.DenyIfBound();
+            _boundPage?.DenyIfBound();
 
-            foreach (var button in this)
+            foreach (TaskDialogRadioButton button in this)
                 button.Collection = null;
 
-            this.itemSet.Clear();
+            _itemSet.Clear();
             base.ClearItems();
         }
-
 
         private void DenyIfHasOtherCollection(TaskDialogRadioButton item)
         {

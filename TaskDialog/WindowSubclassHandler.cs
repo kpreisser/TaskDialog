@@ -7,18 +7,18 @@ namespace KPreisser.UI
 {
     internal class WindowSubclassHandler : IDisposable
     {
-        private readonly IntPtr handle;
+        private readonly IntPtr _handle;
 
-        private bool opened;
+        private bool _opened;
 
-        private bool disposed;
+        private bool _disposed;
 
-        private IntPtr originalWindowProc;
+        private IntPtr _originalWindowProc;
 
         /// <summary>
         /// The delegate for the callback handler (that calls
         /// <see cref="WndProc(int, IntPtr, IntPtr)"/> from which the native function
-        /// pointer <see cref="windowProcDelegatePtr"/> is created. 
+        /// pointer <see cref="_windowProcDelegatePtr"/> is created. 
         /// </summary>
         /// <remarks>
         /// We must store this delegate (and prevent it from being garbage-collected)
@@ -32,33 +32,31 @@ namespace KPreisser.UI
         /// to store reference data. However, this is also the way that the
         /// NativeWindow class of WinForms does it.
         /// </remarks>
-        private readonly WindowSubclassHandlerNativeMethods.WindowProc windowProcDelegate;
+        private readonly WindowSubclassHandlerNativeMethods.WindowProc _windowProcDelegate;
 
         /// <summary>
-        /// The function pointer created from <see cref="windowProcDelegate"/>.
+        /// The function pointer created from <see cref="_windowProcDelegate"/>.
         /// </summary>
-        private readonly IntPtr windowProcDelegatePtr;
-
+        private readonly IntPtr _windowProcDelegatePtr;
 
         public WindowSubclassHandler(IntPtr handle)
         {
             if (handle == IntPtr.Zero)
                 throw new ArgumentNullException(nameof(handle));
 
-            this.handle = handle;
+            _handle = handle;
 
             // Create a delegate for our window procedure, and get a function
             // pointer for it.
-            this.windowProcDelegate = (hWnd, msg, wParam, lParam) =>
+            _windowProcDelegate = (hWnd, msg, wParam, lParam) =>
             {
-                Debug.Assert(hWnd == this.handle);
-                return this.WndProc(msg, wParam, lParam);
+                Debug.Assert(hWnd == _handle);
+                return WndProc(msg, wParam, lParam);
             };
 
-            this.windowProcDelegatePtr = Marshal.GetFunctionPointerForDelegate(
-                    this.windowProcDelegate);
+            _windowProcDelegatePtr = Marshal.GetFunctionPointerForDelegate(
+                    _windowProcDelegate);
         }
-
 
         /// <summary>
         /// Subclasses the window.
@@ -70,9 +68,9 @@ namespace KPreisser.UI
         /// <returns></returns>
         public void Open()
         {
-            if (this.disposed)
+            if (_disposed)
                 throw new ObjectDisposedException(nameof(WindowSubclassHandler));
-            if (this.opened)
+            if (_opened)
                 throw new InvalidOperationException();
 
             // Replace the existing window procedure with our one
@@ -80,49 +78,48 @@ namespace KPreisser.UI
             // We need to explicitely clear the last Win32 error and then retrieve
             // it, to check if the call succeeded.
             WindowSubclassHandlerNativeMethods.SetLastError(0);
-            this.originalWindowProc = WindowSubclassHandlerNativeMethods.SetWindowLongPtr(
-                    this.handle,
+            _originalWindowProc = WindowSubclassHandlerNativeMethods.SetWindowLongPtr(
+                    _handle,
                     WindowSubclassHandlerNativeMethods.GWLP_WNDPROC,
-                    this.windowProcDelegatePtr);
-            if (this.originalWindowProc == IntPtr.Zero && Marshal.GetLastWin32Error() != 0)
+                    _windowProcDelegatePtr);
+            if (_originalWindowProc == IntPtr.Zero && Marshal.GetLastWin32Error() != 0)
                 throw new Win32Exception();
 
-            Debug.Assert(this.originalWindowProc != this.windowProcDelegatePtr);
+            Debug.Assert(_originalWindowProc != _windowProcDelegatePtr);
 
-            this.opened = true;
+            _opened = true;
         }
 
         public void Dispose()
         {
-            this.Dispose(true);
+            Dispose(true);
             GC.SuppressFinalize(this);
         }
 
         public void KeepCallbackDelegateAlive()
         {
-            GC.KeepAlive(this.windowProcDelegate);
+            GC.KeepAlive(_windowProcDelegate);
         }
-
 
         protected virtual void Dispose(bool disposing)
         {
-            if (!this.disposed)
+            if (!_disposed)
             {
                 // We cannot do anything from the finalizer thread since we have
                 // resoures that must only be accessed from the GUI thread.
-                if (disposing && this.opened)
+                if (disposing && _opened)
                 {
                     // Check if the current window procedure is the correct one.
                     // We need to explicitely clear the last Win32 error and then
                     // retrieve it, to check if the call succeeded.
                     WindowSubclassHandlerNativeMethods.SetLastError(0);
-                    var currentWindowProcedure = WindowSubclassHandlerNativeMethods.GetWindowLongPtr(
-                            this.handle,
+                    IntPtr currentWindowProcedure = WindowSubclassHandlerNativeMethods.GetWindowLongPtr(
+                            _handle,
                             WindowSubclassHandlerNativeMethods.GWLP_WNDPROC);
                     if (currentWindowProcedure == IntPtr.Zero && Marshal.GetLastWin32Error() != 0)
                         throw new Win32Exception();
 
-                    if (currentWindowProcedure != this.windowProcDelegatePtr)
+                    if (currentWindowProcedure != _windowProcDelegatePtr)
                         throw new InvalidOperationException(
                                 "The current window procedure is not the expected one.");
 
@@ -130,18 +127,18 @@ namespace KPreisser.UI
                     // procedure.
                     WindowSubclassHandlerNativeMethods.SetLastError(0);
                     if (WindowSubclassHandlerNativeMethods.SetWindowLongPtr(
-                            this.handle,
+                            _handle,
                             WindowSubclassHandlerNativeMethods.GWLP_WNDPROC,
-                            this.originalWindowProc) == IntPtr.Zero &&
+                            _originalWindowProc) == IntPtr.Zero &&
                             Marshal.GetLastWin32Error() != 0)
                         throw new Win32Exception();
 
                     // Ensure to keep the delegate alive up to the point after we
                     // have undone the subclassing.
-                    this.KeepCallbackDelegateAlive();
+                    KeepCallbackDelegateAlive();
                 }
 
-                this.disposed = true;
+                _disposed = true;
             }
         }
 
@@ -151,11 +148,11 @@ namespace KPreisser.UI
                 IntPtr lParam)
         {
             // Call the original window procedure to process the message.
-            if (this.originalWindowProc != IntPtr.Zero)
+            if (_originalWindowProc != IntPtr.Zero)
             {
                 return WindowSubclassHandlerNativeMethods.CallWindowProc(
-                        this.originalWindowProc,
-                        this.handle,
+                        _originalWindowProc,
+                        _handle,
                         msg,
                         wParam,
                         lParam);
