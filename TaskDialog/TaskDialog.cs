@@ -613,7 +613,6 @@ namespace KPreisser.UI
                     _hwndDialog = IntPtr.Zero;
                     _raisedOpened = false;
                     _raisedPageCreated = false;
-                    //this.isWindowActive = false;
 
                     // Clear the cached objects.
                     _resultButton = default;
