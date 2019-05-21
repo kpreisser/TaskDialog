@@ -291,6 +291,10 @@ namespace KPreisser.UI
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
+                // TODO: Maybe ignore the set call if the value is the same
+                // (but we currently also don't do that for other properties).
+                //if (value == _page)
+                //    return;
 
                 if (DialogIsShown)
                 {
@@ -521,7 +525,7 @@ namespace KPreisser.UI
                 throw new InvalidOperationException(
                         $"This {nameof(TaskDialog)} instance is already being shown.");
 
-            Page.Validate(this);
+            Page.Validate();
 
             // Allocate a GCHandle which we will use for the callback data.
             var instanceHandle = GCHandle.Alloc(this);
@@ -1189,7 +1193,7 @@ namespace KPreisser.UI
             _isInNavigate = true;
             try
             {
-                page.Validate(this);
+                page.Validate();
 
                 // After validation passed, we can now unbind the current page and
                 // bind the new one.
@@ -1214,7 +1218,7 @@ namespace KPreisser.UI
                     // the "Destroyed" event so that it would no longer be valid, or e.g.
                     // navigate a different dialog to that page in the meantime (although
                     // admittedly that would be a very strange pattern).
-                    page.Validate(this);
+                    page.Validate();
                 }
 
                 _boundPage.Unbind();

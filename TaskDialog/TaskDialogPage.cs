@@ -557,7 +557,7 @@ namespace KPreisser.UI
             return _radioButtons[buttonID - RadioButtonStartID];
         }
 
-        internal void Validate(TaskDialog newOwner)
+        internal void Validate()
         {
             //// Before assigning button IDs etc., check if the button configs are OK.
             //// This needs to be done before clearing the old button IDs and assigning
@@ -566,31 +566,29 @@ namespace KPreisser.UI
             //// do the check, then release the old buttons, then assign the new
             //// buttons.
 
-            // Check that this page instance is not already bound to another
-            // TaskDialog instance. We don't throw if it is already bound to the
-            // same TaskDialog instane that wants to bind now, because that should
-            // be OK.
-            if (_boundTaskDialog != null && _boundTaskDialog != newOwner)
+            // Check that this page instance is not already bound to a
+            // TaskDialog instance.
+            if (_boundTaskDialog != null)
                 throw new InvalidOperationException(
                         $"This {nameof(TaskDialogPage)} instance is already bound to " +
-                        $"another {nameof(TaskDialog)} instance.");
+                        $"a {nameof(TaskDialog)} instance.");
 
             // We also need to validate the controls since they could also be assigned to
             // another (bound) TaskDialogPage at the same time.
             // Access the collections using the property to ensure they exist.
-            if (CommonButtons.BoundPage != null && CommonButtons.BoundPage != this ||
-                    CustomButtons.BoundPage != null && CustomButtons.BoundPage != this ||
-                    RadioButtons.BoundPage != null && RadioButtons.BoundPage != this ||
-                    _checkBox?.BoundPage != null && _checkBox.BoundPage != this ||
-                    _expander?.BoundPage != null && _expander.BoundPage != this ||
-                    _footer?.BoundPage != null && _footer.BoundPage != this ||
-                    _progressBar?.BoundPage != null && _progressBar.BoundPage != this)
+            if (CommonButtons.BoundPage != null ||
+                    CustomButtons.BoundPage != null ||
+                    RadioButtons.BoundPage != null ||
+                    _checkBox?.BoundPage != null ||
+                    _expander?.BoundPage != null ||
+                    _footer?.BoundPage != null ||
+                    _progressBar?.BoundPage != null)
                 throw new InvalidOperationException();
 
             foreach (TaskDialogControl control in (CommonButtons as IEnumerable<TaskDialogControl>)
                     .Concat(CustomButtons)
                     .Concat(RadioButtons))
-                if (control.BoundPage != null && control.BoundPage != this)
+                if (control.BoundPage != null)
                     throw new InvalidOperationException();
 
             if (CustomButtons.Count > int.MaxValue - CustomButtonStartID + 1 ||
