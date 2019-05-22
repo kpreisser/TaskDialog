@@ -967,7 +967,7 @@ namespace KPreisser.UI
 
                 case TaskDialogNotification.TDN_NAVIGATED:
                     // Indicate to the ButtonClicked handlers currently on the stack
-                    // that the dialog was navigated.
+                    // that we received the TDN_NAVIGATED notification.
                     _buttonClickNavigationCounter.navigationIndex =
                             _buttonClickNavigationCounter.stackCount;
 
@@ -1043,8 +1043,9 @@ namespace KPreisser.UI
                     bool handlerResult = true;
                     if (button != null && !_suppressButtonClickedEvent)
                     {
-                        // Note: When the event handler returns true but the dialog was
-                        // navigated within the handler, the buttonID of the handler
+                        // Note: When the event handler returned true but we received
+                        // a TDN_NAVIGATED notification within the handler (e.g. by
+                        // running the message loop there), the buttonID of the handler
                         // would be set as the dialog's result even if this ID is from
                         // the dialog page before the dialog was navigated.
                         // Additionally, memory access problems like
@@ -1054,8 +1055,8 @@ namespace KPreisser.UI
                         // probably because this scenario isn't an expected usage of
                         // the native TaskDialog.
                         // To fix the memory access problems, we simply always return
-                        // S_FALSE when the dialog was navigated within the ButtonClicked
-                        // event handler.
+                        // S_FALSE when the callback received a TDN_NAVIGATED
+                        // notification within the Button.Click event handler.
                         checked
                         {
                             _buttonClickNavigationCounter.stackCount++;
@@ -1065,10 +1066,11 @@ namespace KPreisser.UI
                             handlerResult = button.HandleButtonClicked();
 
                             // Check if the index was set to the current stack count,
-                            // which means the dialog was navigated while we called
-                            // the handler. In that case we need to return S_FALSE
-                            // to prevent the dialog from closing (and applying the
-                            // previous ButtonID and RadioButtonID as results).
+                            // which means we received a TDN_NAVIGATED notification
+                            // while we called the handler. In that case we need to
+                            // return S_FALSE to prevent the dialog from closing
+                            // (and applying the previous ButtonID and RadioButtonID
+                            // as results).
                             if (_buttonClickNavigationCounter.navigationIndex >=
                                     _buttonClickNavigationCounter.stackCount)
                                 handlerResult = false;
@@ -1267,7 +1269,8 @@ namespace KPreisser.UI
                     // Note: We don't unbind the previous page here - this will be done
                     // when the TDN_NAVIGATED notification occurs, because technically
                     // the controls of the previous page still exist on the native
-                    // Task Dialog until the TDN_NAVIGATED notification occurs.
+                    // Task Dialog until the TDN_NAVIGATED notification occurs (except
+                    // for the window title, which is updated immediately).
                     BindPageAndAllocateConfig(
                             page,
                             IntPtr.Zero,
@@ -1506,11 +1509,11 @@ namespace KPreisser.UI
                         if (alignment <= 0)
                             throw new ArgumentOutOfRangeException(nameof(alignment));
 
-                        // Align the pointer to the next align size. If not specified, we
-                        // will use the pointer (register) size.
+                        // Align the pointer to the next align size. If not specified,
+                        // we will use the pointer (register) size.
                         uint add = (uint)(alignment ?? IntPtr.Size) - 1;
-                        // TODO: Use nuint (System.UIntN) once available to avoid the separate
-                        // code for 32-bit and 64-bit pointer sizes.
+                        // TODO: Use nuint (System.UIntN) once available to avoid the
+                        // separate code for 32-bit and 64-bit pointer sizes.
                         if (IntPtr.Size == 8)
                             // Disable incorrect IDE warning as the latter cast is
                             // actually not redundant.
