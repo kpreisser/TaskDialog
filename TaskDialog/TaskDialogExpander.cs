@@ -58,6 +58,7 @@ namespace KPreisser.UI
             set
             {
                 DenyIfBoundAndNotCreated();
+                DenyIfWaitingForInitialization();
 
                 // Update the text if we are bound.
                 BoundPage?.BoundTaskDialog.UpdateTextElement(

@@ -123,8 +123,15 @@ namespace KPreisser.UI
             BoundPage?.DenyIfBound();
         }
 
-        private protected void DenyIfNotBound()
+        private protected void DenyIfWaitingForInitialization()
         {
+            BoundPage?.DenyIfWaitingForInitialization();
+        }
+
+        private protected void DenyIfNotBoundOrWaitingForInitialization()
+        {
+            DenyIfWaitingForInitialization();
+
             if (BoundPage == null)
                 throw new InvalidOperationException(
                         "This control is not currently bound to a task dialog.");

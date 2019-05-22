@@ -66,6 +66,7 @@ namespace KPreisser.UI
             set
             {
                 DenyIfBoundAndNotCreated();
+                DenyIfWaitingForInitialization();
 
                 if (BoundPage == null)
                 {
@@ -92,7 +93,7 @@ namespace KPreisser.UI
         /// </summary>
         public void Focus()
         {
-            DenyIfNotBound();
+            DenyIfNotBoundOrWaitingForInitialization();
             DenyIfBoundAndNotCreated();
 
             BoundPage.BoundTaskDialog.ClickCheckBox(

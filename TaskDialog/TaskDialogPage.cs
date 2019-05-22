@@ -60,6 +60,8 @@ namespace KPreisser.UI
 
         private bool _boundIconIsFromHandle;
 
+        private bool _appliedInitialization;
+
         /// <summary>
         /// Occurs after this instance is bound to a task dialog and the task dialog
         /// has created the GUI elements represented by this
@@ -248,6 +250,8 @@ namespace KPreisser.UI
 
             set
             {
+                DenyIfWaitingForInitialization();
+
                 // Note: We set the field values after calling the method to ensure
                 // it still has the previous value it the method throws.
                 _boundTaskDialog?.UpdateTitle(value);
@@ -268,6 +272,8 @@ namespace KPreisser.UI
 
             set
             {
+                DenyIfWaitingForInitialization();
+
                 _boundTaskDialog?.UpdateTextElement(
                         TaskDialogTextElement.TDE_MAIN_INSTRUCTION,
                         value);
@@ -288,6 +294,8 @@ namespace KPreisser.UI
 
             set
             {
+                DenyIfWaitingForInitialization();
+
                 _boundTaskDialog?.UpdateTextElement(
                         TaskDialogTextElement.TDE_CONTENT,
                         value);
@@ -320,6 +328,8 @@ namespace KPreisser.UI
                 if (value < ushort.MinValue || (int)value > ushort.MaxValue)
                     throw new ArgumentOutOfRangeException(nameof(value));
 
+                DenyIfWaitingForInitialization();
+
                 if (_boundTaskDialog != null &&
                         _boundIconIsFromHandle)
                     throw new InvalidOperationException();
@@ -347,6 +357,8 @@ namespace KPreisser.UI
 
             set
             {
+                DenyIfWaitingForInitialization();
+
                 if (_boundTaskDialog != null &&
                         !_boundIconIsFromHandle)
                     throw new InvalidOperationException();
@@ -504,6 +516,16 @@ namespace KPreisser.UI
             get => _boundTaskDialog;
         }
 
+        /// <summary>
+        /// Gets a value that indicates if the <see cref="_boundTaskDialog"/>
+        /// started navigation to this page but navigation did not yet complete
+        /// (in which case we cannot modify the dialog even though we are bound).
+        /// </summary>
+        internal bool WaitingForInitialization
+        {
+            get => _boundTaskDialog != null && !_appliedInitialization;
+        }
+
         internal static bool IsNativeStringNullOrEmpty(string str)
         {
             // From a native point of view, the string is empty if its first
@@ -517,6 +539,15 @@ namespace KPreisser.UI
                 throw new InvalidOperationException(
                         "Cannot set this property or call this method while the " +
                         "page is bound to a task dialog.");
+        }
+
+        internal void DenyIfWaitingForInitialization()
+        {
+            if (WaitingForInitialization)
+                throw new InvalidOperationException(
+                        $"Navigation of the task dialog did not complete yet. " +
+                        $"Please wait for the " +
+                        $"{nameof(TaskDialogPage)}.{nameof(Created)} event to occur.");
         }
 
         internal TaskDialogButton GetBoundButtonByID(int buttonID)
@@ -775,10 +806,16 @@ namespace KPreisser.UI
             _progressBar?.Unbind();
 
             _boundTaskDialog = null;
+            _appliedInitialization = false;
         }
 
         internal void ApplyInitialization()
         {
+            if (_appliedInitialization)
+                throw new InvalidOperationException();
+
+            _appliedInitialization = true;
+
             foreach (TaskDialogCommonButton button in CommonButtons)
                 button.ApplyInitialization();
 

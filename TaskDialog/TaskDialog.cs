@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -32,15 +33,6 @@ namespace KPreisser.UI
         , System.Windows.Forms.IWin32Window
 #endif
     {
-        ///// <summary>
-        ///// A self-defined message that is used to raise the <see cref="Activated"/> 
-        ///// event when the message loop is continued.
-        ///// </summary>
-        //// TODO: Is it OK to define a WM_APP message in this component? It means that when
-        //// the user also tries to subclass our task dialog window (like we already do), he
-        //// needs to be aware that he shouldn't use a WM_APP+100 message for his own logic.
-        //private const int HandleActiveWindowMessage = TaskDialogNativeMethods.WM_APP + 100;
-
         /// <summary>
         /// The delegate for the callback handler (that calls
         /// <see cref="HandleTaskDialogCallback"/>) from which the native function
@@ -64,6 +56,15 @@ namespace KPreisser.UI
         private TaskDialogPage _boundPage;
 
         /// <summary>
+        /// A qeueue of <see cref="TaskDialogPage"/>s that have been bound by
+        /// navigating the dialog, but don't yet reflect the state of the
+        /// native dialog because the corresponding
+        /// <see cref="TaskDialogNotification.TDN_NAVIGATED"/> notification was
+        /// not yet received.
+        /// </summary>
+        private readonly Queue<TaskDialogPage> _waitingNavigationPages = new Queue<TaskDialogPage>();
+
+        /// <summary>
         /// Window handle of the task dialog when it is being shown.
         /// </summary>
         private IntPtr _hwndDialog;
@@ -75,8 +76,6 @@ namespace KPreisser.UI
         private IntPtr _instanceHandlePtr;
 
         private WindowSubclassHandler _windowSubclassHandler;
-
-        private bool _waitingForNavigatedEvent;
 
         /// <summary>
         /// Stores a value that indicates if the
@@ -350,11 +349,6 @@ namespace KPreisser.UI
             get => _hwndDialog != IntPtr.Zero;
         }
 
-        internal bool WaitingForNavigatedEvent
-        {
-            get => _waitingForNavigatedEvent;
-        }
-
         /// <summary>
         /// Gets or sets the current count of stack frames that are in the
         /// <see cref="TaskDialogRadioButton.CheckedChanged"/> event for the
@@ -534,11 +528,13 @@ namespace KPreisser.UI
                 _instanceHandlePtr = GCHandle.ToIntPtr(instanceHandle);
 
                 // Bind the page and allocate the memory.
-                BindAndAllocateConfig(
-                       hwndOwner,
-                       _startupLocation,
-                       out IntPtr ptrToFree,
-                       out IntPtr ptrTaskDialogConfig);
+                BindPageAndAllocateConfig(
+                        _page,
+                        hwndOwner,
+                        _startupLocation,
+                        out IntPtr ptrToFree,
+                        out IntPtr ptrTaskDialogConfig);
+                _boundPage = _page;
                 try
                 {
                     //// Note: When an uncaught exception occurs in the callback or a
@@ -607,9 +603,6 @@ namespace KPreisser.UI
                     // due to an exception being thrown (as mentioned above).
                     _windowSubclassHandler = null;
 
-                    // Ensure to clear the flag if a navigation did not complete.
-                    _waitingForNavigatedEvent = false;
-
                     // Also, ensure the window handle and the
                     // raiseClosed/raisePageDestroyed flags are is cleared even if
                     // the TDN_DESTROYED notification did not occur (although that
@@ -625,6 +618,13 @@ namespace KPreisser.UI
                     // will already have been called from the callback.
                     _boundPage.Unbind();
                     _boundPage = null;
+
+                    // If we started navigating the dialog but navigation wasn't
+                    // successful, we also need to unbind the new pages.
+                    foreach (TaskDialogPage page in _waitingNavigationPages)
+                        page.Unbind();
+
+                    _waitingNavigationPages.Clear();
 
                     // We need to ensure the callback delegate is not garbage-collected
                     // as long as TaskDialogIndirect doesn't return, by calling
@@ -863,6 +863,9 @@ namespace KPreisser.UI
 
         internal void UpdateTitle(string title)
         {
+            // Note: We must not allow to change the title if we are currently
+            // waiting for a TDN_NAVIGATED notification, because in that case
+            // the task dialog will already have set the title from the new page.
             DenyIfDialogNotUpdatable();
 
             // TODO: Because we use SetWindowText() directly (as there is no task
@@ -952,9 +955,10 @@ namespace KPreisser.UI
                     // Don't raise the Created event of the bound page if we are
                     // waiting for the TDN_NAVIGATED notification, because that means
                     // the user has already navigated the dialog in one of the
-                    // previous events (so the bound page is the navigated one), and
-                    // so we must wait for the TDN_NAVIGATED notification to occur.
-                    if (!_raisedPageCreated && !_waitingForNavigatedEvent)
+                    // previous events, so eventually the TDN_NAVIGATED notification
+                    // will occur where we will raise the Created event for the new
+                    // page.
+                    if (!_raisedPageCreated && _waitingNavigationPages.Count == 0)
                     {
                         _raisedPageCreated = true;
                         _boundPage.OnCreated(EventArgs.Empty);
@@ -962,11 +966,23 @@ namespace KPreisser.UI
                     break;
 
                 case TaskDialogNotification.TDN_NAVIGATED:
-                    _waitingForNavigatedEvent = false;
+                    // Indicate to the ButtonClicked handlers currently on the stack
+                    // that the dialog was navigated.
+                    _buttonClickNavigationCounter.navigationIndex =
+                            _buttonClickNavigationCounter.stackCount;
+
+                    // We can now unbind the previous page and then switch to the
+                    // new page.
+                    _boundPage.Unbind();
+                    _boundPage = _waitingNavigationPages.Dequeue();
+
                     _boundPage.ApplyInitialization();
 
+                    // Only raise the event if we don't wait for yet another
+                    // navigation (this is the same as we do in the TDN_CREATED
+                    // handler).
                     Debug.Assert(!_raisedPageCreated);
-                    if (!_raisedPageCreated)
+                    if (!_raisedPageCreated &&_waitingNavigationPages.Count == 0)
                     {
                         _raisedPageCreated = true;
                         _boundPage.OnCreated(EventArgs.Empty);
@@ -1112,9 +1128,22 @@ namespace KPreisser.UI
 
                 case TaskDialogNotification.TDN_RADIO_BUTTON_CLICKED:
                     int radioButtonID = (int)wParam;
-                    TaskDialogRadioButton radioButton = _boundPage.GetBoundRadioButtonByID(radioButtonID);
+                    TaskDialogRadioButton radioButton =
+                            _boundPage.GetBoundRadioButtonByID(radioButtonID);
 
-                    radioButton.HandleRadioButtonClicked();
+                    checked
+                    {
+                        RadioButtonClickedStackCount++;
+                    }
+                    try
+                    {
+                        radioButton.HandleRadioButtonClicked();
+                    }
+                    finally
+                    {
+                        RadioButtonClickedStackCount--;
+                    }
+
                     break;
 
                 case TaskDialogNotification.TDN_EXPANDO_BUTTON_CLICKED:
@@ -1163,10 +1192,18 @@ namespace KPreisser.UI
         {
             DenyIfDialogNotUpdatable();
 
-            // Don't allow to navigate the dialog when we are in a RadioButtonClicked
-            // notification, because the dialog doesn't seem to correctly handle this
-            // (e.g. when running the message loop after navigation, an
-            // AccessViolationException would occur after the handler returns).
+            // Don't allow to navigate the dialog when we are in a
+            // TDN_RADIO_BUTTON_CLICKED notification, because the dialog doesn't
+            // seem to correctly handle this (e.g. when running the message loop
+            // after navigation, an AccessViolationException would occur after
+            // the handler returns).
+            // Note: Actually, the problem is when we receive a
+            // TDN_NAVIGATED notification within a TDN_RADIO_BUTTON_CLICKED
+            // notification (due to running the message loop there), but we can
+            // only prevent this by not allowing to send the TDM_NAVIGATE_PAGE
+            // message here (and then disallow to send any
+            // TDM_CLICK_RADIO_BUTTON messages until we receive the TDN_NAVIGATED
+            // notification).
             // See: https://github.com/dotnet/winforms/issues/146#issuecomment-466784079
             if (RadioButtonClickedStackCount > 0)
                 throw new InvalidOperationException(
@@ -1205,62 +1242,68 @@ namespace KPreisser.UI
                     _raisedPageCreated = false;
                     _boundPage.OnDestroyed(EventArgs.Empty);
 
-                    // Need to check again if the dialog has not already been closed, since
-                    // the Destroyed event handler could have performed a button click that
-                    // closed the dialog.
-                    // TODO: Another option would be to disallow button clicks while within
-                    // the event handler.
+                    // Need to check again if the dialog has not already been closed,
+                    // since the Destroyed event handler could have performed a
+                    // button click that closed the dialog.
+                    // TODO: Another option would be to disallow button clicks while
+                    // within the event handler.
                     if (_resultButton != default)
                         throw new InvalidOperationException(dialogAlreadyClosedMesssage);
 
                     // Also, we need to validate the page again. For example, the user
-                    // might change the properties of the new page or its controls within
-                    // the "Destroyed" event so that it would no longer be valid, or e.g.
-                    // navigate a different dialog to that page in the meantime (although
-                    // admittedly that would be a very strange pattern).
+                    // might change the properties of the new page or its controls
+                    // within the "Destroyed" event so that it would no longer be
+                    // valid, or e.g. navigate a different dialog to that page in
+                    // the meantime (although admittedly that would be a very
+                    // strange pattern).
                     page.Validate();
                 }
 
-                _boundPage.Unbind();
-                _boundPage = null;
 
+                TaskDialogPage previousPage = _page;
                 _page = page;
-
-                // Note: If this throws an OutOfMemoryException, we leave the previous
-                // page in the unbound state. We could solve this by re-binding the
-                // previous page in case of an exception.
-                // Note: We don't need to specify the owner window handle again when
-                // navigating.
-                BindAndAllocateConfig(
-                        IntPtr.Zero,
-                        default,
-                        out IntPtr ptrToFree,
-                        out IntPtr ptrTaskDialogConfig);
                 try
                 {
-                    // Note: If the task dialog cannot be recreated with the new page,
-                    // the dialog will close and TaskDialogIndirect() returns with an
-                    // error code.
-                    SendTaskDialogMessage(
-                            TaskDialogMessage.TDM_NAVIGATE_PAGE,
-                            0,
-                            ptrTaskDialogConfig);
+                    // Note: We don't unbind the previous page here - this will be done
+                    // when the TDN_NAVIGATED notification occurs, because technically
+                    // the controls of the previous page still exist on the native
+                    // Task Dialog until the TDN_NAVIGATED notification occurs.
+                    BindPageAndAllocateConfig(
+                            page,
+                            IntPtr.Zero,
+                            default,
+                            out IntPtr ptrToFree,
+                            out IntPtr ptrTaskDialogConfig);
+                    try
+                    {
+                        // Note: If the task dialog cannot be recreated with the new
+                        // page, the dialog will close and TaskDialogIndirect()
+                        // returns with an error code.
+                        SendTaskDialogMessage(
+                                TaskDialogMessage.TDM_NAVIGATE_PAGE,
+                                0,
+                                ptrTaskDialogConfig);
+
+                        // After this was successful, enqueue the page.
+                        _waitingNavigationPages.Enqueue(page);
+                    }
+                    catch
+                    {
+                        page.Unbind();
+                        throw;
+                    }
+                    finally
+                    {
+                        // We can now free the memory because SendMessage does not
+                        // return until the message has been processed.
+                        FreeConfig(ptrToFree);
+                    }
                 }
-                finally
+                catch
                 {
-                    // We can now free the memory because SendMessage does not return
-                    // until the message has been processed.
-                    FreeConfig(ptrToFree);
+                    _page = previousPage;
+                    throw;
                 }
-
-                // After sending the navigation message, disallow updates until we
-                // received the Navigated event because that messages would be lost.
-                _waitingForNavigatedEvent = true;
-
-                // Indicate to the ButtonClicked handlers currently on the stack that
-                // the dialog was navigated.
-                _buttonClickNavigationCounter.navigationIndex =
-                        _buttonClickNavigationCounter.stackCount;
             }
             finally
             {
@@ -1268,13 +1311,13 @@ namespace KPreisser.UI
             }
         }
 
-        private unsafe void BindAndAllocateConfig(
+        private unsafe void BindPageAndAllocateConfig(
+                TaskDialogPage page,
                 IntPtr hwndOwner,
                 TaskDialogStartupLocation startupLocation,
                 out IntPtr ptrToFree,
                 out IntPtr ptrTaskDialogConfig)
         {
-            TaskDialogPage page = Page;
             page.Bind(
                     this,
                     out TaskDialogFlags flags,
@@ -1283,7 +1326,7 @@ namespace KPreisser.UI
                     out IntPtr footerIconValue,
                     out int defaultButtonID,
                     out int defaultRadioButtonID);
-            _boundPage = page;
+
             try
             {
                 if (startupLocation == TaskDialogStartupLocation.CenterParent)
@@ -1488,8 +1531,7 @@ namespace KPreisser.UI
             catch
             {
                 // Unbind the page, then rethrow the exception.
-                _boundPage.Unbind();
-                _boundPage = null;
+                page.Unbind();
 
                 throw;
             }
@@ -1533,18 +1575,27 @@ namespace KPreisser.UI
                         "task dialog is shown.");
         }
 
-        private void DenyIfDialogNotUpdatable()
+        private void DenyIfDialogNotUpdatable(bool ignoreWaitingForNavigation = false)
         {
             if (!HandleAvailable)
                 throw new InvalidOperationException(
                         "Can only update the state of a task dialog while it is shown.");
 
-            if (_waitingForNavigatedEvent)
+            // When we wait for the navigated event to occur, also don't allow to
+            // update the dialog because that could produce an unexpected state
+            // (because it will change its size for the new page, but if we then
+            // updated e.g. the text or instruction, it would update its size again
+            // for the current page, and it would keep the (wrong) size after
+            // navigation).
+            // An exception could e.g. a button click (as that doesn't manipulate
+            // the layout) so that the user can close the dialog even though we are
+            // waiting for the navigation to finish.
+            if (_waitingNavigationPages.Count > 0 && !ignoreWaitingForNavigation)
                 throw new InvalidOperationException(
                         "Cannot update the task dialog directly after navigating it. " +
                         $"Please wait for the " +
                         $"{nameof(TaskDialogPage)}.{nameof(TaskDialogPage.Created)} " +
-                        $"event to occur.");
+                        $"event of the next page to occur.");
         }
 
         private void SendTaskDialogMessage(

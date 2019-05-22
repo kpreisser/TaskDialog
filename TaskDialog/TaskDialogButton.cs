@@ -133,7 +133,7 @@ namespace KPreisser.UI
         public void PerformClick()
         {
             // Note: We allow a click even if the button is not visible/created.
-            DenyIfNotBound();
+            DenyIfNotBoundOrWaitingForInitialization();
 
             BoundPage.BoundTaskDialog.ClickButton(ButtonID);
         }
@@ -166,8 +166,7 @@ namespace KPreisser.UI
             // waiting for the Navigated event. In the latter case we don't throw
             // an exception however, because ApplyInitialization() will be called
             // in the Navigated handler that does the necessary updates.
-            return BoundPage?.BoundTaskDialog
-                    .WaitingForNavigatedEvent == false;
+            return BoundPage?.WaitingForInitialization == false;
         }
     }
 }

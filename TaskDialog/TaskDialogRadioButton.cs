@@ -99,6 +99,7 @@ namespace KPreisser.UI
             set
             {
                 DenyIfBoundAndNotCreated();
+                DenyIfWaitingForInitialization();
 
                 // Unchecking a radio button is not possible in the task dialog.
                 // TODO: Should we throw only if the new value is different than the
@@ -123,9 +124,39 @@ namespace KPreisser.UI
                 }
                 else
                 {
-                    // Don't allow to click the radio button if we are currently in the
-                    // RadioButtonClicked notification handler - see comments in 
-                    // HandleRadioButtonClicked().
+                    // Note: We do not allow to set the "Checked" property of any radio button
+                    // of the current task dialog while we are within the TDN_RADIO_BUTTON_CLICKED
+                    // notification handler. This is because the logic of the task dialog is
+                    // such that the radio button will be selected AFTER the callback returns
+                    // (not before it is called), at least when the event is caused by code
+                    // sending the ClickRadioButton message. This is mentioned in the
+                    // documentation for TDM_CLICK_RADIO_BUTTON:
+                    // "The specified radio button ID is sent to the TaskDialogCallbackProc
+                    // callback function as part of a TDN_RADIO_BUTTON_CLICKED notification code.
+                    // After the callback function returns, the radio button will be selected."
+                    // 
+                    // While we handle this by ignoring the RadioButtonClicked notification
+                    // when it is caused by a ClickRadioButton message, and then raise the
+                    // events after the notification handler returned, this still seems to
+                    // cause problems for RadioButtonClicked notifications initially caused
+                    // by the user clicking the radio button in the UI.
+                    // 
+                    // For example, consider a scenario with two radio buttons [ID 1 and 2],
+                    // and the user added an event handler to automatically select the first
+                    // radio button (ID 1) when the second one (ID 2) is selected in the UI.
+                    // This means the stack will then look as follows:
+                    // Show() ->
+                    // Callback: RadioButtonClicked [ID 2] ->
+                    // SendMessage: ClickRadioButton [ID 1] ->
+                    // Callback: RadioButtonClicked [ID 1]
+                    //
+                    // However, when the initial RadioButtonClicked handler (ID 2) returns, the
+                    // TaskDialog again calls the handler for ID 1 (which wouldn't be a problem),
+                    // and then again calls it for ID 2, which is unexpected (and it doesn't
+                    // seem that we can prevent this by returning S_FALSE in the notification
+                    // handler). Additionally, after that it even seems we get an endless loop
+                    // of RadioButtonClicked notifications even when we don't send any further
+                    // messages to the dialog.
                     if (BoundPage.BoundTaskDialog.RadioButtonClickedStackCount > 0)
                         throw new InvalidOperationException(
                                 $"Cannot set the " +
@@ -197,71 +228,23 @@ namespace KPreisser.UI
             if (_ignoreRadioButtonClickedNotification)
                 return;
 
-            //// Note: We do not allow to set the "Checked" property of any radio button
-            //// of the current task dialog while we are within the RadioButtonClicked
-            //// notification handler. This is because the logic of the task dialog is
-            //// such that the radio button will be selected AFTER the callback returns
-            //// (not before it is called), at least when the event is caused by code
-            //// sending the ClickRadioButton message. This is mentioned in the
-            //// documentation for TDM_CLICK_RADIO_BUTTON:
-            //// "The specified radio button ID is sent to the TaskDialogCallbackProc
-            //// callback function as part of a TDN_RADIO_BUTTON_CLICKED notification code.
-            //// After the callback function returns, the radio button will be selected."
-            //// 
-            //// While we handle this by ignoring the RadioButtonClicked notification
-            //// when it is caused by a ClickRadioButton message, and then raise the
-            //// events after the notification handler returned, this still seems to
-            //// cause problems for RadioButtonClicked notifications initially caused
-            //// by the user clicking the radio button in the UI.
-            //// 
-            //// For example, consider a scenario with two radio buttons [ID 1 and 2],
-            //// and the user added an event handler to automatically select the first
-            //// radio button (ID 1) when the second one (ID 2) is selected in the UI.
-            //// This means the stack will then look as follows:
-            //// Show() ->
-            //// Callback: RadioButtonClicked [ID 2] ->
-            //// SendMessage: ClickRadioButton [ID 1] ->
-            //// Callback: RadioButtonClicked [ID 1]
-            ////
-            //// However, when the initial RadioButtonClicked handler (ID 2) returns, the
-            //// TaskDialog again calls the handler for ID 1 (which wouldn't be a problem),
-            //// and then again calls it for ID 2, which is unexpected (and it doesn't
-            //// seem that we can prevent this by returning S_FALSE in the notification
-            //// handler). Additionally, after that it even seems we get an endless loop
-            //// of RadioButtonClicked notifications even when we don't send any further
-            //// messages to the dialog.
-
             if (!_checked)
-            {
-                // Need to copy the dialog reference because it can become null if the
-                // dialog is navigated from the event handler.
-                TaskDialog boundDialog = BoundPage.BoundTaskDialog;
-                checked
-                {
-                    boundDialog.RadioButtonClickedStackCount++;
-                }
-                try
-                {
-                    _checked = true;
+            {                
+                _checked = true;
 
-                    // Before raising the CheckedChanged event for the current button,
-                    // uncheck the other radio buttons and call their events.
-                    foreach (TaskDialogRadioButton radioButton in BoundPage.RadioButtons)
+                // Before raising the CheckedChanged event for the current button,
+                // uncheck the other radio buttons and call their events.
+                foreach (TaskDialogRadioButton radioButton in BoundPage.RadioButtons)
+                {
+                    if (radioButton != this && radioButton._checked)
                     {
-                        if (radioButton != this && radioButton._checked)
-                        {
-                            radioButton._checked = false;
-                            radioButton.OnCheckedChanged(EventArgs.Empty);
-                        }
+                        radioButton._checked = false;
+                        radioButton.OnCheckedChanged(EventArgs.Empty);
                     }
+                }
 
-                    // Finally, call the event for the current button.
-                    OnCheckedChanged(EventArgs.Empty);
-                }
-                finally
-                {
-                    boundDialog.RadioButtonClickedStackCount--;
-                }
+                // Finally, call the event for the current button.
+                OnCheckedChanged(EventArgs.Empty);
             }
         }
 
@@ -285,8 +268,7 @@ namespace KPreisser.UI
             // waiting for the Navigated event. In the latter case we don't throw
             // an exception however, because ApplyInitialization will be called in
             // the Navigated handler that does the necessary updates.
-            return BoundPage?.BoundTaskDialog
-                    .WaitingForNavigatedEvent == false;
+            return BoundPage?.WaitingForInitialization == false;
         }
 
         private void OnCheckedChanged(EventArgs e)

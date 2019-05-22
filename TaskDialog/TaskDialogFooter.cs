@@ -52,6 +52,7 @@ namespace KPreisser.UI
             set
             {
                 DenyIfBoundAndNotCreated();
+                DenyIfWaitingForInitialization();
 
                 // Update the text if we are bound.
                 BoundPage?.BoundTaskDialog.UpdateTextElement(
@@ -81,6 +82,7 @@ namespace KPreisser.UI
                     throw new ArgumentOutOfRangeException(nameof(value));
 
                 DenyIfBoundAndNotCreated();
+                DenyIfWaitingForInitialization();
 
                 if (BoundPage != null &&
                         _boundFooterIconIsFromHandle)
@@ -110,6 +112,7 @@ namespace KPreisser.UI
             set
             {
                 DenyIfBoundAndNotCreated();
+                DenyIfWaitingForInitialization();
 
                 if (BoundPage != null &&
                         !_boundFooterIconIsFromHandle)

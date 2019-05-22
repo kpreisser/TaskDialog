@@ -55,6 +55,7 @@ namespace KPreisser.UI
             set
             {
                 DenyIfBoundAndNotCreated();
+                DenyIfWaitingForInitialization();
 
                 if (BoundPage != null && value == TaskDialogProgressBarState.None)
                     throw new InvalidOperationException(
@@ -148,6 +149,7 @@ namespace KPreisser.UI
                     throw new ArgumentOutOfRangeException(nameof(value));
 
                 DenyIfBoundAndNotCreated();
+                DenyIfWaitingForInitialization();
 
                 // We only update the TaskDialog if the current state is a
                 // non-marquee progress bar.
@@ -178,6 +180,7 @@ namespace KPreisser.UI
                     throw new ArgumentOutOfRangeException(nameof(value));
 
                 DenyIfBoundAndNotCreated();
+                DenyIfWaitingForInitialization();
 
                 // We only update the TaskDialog if the current state is a
                 // non-marquee progress bar.
@@ -208,6 +211,7 @@ namespace KPreisser.UI
                     throw new ArgumentOutOfRangeException(nameof(value));
 
                 DenyIfBoundAndNotCreated();
+                DenyIfWaitingForInitialization();
 
                 // We only update the TaskDialog if the current state is a
                 // non-marquee progress bar.
