@@ -62,6 +62,12 @@ namespace KPreisser.UI
         /// <see cref="TaskDialogNotification.TDN_NAVIGATED"/> notification was
         /// not yet received.
         /// </summary>
+        /// <remarks>
+        /// For example, if you updated the dialog's contents like Text or
+        /// Instruction before receiving the
+        /// <see cref="TaskDialogNotification.TDN_NAVIGATED"/> notification, these
+        /// changes will be lost after the dialog completes navigation.
+        /// </remarks>
         private readonly Queue<TaskDialogPage> _waitingNavigationPages = new Queue<TaskDialogPage>();
 
         /// <summary>
@@ -666,7 +672,7 @@ namespace KPreisser.UI
             try
             {
                 // Send a click button message with the cancel result.
-                ClickButton((int)TaskDialogResult.Cancel);
+                ClickCancelButton();
             }
             finally
             {
@@ -809,6 +815,22 @@ namespace KPreisser.UI
                     TaskDialogMessage.TDM_CLICK_BUTTON,
                     buttonID,
                     IntPtr.Zero);
+        }
+
+        internal void ClickCancelButton()
+        {
+            // We allow to simulate a button click (which might close the dialog),
+            // even if we are waiting for the TDN_NAVIGATED notification to occur,
+            // because between sending the TDM_NAVIGATE_PAGE message and receiving
+            // the TDN_NAVIGATED notification, the dialog will behave as if it
+            // still contains the controls of the previous page (though actually
+            // handles for controls of both the previous and new page exist during
+            // that time).
+            SendTaskDialogMessage(
+                    TaskDialogMessage.TDM_CLICK_BUTTON,
+                    (int)TaskDialogResult.Cancel,
+                    IntPtr.Zero,
+                    false);
         }
 
         internal void ClickRadioButton(int radioButtonID)
@@ -982,7 +1004,7 @@ namespace KPreisser.UI
                     // navigation (this is the same as we do in the TDN_CREATED
                     // handler).
                     Debug.Assert(!_raisedPageCreated);
-                    if (!_raisedPageCreated &&_waitingNavigationPages.Count == 0)
+                    if (!_raisedPageCreated && _waitingNavigationPages.Count == 0)
                     {
                         _raisedPageCreated = true;
                         _boundPage.OnCreated(EventArgs.Empty);
@@ -1268,9 +1290,14 @@ namespace KPreisser.UI
                 {
                     // Note: We don't unbind the previous page here - this will be done
                     // when the TDN_NAVIGATED notification occurs, because technically
-                    // the controls of the previous page still exist on the native
-                    // Task Dialog until the TDN_NAVIGATED notification occurs (except
-                    // for the window title, which is updated immediately).
+                    // the controls of both the previous page AND the new page exist
+                    // on the native Task Dialog until the TDN_NAVIGATED notification
+                    // occurs, and the dialog behaves as if it currently still showing
+                    // the previous page (which can be verified using the behavior of
+                    // the "Help" button, where simulating a click to that button will
+                    // raise the "Help" event if the dialog considers the button to
+                    // be shown, and otherwise will close the dialog without raising
+                    // the "Help" event).
                     BindPageAndAllocateConfig(
                             page,
                             IntPtr.Zero,
@@ -1578,7 +1605,7 @@ namespace KPreisser.UI
                         "task dialog is shown.");
         }
 
-        private void DenyIfDialogNotUpdatable(bool ignoreWaitingForNavigation = false)
+        private void DenyIfDialogNotUpdatable(bool checkWaitingForNavigation = true)
         {
             if (!HandleAvailable)
                 throw new InvalidOperationException(
@@ -1590,10 +1617,10 @@ namespace KPreisser.UI
             // updated e.g. the text or instruction, it would update its size again
             // for the current page, and it would keep the (wrong) size after
             // navigation).
-            // An exception could e.g. a button click (as that doesn't manipulate
+            // An exception is e.g. a button click (as that doesn't manipulate
             // the layout) so that the user can close the dialog even though we are
             // waiting for the navigation to finish.
-            if (_waitingNavigationPages.Count > 0 && !ignoreWaitingForNavigation)
+            if (_waitingNavigationPages.Count > 0 && checkWaitingForNavigation)
                 throw new InvalidOperationException(
                         "Cannot update the task dialog directly after navigating it. " +
                         $"Please wait for the " +
@@ -1604,9 +1631,10 @@ namespace KPreisser.UI
         private void SendTaskDialogMessage(
                 TaskDialogMessage message,
                 int wParam,
-                IntPtr lParam)
+                IntPtr lParam,
+                bool checkWaitingForNavigation = true)
         {
-            DenyIfDialogNotUpdatable();
+            DenyIfDialogNotUpdatable(checkWaitingForNavigation);
 
             TaskDialogNativeMethods.SendMessage(
                     _hwndDialog,
