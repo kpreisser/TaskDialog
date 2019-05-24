@@ -112,10 +112,10 @@ namespace KPreisser.UI
                 {
                     _checked = value;
 
-                    // If we are part of a collection, set the checked value of
+                    // If we are part of a collection, set the checked value of all
                     // all other buttons to False.
-                    // Note that this does not handle buttons that are added later to
-                    // the collection.
+                    // Note that this does not handle buttons that are added later
+                    // to the collection.
                     if (_collection != null && value)
                     {
                         foreach (TaskDialogRadioButton radioButton in _collection)
@@ -183,7 +183,24 @@ namespace KPreisser.UI
                     }
 
                     // Now raise the events.
-                    HandleRadioButtonClicked();
+                    // Note: We also increment the stack count here to prevent
+                    // navigating the dialog and setting the Checked property
+                    // within the event handlers here even though this would work
+                    // correctly for the native API (as we are not in the
+                    // TDN_RADIO_BUTTON_CLICKED notification), because we are
+                    // raising two events (Unchecked+Checked), and when the
+                    // second event is called, the dialog might already be
+                    // navigated or another radio button may have been checked.
+                    TaskDialog boundTaskDialog = BoundPage.BoundTaskDialog;
+                    boundTaskDialog.RadioButtonClickedStackCount++;
+                    try
+                    {
+                        HandleRadioButtonClicked();
+                    }
+                    finally
+                    {
+                        boundTaskDialog.RadioButtonClickedStackCount--;
+                    }
                 }
             }
         }
@@ -223,8 +240,8 @@ namespace KPreisser.UI
 
         internal void HandleRadioButtonClicked()
         {
-            // Check if we need to ignore the notification when it is caused by sending
-            // the ClickRadioButton message.
+            // Check if we need to ignore the notification when it is caused by
+            // sending the ClickRadioButton message.
             if (_ignoreRadioButtonClickedNotification)
                 return;
 
@@ -233,7 +250,8 @@ namespace KPreisser.UI
                 _checked = true;
 
                 // Before raising the CheckedChanged event for the current button,
-                // uncheck the other radio buttons and call their events.
+                // uncheck the other radio buttons and call their events (there
+                // should be no more than one other button that is already checked).
                 foreach (TaskDialogRadioButton radioButton in BoundPage.RadioButtons)
                 {
                     if (radioButton != this && radioButton._checked)
