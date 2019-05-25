@@ -277,12 +277,21 @@ namespace KPreisser.UI
         /// <remarks>
         /// When setting this property while the task dialog is displayed, it will
         /// recreate its contents from the specified <see cref="TaskDialogPage"/>
-        /// ("navigation"). After the dialog is navigated, the <!--<see cref="Navigated"/>
-        /// and the --> <see cref="TaskDialogPage.Created"/> event will occur.
+        /// ("navigation"). This means that the <see cref="TaskDialogPage.Destroyed"/>
+        /// event will occur for the current page, and after the dialog
+        /// completed navigation, the <see cref="TaskDialogPage.Created"/> event
+        /// of the new page will occur.
         /// 
         /// Please note that you cannot update the task dialog or its controls
-        /// directly after navigating it. You will need to wait for the mentioned
+        /// directly after navigating it (except for calling <see cref="Close"/>.
+        /// You will need to wait for the <see cref="TaskDialogPage.Created"/>
         /// event to occur before you can update the dialog or its controls.
+        /// 
+        /// Note that when navigating the dialog, the new page will be bound
+        /// immediately, but the previous page will not be unbound until the
+        /// <see cref="TaskDialogPage.Created"/> event of the new page is raised,
+        /// because during that time the task dialog behaves as if it still
+        /// showed the controls of the previous page.
         /// </remarks>
         [Category("Contents")]
         [Description("Contains the current page of the Task Dialog.")]
