@@ -52,7 +52,7 @@ namespace KPreisser.UI
                 // Check if we can update the button.
                 if (CanUpdate())
                 {
-                    BoundPage?.BoundTaskDialog.SetButtonEnabled(
+                    BoundPage.BoundTaskDialog.SetButtonEnabled(
                             ButtonID,
                             value);
                 }
@@ -77,7 +77,7 @@ namespace KPreisser.UI
 
                 if (CanUpdate())
                 {
-                    BoundPage?.BoundTaskDialog.SetButtonElevationRequiredState(
+                    BoundPage.BoundTaskDialog.SetButtonElevationRequiredState(
                             ButtonID,
                             value);
                 }
