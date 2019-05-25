@@ -1076,6 +1076,8 @@ namespace KPreisser.UI
                         // navigation; these would also be set as result of the dialog),
                         // probably because this scenario isn't an expected usage of
                         // the native TaskDialog.
+                        // See:
+                        // https://gist.github.com/kpreisser/61e01d3d99cf63d92d0c5e1379af3119
                         // To fix the memory access problems, we simply always return
                         // S_FALSE when the callback received a TDN_NAVIGATED
                         // notification within the Button.Click event handler.
@@ -1228,7 +1230,9 @@ namespace KPreisser.UI
             // message here (and then disallow to send any
             // TDM_CLICK_RADIO_BUTTON messages until we receive the TDN_NAVIGATED
             // notification).
-            // See: https://github.com/dotnet/winforms/issues/146#issuecomment-466784079
+            // See:
+            // https://github.com/dotnet/winforms/issues/146#issuecomment-466784079
+            // and https://gist.github.com/kpreisser/4990c29ccad7fe3c4e932d3a2833c91f
             if (RadioButtonClickedStackCount > 0)
                 throw new InvalidOperationException(
                         $"Cannot navigate the dialog from within the " +

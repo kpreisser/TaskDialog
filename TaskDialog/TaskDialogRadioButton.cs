@@ -142,7 +142,7 @@ namespace KPreisser.UI
                     // TDN_RADIO_BUTTON_CLICKED notification when it is caused by
                     // sending a TDM_CLICK_RADIO_BUTTON message, and then raising
                     // the events after the notification handler returned, this
-                    // still seems to cause problems for RadioButtonClicked
+                    // still seems to cause problems for TDN_RADIO_BUTTON_CLICKED
                     // notifications initially caused by the user clicking the radio
                     // button in the UI.
                     // 
@@ -152,18 +152,20 @@ namespace KPreisser.UI
                     // second one (ID 2) is selected in the UI.
                     // This means the stack will then look as follows:
                     // Show() ->
-                    // Callback: RadioButtonClicked [ID 2] ->
-                    // SendMessage: ClickRadioButton [ID 1] ->
-                    // Callback: RadioButtonClicked [ID 1]
+                    // Callback: TDN_RADIO_BUTTON_CLICKED [ID 2] ->
+                    // SendMessage: TDM_CLICK_RADIO_BUTTON [ID 1] ->
+                    // Callback: TDN_RADIO_BUTTON_CLICKED [ID 1]
                     //
-                    // However, when the initial RadioButtonClicked handler (ID 2)
-                    // returns, the TaskDialog again calls the handler for ID 1
-                    // (which wouldn't be a problem), and then again calls it for
-                    // ID 2, which is unexpected (and it doesn't seem that we can
-                    // prevent this by returning S_FALSE in the notification
+                    // However, when the initial TDN_RADIO_BUTTON_CLICKED handler
+                    // (ID 2) returns, the task dialog again calls the handler for
+                    // ID 1 (which wouldn't be a problem), and then again calls it
+                    // for ID 2, which is unexpected (and it doesn't seem that we
+                    // can prevent this by returning S_FALSE in the notification
                     // handler). Additionally, after that it even seems we get an
-                    // endless loop of RadioButtonClicked notifications even when
-                    // we don't send any further messages to the dialog.
+                    // endless loop of TDN_RADIO_BUTTON_CLICKED notifications even
+                    // when we don't send any further messages to the dialog.
+                    // See:
+                    // https://gist.github.com/kpreisser/c9d07225d801783c4b5fed0fac563469
                     if (BoundPage.BoundTaskDialog.RadioButtonClickedStackCount > 0)
                         throw new InvalidOperationException(
                                 $"Cannot set the " +
@@ -173,10 +175,8 @@ namespace KPreisser.UI
                                 $"event of one of the radio buttons of the current task dialog.");
 
                     // Click the radio button which will (recursively) raise the
-                    // RadioButtonClicked notification. However, we ignore the
-                    // notification and then raise the events afterwards (because
-                    // the task dialog actually selects the radio button only
-                    // after the notification handler returned - see comments
+                    // TDN_RADIO_BUTTON_CLICKED notification. However, we ignore
+                    // the notification and then raise the events afterwards - see
                     // above.
                     _ignoreRadioButtonClickedNotification = true;
                     try
@@ -199,7 +199,10 @@ namespace KPreisser.UI
                     // second event is called, the dialog might already be
                     // navigated or another radio button may have been checked.
                     TaskDialog boundTaskDialog = BoundPage.BoundTaskDialog;
-                    boundTaskDialog.RadioButtonClickedStackCount++;
+                    checked
+                    {
+                        boundTaskDialog.RadioButtonClickedStackCount++;
+                    }
                     try
                     {
                         HandleRadioButtonClicked();
@@ -248,12 +251,12 @@ namespace KPreisser.UI
         internal void HandleRadioButtonClicked()
         {
             // Check if we need to ignore the notification when it is caused by
-            // sending the ClickRadioButton message.
+            // sending the TDM_CLICK_RADIO_BUTTON message.
             if (_ignoreRadioButtonClickedNotification)
                 return;
 
             if (!_checked)
-            {                
+            {
                 _checked = true;
 
                 // Before raising the CheckedChanged event for the current button,
@@ -291,8 +294,8 @@ namespace KPreisser.UI
         {
             // Only update the button when bound to a task dialog and we are not
             // waiting for the Navigated event. In the latter case we don't throw
-            // an exception however, because ApplyInitialization will be called in
-            // the Navigated handler that does the necessary updates.
+            // an exception however, because ApplyInitialization() will be called
+            // in the Navigated handler that does the necessary updates.
             return BoundPage?.WaitingForInitialization == false;
         }
 
