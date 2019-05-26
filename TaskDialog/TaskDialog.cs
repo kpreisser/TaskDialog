@@ -282,10 +282,11 @@ namespace KPreisser.UI
         /// completed navigation, the <see cref="TaskDialogPage.Created"/> event
         /// of the new page will occur.
         /// 
-        /// Please note that you cannot update the task dialog or its controls
-        /// directly after navigating it (except for calling <see cref="Close"/>.
+        /// Please note that you cannot manipulate the task dialog or its controls
+        /// immediately after navigating it (except for calling <see cref="Close"/>
+        /// or navigating the dialog again).
         /// You will need to wait for the <see cref="TaskDialogPage.Created"/>
-        /// event to occur before you can update the dialog or its controls.
+        /// event to occur before you can manipulate the dialog or its controls.
         /// 
         /// Note that when navigating the dialog, the new page will be bound
         /// immediately, but the previous page will not be unbound until the
