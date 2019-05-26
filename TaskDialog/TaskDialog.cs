@@ -1225,7 +1225,9 @@ namespace KPreisser.UI
         /// </remarks>
         private void Navigate(TaskDialogPage page)
         {
-            DenyIfDialogNotUpdatable();
+            // We allow to nagivate the dialog even if the previous navigation did
+            // not complete yet, as this seems to work in the native implementation.
+            DenyIfDialogNotUpdatable(checkWaitingForNavigation: false);
 
             // Don't allow to navigate the dialog when we are in a
             // TDN_RADIO_BUTTON_CLICKED notification, because the dialog doesn't
@@ -1295,62 +1297,84 @@ namespace KPreisser.UI
                     // strange pattern).
                     page.Validate();
                 }
-
-
-                TaskDialogPage previousPage = _page;
-                _page = page;
-                try
-                {
-                    // Note: We don't unbind the previous page here - this will be done
-                    // when the TDN_NAVIGATED notification occurs, because technically
-                    // the controls of both the previous page AND the new page exist
-                    // on the native Task Dialog until the TDN_NAVIGATED notification
-                    // occurs, and the dialog behaves as if it currently still showing
-                    // the previous page (which can be verified using the behavior of
-                    // the "Help" button, where simulating a click to that button will
-                    // raise the "Help" event if the dialog considers the button to
-                    // be shown, and otherwise will close the dialog without raising
-                    // the "Help" event).
-                    BindPageAndAllocateConfig(
-                            page,
-                            IntPtr.Zero,
-                            default,
-                            out IntPtr ptrToFree,
-                            out IntPtr ptrTaskDialogConfig);
-                    try
-                    {
-                        // Note: If the task dialog cannot be recreated with the new
-                        // page, the dialog will close and TaskDialogIndirect()
-                        // returns with an error code.
-                        SendTaskDialogMessage(
-                                TaskDialogMessage.TDM_NAVIGATE_PAGE,
-                                0,
-                                ptrTaskDialogConfig);
-
-                        // After this was successful, enqueue the page.
-                        _waitingNavigationPages.Enqueue(page);
-                    }
-                    catch
-                    {
-                        page.Unbind();
-                        throw;
-                    }
-                    finally
-                    {
-                        // We can now free the memory because SendMessage does not
-                        // return until the message has been processed.
-                        FreeConfig(ptrToFree);
-                    }
-                }
-                catch
-                {
-                    _page = previousPage;
-                    throw;
-                }
             }
             finally
             {
                 _isInNavigate = false;
+            }
+
+            TaskDialogPage previousPage = _page;
+            _page = page;
+            try
+            {
+                // Note: We don't unbind the previous page here - this will be done
+                // when the TDN_NAVIGATED notification occurs, because technically
+                // the controls of both the previous page AND the new page exist
+                // on the native Task Dialog until the TDN_NAVIGATED notification
+                // occurs, and the dialog behaves as if it currently still showing
+                // the previous page (which can be verified using the behavior of
+                // the "Help" button, where simulating a click to that button will
+                // raise the "Help" event if the dialog considers the button to
+                // be shown, and otherwise will close the dialog without raising
+                // the "Help" event).
+                BindPageAndAllocateConfig(
+                        page,
+                        IntPtr.Zero,
+                        default,
+                        out IntPtr ptrToFree,
+                        out IntPtr ptrTaskDialogConfig);
+                try
+                {
+                    // Enqueue the page before sending the message. This ensures
+                    // that if the native task dialog's behavior is ever changed
+                    // to raise the TDN_NAVIGATED notification recursively from
+                    // sending the TDM_NAVIGATE_PAGE message, we can correctly
+                    // process the page in the callback.
+                    _waitingNavigationPages.Enqueue(page);
+                    try
+                    {
+                        // Note: If the task dialog cannot be recreated with the
+                        // new page, the dialog will close and TaskDialogIndirect()
+                        // returns with an error code; but this will not be
+                        // noticeable in the SendMessage() return value.
+                        SendTaskDialogMessage(
+                                TaskDialogMessage.TDM_NAVIGATE_PAGE,
+                                0,
+                                ptrTaskDialogConfig,
+                                checkWaitingForNavigation: false);
+                    }
+                    catch
+                    {
+                        // Since navigation failed, we need to remove our page
+                        // from the queue.
+                        // However, this should not happen because
+                        // SendTaskDialogMessage() shouldn't throw here.
+                        int originalCount = _waitingNavigationPages.Count;
+                        for (int i = 0; i < originalCount; i++)
+                        {
+                            TaskDialogPage element = _waitingNavigationPages.Dequeue();
+                            if (element != page)
+                                _waitingNavigationPages.Enqueue(element);
+                        }
+                        throw;
+                    }
+                }
+                catch
+                {
+                    page.Unbind();
+                    throw;
+                }
+                finally
+                {
+                    // We can now free the memory because SendMessage does not
+                    // return until the message has been processed.
+                    FreeConfig(ptrToFree);
+                }
+            }
+            catch
+            {
+                _page = previousPage;
+                throw;
             }
         }
 
@@ -1635,7 +1659,7 @@ namespace KPreisser.UI
             // waiting for the navigation to finish.
             if (_waitingNavigationPages.Count > 0 && checkWaitingForNavigation)
                 throw new InvalidOperationException(
-                        "Cannot update the task dialog directly after navigating it. " +
+                        "Cannot manipulate the task dialog immediately after navigating it. " +
                         $"Please wait for the " +
                         $"{nameof(TaskDialogPage)}.{nameof(TaskDialogPage.Created)} " +
                         $"event of the next page to occur.");
