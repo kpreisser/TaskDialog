@@ -62,12 +62,6 @@ namespace KPreisser.UI
         /// <see cref="TaskDialogNotification.TDN_NAVIGATED"/> notification was
         /// not yet received.
         /// </summary>
-        /// <remarks>
-        /// For example, if you updated the dialog's contents like Text or
-        /// Instruction before receiving the
-        /// <see cref="TaskDialogNotification.TDN_NAVIGATED"/> notification, these
-        /// changes will be lost after the dialog completes navigation.
-        /// </remarks>
         private readonly Queue<TaskDialogPage> _waitingNavigationPages = new Queue<TaskDialogPage>();
 
         /// <summary>
@@ -1317,7 +1311,9 @@ namespace KPreisser.UI
                 // the "Help" button, where simulating a click to that button will
                 // raise the "Help" event if the dialog considers the button to
                 // be shown, and otherwise will close the dialog without raising
-                // the "Help" event).
+                // the "Help" event; also, if you updated e.g. the dialog's text or
+                // instruction during that time, these changes would be lost when
+                // the TDN_NAVIGATED notification occurs).
                 BindPageAndAllocateConfig(
                         page,
                         IntPtr.Zero,
