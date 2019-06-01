@@ -145,7 +145,7 @@ namespace KPreisser.UI
         /// handles will return <see cref="TaskDialogNativeMethods.S_FALSE"/> to
         /// not override the previously set result.
         /// </remarks>
-        private (TaskDialogButton button, int buttonID) _resultButton;
+        private (TaskDialogButton button, int buttonID)? _resultButton;
 
         private bool _suppressButtonClickedEvent;
 
@@ -585,8 +585,8 @@ namespace KPreisser.UI
                     // dialog is displayed), the dialog returns IDCANCEL (2) without
                     // priorly raising the TDN_BUTTON_CLICKED notification.
                     // Therefore, in that case we need to retrieve the button ourselves.
-                    if (resultButtonID == _resultButton.buttonID)
-                        return _resultButton.button;
+                    if (resultButtonID == _resultButton?.buttonID)
+                        return _resultButton.Value.button;
                     else
                         return _boundPage.GetBoundButtonByID(resultButtonID) ??
                                 CreatePlaceholderButton((TaskDialogResult)resultButtonID);
@@ -622,7 +622,7 @@ namespace KPreisser.UI
                     _raisedPageCreated = false;
 
                     // Clear the cached objects.
-                    _resultButton = default;
+                    _resultButton = null;
 
                     // Unbind the page. The 'Destroyed' event of the TaskDialogPage
                     // will already have been called from the callback.
@@ -1124,7 +1124,7 @@ namespace KPreisser.UI
                         // override the previously set result, which would mean the
                         // button returned from Show() would not match one specified
                         // in the "Closing" event's args.
-                        if (_resultButton != default)
+                        if (_resultButton != null)
                         {
                             handlerResult = false;
                         }
@@ -1258,7 +1258,7 @@ namespace KPreisser.UI
             // result even though a different button has already been set as result).
             const string dialogAlreadyClosedMesssage =
                     "Cannot navigate the dialog when it has already closed.";
-            if (_resultButton != default)
+            if (_resultButton != null)
                 throw new InvalidOperationException(dialogAlreadyClosedMesssage);
 
             _isInNavigate = true;
@@ -1281,7 +1281,7 @@ namespace KPreisser.UI
                     // button click that closed the dialog.
                     // TODO: Another option would be to disallow button clicks while
                     // within the event handler.
-                    if (_resultButton != default)
+                    if (_resultButton != null)
                         throw new InvalidOperationException(dialogAlreadyClosedMesssage);
 
                     // Also, we need to validate the page again. For example, the user
