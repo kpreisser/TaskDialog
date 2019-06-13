@@ -7,15 +7,15 @@ namespace KPreisser.UI
     /// <summary>
     /// 
     /// </summary>
-    public class TaskDialogCommonButtonCollection
-        : KeyedCollection<TaskDialogResult, TaskDialogCommonButton>
+    public class TaskDialogStandardButtonCollection
+        : KeyedCollection<TaskDialogResult, TaskDialogStandardButton>
     {
         private TaskDialogPage _boundPage;
 
         /// <summary>
         /// 
         /// </summary>
-        public TaskDialogCommonButtonCollection()
+        public TaskDialogStandardButtonCollection()
             : base()
         {
         }
@@ -24,14 +24,14 @@ namespace KPreisser.UI
         /// 
         /// </summary>
         /// <param name="buttons"></param>
-        public static implicit operator TaskDialogCommonButtonCollection(
+        public static implicit operator TaskDialogStandardButtonCollection(
                 TaskDialogButtons buttons)
         {
-            var collection = new TaskDialogCommonButtonCollection();
+            var collection = new TaskDialogStandardButtonCollection();
 
             // Get the button results for the flags.
             foreach (TaskDialogResult result in GetResultsForButtonFlags(buttons))
-                collection.Add(new TaskDialogCommonButton(result));
+                collection.Add(new TaskDialogStandardButton(result));
 
             return collection;
         }
@@ -80,16 +80,16 @@ namespace KPreisser.UI
         /// </summary>
         /// <param name="result"></param>
         /// <returns></returns>
-        public TaskDialogCommonButton Add(TaskDialogResult result)
+        public TaskDialogStandardButton Add(TaskDialogResult result)
         {
-            var button = new TaskDialogCommonButton(result);
+            var button = new TaskDialogStandardButton(result);
             Add(button);
 
             return button;
         }
 
         internal void HandleKeyChange(
-                TaskDialogCommonButton button,
+                TaskDialogStandardButton button,
                 TaskDialogResult newKey)
         {
             ChangeItemKey(button, newKey);
@@ -100,7 +100,7 @@ namespace KPreisser.UI
         /// </summary>
         /// <param name="item"></param>
         /// <returns></returns>
-        protected override TaskDialogResult GetKeyForItem(TaskDialogCommonButton item)
+        protected override TaskDialogResult GetKeyForItem(TaskDialogStandardButton item)
         {
             return item.Result;
         }
@@ -110,14 +110,14 @@ namespace KPreisser.UI
         /// </summary>
         /// <param name="index"></param>
         /// <param name="item"></param>
-        protected override void SetItem(int index, TaskDialogCommonButton item)
+        protected override void SetItem(int index, TaskDialogStandardButton item)
         {
             // Disallow collection modification, so that we don't need to copy it
             // when binding the TaskDialogPage.
             _boundPage?.DenyIfBound();
             DenyIfHasOtherCollection(item);
 
-            TaskDialogCommonButton oldItem = this[index];
+            TaskDialogStandardButton oldItem = this[index];
 
             // Call the base method first, as it will throw if we would insert a
             // duplicate item.
@@ -132,7 +132,7 @@ namespace KPreisser.UI
         /// </summary>
         /// <param name="index"></param>
         /// <param name="item"></param>
-        protected override void InsertItem(int index, TaskDialogCommonButton item)
+        protected override void InsertItem(int index, TaskDialogStandardButton item)
         {
             // Disallow collection modification, so that we don't need to copy it
             // when binding the TaskDialogPage.
@@ -156,7 +156,7 @@ namespace KPreisser.UI
             // when binding the TaskDialogPage.
             _boundPage?.DenyIfBound();
 
-            TaskDialogCommonButton oldItem = this[index];
+            TaskDialogStandardButton oldItem = this[index];
             oldItem.Collection = null;
             base.RemoveItem(index);
         }
@@ -170,12 +170,12 @@ namespace KPreisser.UI
             // when binding the TaskDialogPage.
             _boundPage?.DenyIfBound();
 
-            foreach (TaskDialogCommonButton button in this)
+            foreach (TaskDialogStandardButton button in this)
                 button.Collection = null;
             base.ClearItems();
         }
 
-        private void DenyIfHasOtherCollection(TaskDialogCommonButton item)
+        private void DenyIfHasOtherCollection(TaskDialogStandardButton item)
         {
             if (item.Collection != null && item.Collection != this)
                 throw new InvalidOperationException(

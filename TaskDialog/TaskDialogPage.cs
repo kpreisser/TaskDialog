@@ -20,7 +20,7 @@ namespace KPreisser.UI
         /// </summary>
         /// <remarks>
         /// We need to ensure we don't use a ID that is already used for a
-        /// common button (TaskDialogResult), so we start with 100 to be safe
+        /// standard button (TaskDialogResult), so we start with 100 to be safe
         /// (100 is also used as first ID in MSDN examples for the task dialog).
         /// </remarks>
         private const int CustomButtonStartID = 100;
@@ -33,7 +33,7 @@ namespace KPreisser.UI
         /// </remarks>
         private const int RadioButtonStartID = 1;
 
-        private TaskDialogCommonButtonCollection _commonButtons;
+        private TaskDialogStandardButtonCollection _standardButtons;
 
         private TaskDialogCustomButtonCollection _customButtons;
 
@@ -108,10 +108,10 @@ namespace KPreisser.UI
         /// 
         /// </summary>
         [Category("Controls")]
-        public TaskDialogCommonButtonCollection CommonButtons
+        public TaskDialogStandardButtonCollection StandardButtons
         {
-            get => _commonButtons ??
-                    (_commonButtons = new TaskDialogCommonButtonCollection());
+            get => _standardButtons ??
+                    (_standardButtons = new TaskDialogStandardButtonCollection());
 
             set
             {
@@ -119,7 +119,7 @@ namespace KPreisser.UI
                 // access the controls from the task dialog's callback.
                 DenyIfBound();
 
-                _commonButtons = value ?? throw new ArgumentNullException(nameof(value));
+                _standardButtons = value ?? throw new ArgumentNullException(nameof(value));
             }
         }
 
@@ -392,12 +392,12 @@ namespace KPreisser.UI
         /// Gets or sets a value that indicates whether the task dialog can be canceled
         /// by pressing ESC, Alt+F4 or clicking the title bar's close button even if no
         /// <see cref="TaskDialogButtons.Cancel"/> button is specified in
-        /// <see cref="CommonButtons"/>.
+        /// <see cref="StandardButtons"/>.
         /// </summary>
         /// <remarks>
         /// You can intercept cancellation of the dialog without displaying a "Cancel"
-        /// button by adding a <see cref="TaskDialogCommonButton"/> with its
-        /// <see cref="TaskDialogCommonButton.Visible"/> set to <c>false</c> and specifying
+        /// button by adding a <see cref="TaskDialogStandardButton"/> with its
+        /// <see cref="TaskDialogStandardButton.Visible"/> set to <c>false</c> and specifying
         /// a <see cref="TaskDialogResult.Cancel"/> result.
         /// </remarks>
         [DefaultValue(false)]
@@ -562,8 +562,8 @@ namespace KPreisser.UI
                 // the common button ID is not part of the collection, because
                 // the caller might not know if such a button exists.
                 var result = (TaskDialogResult)buttonID;
-                if (_commonButtons.Contains(result))
-                    button = _commonButtons[result];
+                if (_standardButtons.Contains(result))
+                    button = _standardButtons[result];
             }
 
             return button;
@@ -599,7 +599,7 @@ namespace KPreisser.UI
             // We also need to validate the controls since they could also be assigned to
             // another (bound) TaskDialogPage at the same time.
             // Access the collections using the property to ensure they exist.
-            if (CommonButtons.BoundPage != null ||
+            if (StandardButtons.BoundPage != null ||
                     CustomButtons.BoundPage != null ||
                     RadioButtons.BoundPage != null ||
                     _checkBox?.BoundPage != null ||
@@ -608,7 +608,7 @@ namespace KPreisser.UI
                     _progressBar?.BoundPage != null)
                 throw new InvalidOperationException();
 
-            foreach (TaskDialogControl control in (CommonButtons as IEnumerable<TaskDialogControl>)
+            foreach (TaskDialogControl control in (StandardButtons as IEnumerable<TaskDialogControl>)
                     .Concat(CustomButtons)
                     .Concat(RadioButtons))
                 if (control.BoundPage != null)
@@ -620,7 +620,7 @@ namespace KPreisser.UI
                         "Too many custom buttons or radio buttons have been added.");
 
             bool foundDefaultButton = false;
-            foreach (TaskDialogButton button in (CommonButtons as IEnumerable<TaskDialogButton>)
+            foreach (TaskDialogButton button in (StandardButtons as IEnumerable<TaskDialogButton>)
                     .Concat(CustomButtons))
             {
                 if (button.DefaultButton)
@@ -694,11 +694,11 @@ namespace KPreisser.UI
                     flags |= TaskDialogFlags.TDF_USE_COMMAND_LINKS_NO_ICON;
             }
 
-            TaskDialogCommonButtonCollection commonButtons = CommonButtons;
+            TaskDialogStandardButtonCollection standardButtons = StandardButtons;
             TaskDialogCustomButtonCollection customButtons = CustomButtons;
             TaskDialogRadioButtonCollection radioButtons = RadioButtons;
 
-            commonButtons.BoundPage = this;
+            standardButtons.BoundPage = this;
             customButtons.BoundPage = this;
             radioButtons.BoundPage = this;
 
@@ -707,16 +707,16 @@ namespace KPreisser.UI
             // don't need to copy them here.
             defaultButtonID = 0;
             buttonFlags = default;
-            foreach (TaskDialogCommonButton commonButton in commonButtons)
+            foreach (TaskDialogStandardButton standardButton in standardButtons)
             {
-                flags |= commonButton.Bind(this);
+                flags |= standardButton.Bind(this);
 
-                if (commonButton.IsCreated)
+                if (standardButton.IsCreated)
                 {
-                    buttonFlags |= commonButton.GetButtonFlag();
+                    buttonFlags |= standardButton.GetButtonFlag();
 
-                    if (commonButton.DefaultButton && defaultButtonID == 0)
-                        defaultButtonID = commonButton.ButtonID;
+                    if (standardButton.DefaultButton && defaultButtonID == 0)
+                        defaultButtonID = standardButton.ButtonID;
                 }
             }
 
@@ -770,12 +770,12 @@ namespace KPreisser.UI
             if (_boundTaskDialog == null)
                 throw new InvalidOperationException();
 
-            TaskDialogCommonButtonCollection commonButtons = CommonButtons;
+            TaskDialogStandardButtonCollection standardButtons = StandardButtons;
             TaskDialogCustomButtonCollection customButtons = CustomButtons;
             TaskDialogRadioButtonCollection radioButtons = RadioButtons;
 
-            foreach (TaskDialogCommonButton commonButton in commonButtons)
-                commonButton.Unbind();
+            foreach (TaskDialogStandardButton standardButton in standardButtons)
+                standardButton.Unbind();
 
             foreach (TaskDialogCustomButton customButton in customButtons)
                 customButton.Unbind();
@@ -783,7 +783,7 @@ namespace KPreisser.UI
             foreach (TaskDialogRadioButton radioButton in radioButtons)
                 radioButton.Unbind();
 
-            commonButtons.BoundPage = null;
+            standardButtons.BoundPage = null;
             customButtons.BoundPage = null;
             radioButtons.BoundPage = null;
 
@@ -803,7 +803,7 @@ namespace KPreisser.UI
 
             _appliedInitialization = true;
 
-            foreach (TaskDialogCommonButton button in CommonButtons)
+            foreach (TaskDialogStandardButton button in StandardButtons)
                 button.ApplyInitialization();
 
             foreach (TaskDialogCustomButton button in CustomButtons)

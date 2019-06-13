@@ -5,7 +5,7 @@ namespace KPreisser.UI
     /// <summary>
     /// 
     /// </summary>
-    public sealed class TaskDialogCommonButton : TaskDialogButton
+    public sealed class TaskDialogStandardButton : TaskDialogButton
     {
         private TaskDialogResult _result;
 
@@ -14,9 +14,9 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
-        public TaskDialogCommonButton()
+        public TaskDialogStandardButton()
             // Use 'OK' by default instead of 'None' (which would not be a valid
-            // common button).
+            // standard button).
             : this(TaskDialogResult.OK)
         {
         }
@@ -25,11 +25,11 @@ namespace KPreisser.UI
         /// 
         /// </summary>
         /// <param name="result"></param>
-        public TaskDialogCommonButton(
+        public TaskDialogStandardButton(
                 TaskDialogResult result)
             : base()
         {
-            if (!IsValidCommonButtonResult(result))
+            if (!IsValidStandardButtonResult(result))
                 throw new ArgumentOutOfRangeException(nameof(result));
 
             _result = result;
@@ -37,7 +37,7 @@ namespace KPreisser.UI
 
         /// <summary>
         /// Gets or sets the <see cref="TaskDialogResult"/> which is represented by
-        /// this <see cref="TaskDialogCommonButton"/>.
+        /// this <see cref="TaskDialogStandardButton"/>.
         /// </summary>
         public TaskDialogResult Result
         {
@@ -45,12 +45,12 @@ namespace KPreisser.UI
 
             set
             {
-                if (!IsValidCommonButtonResult(value))
+                if (!IsValidStandardButtonResult(value))
                     throw new ArgumentOutOfRangeException(nameof(value));
 
                 DenyIfBound();
 
-                // If we are part of a CommonButtonCollection, we must now notify it
+                // If we are part of a StandardButtonCollection, we must now notify it
                 // that we changed our result.
                 Collection?.HandleKeyChange(
                         this,
@@ -64,7 +64,7 @@ namespace KPreisser.UI
 
         /// <summary>
         /// Gets or sets a value that indicates if this
-        /// <see cref="TaskDialogCommonButton"/> should be shown when displaying
+        /// <see cref="TaskDialogStandardButton"/> should be shown when displaying
         /// the Task Dialog.
         /// </summary>
         /// <remarks>
@@ -97,9 +97,9 @@ namespace KPreisser.UI
             get => (int)_result;
         }
 
-        internal new TaskDialogCommonButtonCollection Collection
+        internal new TaskDialogStandardButtonCollection Collection
         {
-            get => (TaskDialogCommonButtonCollection)base.Collection;
+            get => (TaskDialogStandardButtonCollection)base.Collection;
             set => base.Collection = value;
         }
 
@@ -135,7 +135,7 @@ namespace KPreisser.UI
             }
         }
 
-        private static bool IsValidCommonButtonResult(
+        private static bool IsValidStandardButtonResult(
                 TaskDialogResult result)
         {
             return GetButtonFlagForResult(result) != default;

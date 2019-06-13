@@ -445,10 +445,10 @@ namespace KPreisser.UI
                 Instruction = instruction,
                 Title = title,
                 Icon = icon,
-                CommonButtons = buttons
+                StandardButtons = buttons
             }))
             {
-                return ((TaskDialogCommonButton)dialog.Show(hwndOwner)).Result;
+                return ((TaskDialogStandardButton)dialog.Show(hwndOwner)).Result;
             }
         }
 
@@ -459,25 +459,25 @@ namespace KPreisser.UI
 
         private static bool IsTaskDialogButtonCommitting(TaskDialogButton button)
         {
-            // All custom button as well as all common buttons except for the
+            // All custom button as well as all standard buttons except for the
             // "Help" button (if it is shown in the dialog) will close the
             // dialog. If the "Help" button is not shown in the task dialog,
             // "button" will be null or its "IsCreated" property returns false.
             // In that case the "Help" button would close the dialog, so we
             // return true.
-            return !(button is TaskDialogCommonButton commonButton &&
-                    commonButton.IsCreated &&
-                    commonButton.Result == TaskDialogResult.Help);
+            return !(button is TaskDialogStandardButton standardButton &&
+                    standardButton.IsCreated &&
+                    standardButton.Result == TaskDialogResult.Help);
         }
 
-        private static TaskDialogCommonButton CreatePlaceholderButton(
+        private static TaskDialogStandardButton CreatePlaceholderButton(
                 TaskDialogResult result)
         {
             // TODO: Maybe bind the button so that the user
             // cannot change the properties, like it is the
             // case with the regular buttons added to the
             // collections.
-            return new TaskDialogCommonButton(result)
+            return new TaskDialogStandardButton(result)
             {
                 Visible = false
             };
@@ -1385,7 +1385,7 @@ namespace KPreisser.UI
             page.Bind(
                     this,
                     out TaskDialogFlags flags,
-                    out TaskDialogButtons commonButtonFlags,
+                    out TaskDialogButtons standardButtonFlags,
                     out IntPtr iconValue,
                     out IntPtr footerIconValue,
                     out int defaultButtonID,
@@ -1472,7 +1472,7 @@ namespace KPreisser.UI
                             cbSize = (uint)sizeof(TaskDialogConfig),
                             hwndParent = hwndOwner,
                             dwFlags = flags,
-                            dwCommonButtons = commonButtonFlags,
+                            dwCommonButtons = standardButtonFlags,
                             mainIconUnion = iconValue,
                             footerIconUnion = footerIconValue,
                             pszWindowTitle = MarshalString(page.Title),

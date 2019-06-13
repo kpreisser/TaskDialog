@@ -86,14 +86,14 @@ namespace TaskDialogExample
 
                 dialogPage.ProgressBar.Value = 1;
 
-                TaskDialogCommonButton buttonYes = dialogPage.CommonButtons.Add(TaskDialogResult.Yes);
+                TaskDialogStandardButton buttonYes = dialogPage.StandardButtons.Add(TaskDialogResult.Yes);
                 buttonYes.Enabled = false;
-                TaskDialogCommonButton buttonNo = dialogPage.CommonButtons.Add(TaskDialogResult.No);
+                TaskDialogStandardButton buttonNo = dialogPage.StandardButtons.Add(TaskDialogResult.No);
 
                 // Add a hidden "Cancel" button so that we can get notified when the user 
                 // closes the dialog through the window's X button or with ESC (and could
                 // cancel the close operation).
-                TaskDialogCommonButton buttonCancelHidden = dialogPage.CommonButtons.Add(TaskDialogResult.Cancel);
+                TaskDialogStandardButton buttonCancelHidden = dialogPage.StandardButtons.Add(TaskDialogResult.Cancel);
                 buttonCancelHidden.Visible = false;
                 buttonCancelHidden.Click += (s, e) =>
                 {
@@ -142,7 +142,7 @@ namespace TaskDialogExample
                 TaskDialogCustomButton button3 = dialogPage.CustomButtons.Add("Some Admin Action…", "Navigates to a new dialog page.");
                 button3.ElevationRequired = true;
 
-                TaskDialogStandardIcon nextIcon = 0;
+                TaskDialogStandardIcon nextIcon = TaskDialogStandardIcon.SecuritySuccessGreenBar;
                 button1.Click += (s, e) =>
                 {
                     Console.WriteLine("Button1 clicked!");
@@ -176,8 +176,8 @@ namespace TaskDialogExample
                         Icon = TaskDialogStandardIcon.Information,
                     };
 
-                    TaskDialogCommonButton buttonClose = newPage.CommonButtons.Add(TaskDialogResult.Close);
-                    TaskDialogCommonButton buttonContinue = newPage.CommonButtons.Add(TaskDialogResult.Continue);
+                    TaskDialogStandardButton buttonClose = newPage.StandardButtons.Add(TaskDialogResult.Close);
+                    TaskDialogStandardButton buttonContinue = newPage.StandardButtons.Add(TaskDialogResult.Continue);
 
                     int number = 0;
                     void UpdateNumberText(bool callUpdate = true)
@@ -260,7 +260,7 @@ namespace TaskDialogExample
                         Console.WriteLine("New Contents destroyed!");
                     };
 
-                    TaskDialogCommonButton buttonCancel = newContents.CommonButtons.Add(TaskDialogResult.Cancel);
+                    TaskDialogStandardButton buttonCancel = newContents.StandardButtons.Add(TaskDialogResult.Cancel);
                     buttonCancel.Enabled = false;
                     buttonCancel.ElevationRequired = true;
 
