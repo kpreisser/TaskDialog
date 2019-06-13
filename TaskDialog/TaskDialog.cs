@@ -51,6 +51,8 @@ namespace KPreisser.UI
 
         private TaskDialogStartupLocation _startupLocation;
 
+        private bool _doNotSetForeground;
+
         private TaskDialogPage _page;
 
         private TaskDialogPage _boundPage;
@@ -334,6 +336,37 @@ namespace KPreisser.UI
             }
         }
 
+        // TODO: Maybe invert the property (like "SetToForeground") so that by default
+        // the TDF_NO_SET_FOREGROUND flag is specified (as that is also the default
+        // behavior of the MessageBox).
+        /// <summary>
+        /// Gets or sets a value that indicates if the task dialog should not set
+        /// itself as foreground window when showing it.
+        /// </summary>
+        /// <remarks>
+        /// When setting this property to <c>true</c> and then showing the dialog, it
+        /// causes the dialog to net set itself as foreground window. This means that
+        /// if currently none of the application's windows has focus, the task dialog
+        /// doesn't try to "steal" focus (which otherwise can result in the task dialog
+        /// window being activated, or the taskbar button for the window flashing
+        /// orange). However, if the application already has focus, the task dialog
+        /// window will be activated anyway.
+        /// 
+        /// Note: This property only has an effect on Windows 8 and higher.
+        /// </remarks>
+        [DefaultValue(false)]
+        public bool DoNotSetForeground
+        {
+            get => _doNotSetForeground;
+
+            set
+            {
+                DenyIfBound();
+
+                _doNotSetForeground = value;
+            }
+        }
+
         /// <summary>
         /// Gets a value that indicates whether <see cref="Show(IntPtr)"/> is
         /// currently being called.
@@ -542,6 +575,7 @@ namespace KPreisser.UI
                         _page,
                         hwndOwner,
                         _startupLocation,
+                        _doNotSetForeground,
                         out IntPtr ptrToFree,
                         out IntPtr ptrTaskDialogConfig);
                 _boundPage = _page;
@@ -1317,7 +1351,8 @@ namespace KPreisser.UI
                 BindPageAndAllocateConfig(
                         page,
                         IntPtr.Zero,
-                        default,
+                        startupLocation: default,
+                        doNotSetForeground: false,
                         out IntPtr ptrToFree,
                         out IntPtr ptrTaskDialogConfig);
                 try
@@ -1379,6 +1414,7 @@ namespace KPreisser.UI
                 TaskDialogPage page,
                 IntPtr hwndOwner,
                 TaskDialogStartupLocation startupLocation,
+                bool doNotSetForeground,
                 out IntPtr ptrToFree,
                 out IntPtr ptrTaskDialogConfig)
         {
@@ -1395,6 +1431,8 @@ namespace KPreisser.UI
             {
                 if (startupLocation == TaskDialogStartupLocation.CenterParent)
                     flags |= TaskDialogFlags.TDF_POSITION_RELATIVE_TO_WINDOW;
+                if (doNotSetForeground)
+                    flags |= TaskDialogFlags.TDF_NO_SET_FOREGROUND;
 
                 checked
                 {
