@@ -17,9 +17,7 @@ namespace KPreisser.UI
 
         private TaskDialogIcon _icon;
 
-        private IntPtr _iconHandle;
-
-        private bool _boundFooterIconIsFromHandle;
+        private bool _boundIconIsFromHandle;
 
         /// <summary>
         /// 
@@ -64,65 +62,41 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// Gets or sets the footer icon, if <see cref="IconHandle"/> is
-        /// <see cref="IntPtr.Zero"/>.
+        /// Gets or sets the footer icon.
         /// </summary>
         /// <remarks>
-        /// This property can be set while the dialog is shown.
+        /// This property can be set while the dialog is shown (but in that case, it
+        /// cannot be switched between instances of <see cref="TaskDialogIconHandle"/>
+        /// and instances of other icon types).
         /// </remarks>
-        [DefaultValue(TaskDialogIcon.None)]
+        [DefaultValue(null)]
         public TaskDialogIcon Icon
         {
             get => _icon;
 
             set
             {
-                // See comments in property "TaskDialogPage.Icon".
-                if (value < ushort.MinValue || (int)value > ushort.MaxValue)
-                    throw new ArgumentOutOfRangeException(nameof(value));
-
                 DenyIfBoundAndNotCreated();
                 DenyIfWaitingForInitialization();
 
+                (IntPtr iconValue, bool? iconIsFromHandle) =
+                        TaskDialogPage.GetIconValue(value);
+
+                // The native task dialog icon cannot be updated from a handle
+                // type to a non-handle type and vice versa, so we need to throw
+                // throw in such a case.
                 if (BoundPage != null &&
-                        _boundFooterIconIsFromHandle)
-                    throw new InvalidOperationException();
+                        iconIsFromHandle != null &&
+                        iconIsFromHandle != _boundIconIsFromHandle)
+                    throw new InvalidOperationException(
+                            "Cannot update the icon from a handle icon type to a " +
+                            "non-handle icon type, and vice versa.");
 
                 BoundPage?.BoundTaskDialog.UpdateIconElement(
                         TaskDialogIconElement.TDIE_ICON_FOOTER,
-                        (IntPtr)value);
+                        iconValue);
 
                 _icon = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the handle to the footer icon. When this member is not
-        /// <see cref="IntPtr.Zero"/>, the <see cref="Icon"/> property will
-        /// be ignored.
-        /// </summary>
-        /// <remarks>
-        /// This property can be set while the dialog is shown.
-        /// </remarks>
-        [Browsable(false)]
-        public IntPtr IconHandle
-        {
-            get => _iconHandle;
-
-            set
-            {
-                DenyIfBoundAndNotCreated();
-                DenyIfWaitingForInitialization();
-
-                if (BoundPage != null &&
-                        !_boundFooterIconIsFromHandle)
-                    throw new InvalidOperationException();
-
-                BoundPage?.BoundTaskDialog.UpdateIconElement(
-                        TaskDialogIconElement.TDIE_ICON_FOOTER,
-                        value);
-
-                _iconHandle = value;
             }
         }
 
@@ -144,9 +118,7 @@ namespace KPreisser.UI
         {
             TaskDialogFlags result = base.Bind(page);
 
-            footerIconValue = _boundFooterIconIsFromHandle ?
-                    _iconHandle :
-                    (IntPtr)_icon;
+            footerIconValue = TaskDialogPage.GetIconValue(_icon).iconValue;
 
             return result;
         }
@@ -155,9 +127,10 @@ namespace KPreisser.UI
         {
             TaskDialogFlags flags = base.BindCore();
 
-            _boundFooterIconIsFromHandle = _iconHandle != IntPtr.Zero;
+            _boundIconIsFromHandle = TaskDialogPage.GetIconValue(_icon).iconIsFromHandle
+                    ?? false;
 
-            if (_boundFooterIconIsFromHandle)
+            if (_boundIconIsFromHandle)
                 flags |= TaskDialogFlags.TDF_USE_HICON_FOOTER;
 
             return flags;
@@ -165,7 +138,7 @@ namespace KPreisser.UI
 
         private protected override void UnbindCore()
         {
-            _boundFooterIconIsFromHandle = false;
+            _boundIconIsFromHandle = false;
 
             base.UnbindCore();
         }

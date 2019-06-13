@@ -21,12 +21,12 @@ namespace TaskDialogExample
                 Title = "Example 1",
                 Instruction = "Hello Task Dialog!   👍",
                 Text = "Hi, this is <A HREF=\"link1\">the Content</A>.\nBlah blah blah…",
-                Icon = TaskDialogIcon.SecuritySuccessGreenBar,
+                Icon = TaskDialogStandardIcon.SecuritySuccessGreenBar,
 
                 Footer =
                 {
                     Text = "This is the <A HREF=\"link2\">footer</A>.",
-                    Icon = TaskDialogIcon.Warning,
+                    Icon = TaskDialogStandardIcon.Warning,
                 },
 
                 Expander =
@@ -133,7 +133,7 @@ namespace TaskDialogExample
                 dialogPage.HyperlinkClicked += (s, e) =>
                 {
                     Console.WriteLine("Hyperlink clicked!");
-                    TaskDialog.Show(dialog, "Clicked Hyperlink: " + e.Hyperlink, icon: TaskDialogIcon.Information);
+                    TaskDialog.Show(dialog, "Clicked Hyperlink: " + e.Hyperlink, icon: TaskDialogStandardIcon.Information);
                 };
 
                 // Create custom buttons that are shown as command links.
@@ -142,7 +142,7 @@ namespace TaskDialogExample
                 TaskDialogCustomButton button3 = dialogPage.CustomButtons.Add("Some Admin Action…", "Navigates to a new dialog page.");
                 button3.ElevationRequired = true;
 
-                TaskDialogIcon nextIcon = 0;
+                TaskDialogStandardIcon nextIcon = 0;
                 button1.Click += (s, e) =>
                 {
                     Console.WriteLine("Button1 clicked!");
@@ -173,7 +173,7 @@ namespace TaskDialogExample
                     var newPage = new TaskDialogPage()
                     {
                         Text = "This is a new non-modal dialog!",
-                        Icon = TaskDialogIcon.Information,
+                        Icon = TaskDialogStandardIcon.Information,
                     };
 
                     TaskDialogCommonButton buttonClose = newPage.CommonButtons.Add(TaskDialogResult.Close);
@@ -235,7 +235,7 @@ namespace TaskDialogExample
                     {
                         Instruction = "Page 2",
                         Text = "Welcome to the second page!",
-                        Icon = TaskDialogIcon.SecurityShieldBlueBar,
+                        Icon = TaskDialogStandardIcon.SecurityShieldBlueBar,
                         SizeToContent = true,
 
                         CheckBox =
@@ -253,7 +253,7 @@ namespace TaskDialogExample
 
                         // Set a new icon after navigating the dialog. This allows us to show the
                         // yellow bar from the "SecurityWarningBar" icon with a different icon.
-                        newContents.Icon = TaskDialogIcon.Warning;
+                        newContents.Icon = TaskDialogStandardIcon.Warning;
                     };
                     newContents.Destroyed += (s2, e2) =>
                     {

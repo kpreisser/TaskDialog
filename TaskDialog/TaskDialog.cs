@@ -390,7 +390,7 @@ namespace KPreisser.UI
                 string instruction = null,
                 string title = null,
                 TaskDialogButtons buttons = TaskDialogButtons.OK,
-                TaskDialogIcon icon = TaskDialogIcon.None)
+                TaskDialogStandardIcon icon = TaskDialogStandardIcon.None)
         {
             return Show(IntPtr.Zero, text, instruction, title, buttons, icon);
         }
@@ -412,7 +412,7 @@ namespace KPreisser.UI
                 string instruction = null,
                 string title = null,
                 TaskDialogButtons buttons = TaskDialogButtons.OK,
-                TaskDialogIcon icon = TaskDialogIcon.None)
+                TaskDialogStandardIcon icon = TaskDialogStandardIcon.None)
         {
             return Show(owner.Handle, text, instruction, title, buttons, icon);
         }
@@ -437,7 +437,7 @@ namespace KPreisser.UI
                 string instruction = null,
                 string title = null,
                 TaskDialogButtons buttons = TaskDialogButtons.OK,
-                TaskDialogIcon icon = TaskDialogIcon.None)
+                TaskDialogStandardIcon icon = TaskDialogStandardIcon.None)
         {
             using (var dialog = new TaskDialog(new TaskDialogPage()
             {

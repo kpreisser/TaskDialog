@@ -1,108 +1,67 @@
-﻿namespace KPreisser.UI
+﻿using System;
+using System.Collections.Generic;
+using System.Drawing;
+
+namespace KPreisser.UI
 {
     /// <summary>
     /// 
     /// </summary>
-    public enum TaskDialogIcon : int
+    public abstract class TaskDialogIcon
     {
-        /// <summary>
-        /// 
-        /// </summary>
-        None = 0,
+        private static readonly IReadOnlyDictionary<TaskDialogStandardIcon, TaskDialogStandardIconContainer> s_standardIcons
+                = new Dictionary<TaskDialogStandardIcon, TaskDialogStandardIconContainer>() {
+                    { TaskDialogStandardIcon.None, new TaskDialogStandardIconContainer(TaskDialogStandardIcon.None) },
+                    { TaskDialogStandardIcon.Information, new TaskDialogStandardIconContainer(TaskDialogStandardIcon.Information) },
+                    { TaskDialogStandardIcon.Warning, new TaskDialogStandardIconContainer(TaskDialogStandardIcon.Warning) },
+                    { TaskDialogStandardIcon.Error, new TaskDialogStandardIconContainer(TaskDialogStandardIcon.Error) },
+                    { TaskDialogStandardIcon.SecurityShield, new TaskDialogStandardIconContainer(TaskDialogStandardIcon.SecurityShield) },
+                    { TaskDialogStandardIcon.SecurityShieldBlueBar, new TaskDialogStandardIconContainer(TaskDialogStandardIcon.SecurityShieldBlueBar) },
+                    { TaskDialogStandardIcon.SecurityShieldGrayBar, new TaskDialogStandardIconContainer(TaskDialogStandardIcon.SecurityShieldGrayBar) },
+                    { TaskDialogStandardIcon.SecurityWarningYellowBar, new TaskDialogStandardIconContainer(TaskDialogStandardIcon.SecurityWarningYellowBar) },
+                    { TaskDialogStandardIcon.SecurityErrorRedBar, new TaskDialogStandardIconContainer(TaskDialogStandardIcon.SecurityErrorRedBar) },
+                    { TaskDialogStandardIcon.SecuritySuccessGreenBar, new TaskDialogStandardIconContainer(TaskDialogStandardIcon.SecuritySuccessGreenBar) },
+                };
+
+        private protected TaskDialogIcon()
+            : base()
+        {
+        }
 
         /// <summary>
         /// 
         /// </summary>
-        Information = ushort.MaxValue - 2, // TD_INFORMATION_ICON
+        /// <param name="icon"></param>
+        public static implicit operator TaskDialogIcon(TaskDialogStandardIcon icon)
+        {
+            if (!s_standardIcons.TryGetValue(icon, out TaskDialogStandardIconContainer result))
+                throw new InvalidCastException(); // TODO: Is this the correct exception type?
+
+            return result;
+        }
+
+#if !NET_STANDARD
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="icon"></param>
+        public static implicit operator TaskDialogIcon(Icon icon)
+        {
+            return new TaskDialogIconHandle(icon);
+        }
+#endif
 
         /// <summary>
         /// 
         /// </summary>
-        Warning = ushort.MaxValue, // TD_WARNING_ICON
+        /// <param name="icon"></param>
+        /// <returns></returns>
+        public static TaskDialogIcon Get(TaskDialogStandardIcon icon)
+        {
+            if (!s_standardIcons.TryGetValue(icon, out TaskDialogStandardIconContainer result))
+                throw new ArgumentOutOfRangeException(nameof(icon));
 
-        /// <summary>
-        /// 
-        /// </summary>
-        Error = ushort.MaxValue - 1, // TD_ERROR_ICON
-
-        /// <summary>
-        /// 
-        /// </summary>
-        SecurityShield = ushort.MaxValue - 3, // TD_SHIELD_ICON
-
-        /// <summary>
-        /// 
-        /// </summary>
-        SecurityShieldBlueBar = ushort.MaxValue - 4,
-
-        /// <summary>
-        /// 
-        /// </summary>
-        SecurityShieldGrayBar = ushort.MaxValue - 8,
-
-        /// <summary>
-        /// 
-        /// </summary>
-        SecurityWarningYellowBar = ushort.MaxValue - 5,
-
-        /// <summary>
-        /// 
-        /// </summary>
-        SecurityErrorRedBar = ushort.MaxValue - 6,
-
-        /// <summary>
-        /// 
-        /// </summary>
-        SecuritySuccessGreenBar = ushort.MaxValue - 7,
-
-        //// TODO: Check if the following icons should be included.
-        //// These icons are used from the system's resource module (imageres.dll)
-        //// and can be used when specifying NULL in the TaskDialogConfig's hInstance
-        //// field (which we currently always do).
-        //// For more information, see:
-        //// https://docs.microsoft.com/en-us/windows/desktop/Controls/tdm-update-icon
-        //// However, if we allow to specify the hInstance in the future, these enum
-        //// values would no longer be valid, so we probably shouldn't add them.
-        //// Note: The 32xxx values are taken from WinUser.h (prefix "OIC_").
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        //InformationNoSound = 32516, // OIC_INFORMATION
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        //WarningNoSound = 32515, // OIC_WARNING
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        //StopNoSound = 32513, // OIC_ERROR
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        //QuestionNoSound = 32514, // OIC_QUES
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        //SecurityQuestion = 104,
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        //SecurityError = 105,
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        //SecuritySuccess = 106,
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        //SecurityWarning = 107
+            return result;
+        }
     }
 }

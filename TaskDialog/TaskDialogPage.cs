@@ -52,7 +52,6 @@ namespace KPreisser.UI
         private string _instruction;
         private string _text;
         private TaskDialogIcon _icon;
-        private IntPtr _iconHandle;
         private int _width;
         private TaskDialogCommandLinkMode _commandLinkMode;
 
@@ -305,69 +304,39 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// Gets or sets the main icon, if <see cref="IconHandle"/> is
-        /// <see cref="IntPtr.Zero"/>.
+        /// Gets or sets the main icon.
         /// </summary>
         /// <remarks>
-        /// This property can be set while the dialog is shown.
+        /// This property can be set while the dialog is shown (but in that case, it
+        /// cannot be switched between instances of <see cref="TaskDialogIconHandle"/>
+        /// and instances of other icon types).
         /// </remarks>
-        [DefaultValue(TaskDialogIcon.None)]
+        [DefaultValue(null)]
         public TaskDialogIcon Icon
         {
             get => _icon;
 
             set
             {
-                // The value must be a integer resource passed through the
-                // MAKEINTRESOURCEW macro, which casts the value to a WORD and
-                // then to a ULONG_PTR and LPWSTR, so its range is 16 bit (unsigned).
-                // Values outside of that range could cause an AccessViolationException
-                // since the native implementation would treat it as string pointer
-                // and dereference it in order to read the resource name from the
-                // string, but we don't support this.
-                if (value < ushort.MinValue || (int)value > ushort.MaxValue)
-                    throw new ArgumentOutOfRangeException(nameof(value));
-
                 DenyIfWaitingForInitialization();
 
+                (IntPtr iconValue, bool? iconIsFromHandle) = GetIconValue(value);
+
+                // The native task dialog icon cannot be updated from a handle
+                // type to a non-handle type and vice versa, so we need to throw
+                // throw in such a case.
                 if (_boundTaskDialog != null &&
-                        _boundIconIsFromHandle)
-                    throw new InvalidOperationException();
+                        iconIsFromHandle != null &&
+                        iconIsFromHandle != _boundIconIsFromHandle)
+                    throw new InvalidOperationException(
+                            "Cannot update the icon from a handle icon type to a " +
+                            "non-handle icon type, and vice versa.");
 
                 _boundTaskDialog?.UpdateIconElement(
                         TaskDialogIconElement.TDIE_ICON_MAIN,
-                        (IntPtr)value);
+                        iconValue);
 
                 _icon = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the handle to the main icon. When this member is not
-        /// <see cref="IntPtr.Zero"/>, the <see cref="Icon"/> property will
-        /// be ignored.
-        /// </summary>
-        /// <remarks>
-        /// This property can be set while the dialog is shown.
-        /// </remarks>
-        [Browsable(false)]
-        public IntPtr IconHandle
-        {
-            get => _iconHandle;
-
-            set
-            {
-                DenyIfWaitingForInitialization();
-
-                if (_boundTaskDialog != null &&
-                        !_boundIconIsFromHandle)
-                    throw new InvalidOperationException();
-
-                _boundTaskDialog?.UpdateIconElement(
-                        TaskDialogIconElement.TDIE_ICON_MAIN,
-                        value);
-
-                _iconHandle = value;
             }
         }
 
@@ -533,6 +502,29 @@ namespace KPreisser.UI
             return string.IsNullOrEmpty(str) || str[0] == '\0';
         }
 
+        internal static (IntPtr iconValue, bool? iconIsFromHandle) GetIconValue(
+                TaskDialogIcon icon)
+        {
+            IntPtr iconValue = default;
+            bool? iconIsFromHandle = null;
+
+            // If no icon is specified (icon is null), we don't set the
+            // "iconIsFromHandle" flag, which means that the icon can be updated
+            // to show a Standard icon while the dialog is running.
+            if (icon is TaskDialogIconHandle iconHandle)
+            {
+                iconIsFromHandle = true;
+                iconValue = iconHandle.IconHandle;
+            }
+            else if (icon is TaskDialogStandardIconContainer standardIconContainer)
+            {
+                iconIsFromHandle = false;
+                iconValue = (IntPtr)standardIconContainer.Icon;
+            }
+
+            return (iconValue, iconIsFromHandle);
+        }
+
         internal void DenyIfBound()
         {
             if (_boundTaskDialog != null)
@@ -686,16 +678,11 @@ namespace KPreisser.UI
             _boundTaskDialog = owner;
             flags = _flags;
 
-            _boundIconIsFromHandle = _iconHandle != IntPtr.Zero;
+            (IntPtr localIconValue, bool? iconIsFromHandle) = GetIconValue(_icon);
+            (iconValue, _boundIconIsFromHandle) = (localIconValue, iconIsFromHandle ?? false);
+
             if (_boundIconIsFromHandle)
-            {
                 flags |= TaskDialogFlags.TDF_USE_HICON_MAIN;
-                iconValue = _iconHandle;
-            }
-            else
-            {
-                iconValue = (IntPtr)_icon;
-            }
 
             // Only specify the command link flags if there actually are custom buttons;
             // otherwise the dialog will not work.
