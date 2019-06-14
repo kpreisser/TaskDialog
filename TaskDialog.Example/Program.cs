@@ -37,7 +37,7 @@ namespace TaskDialogExample
 
                 ProgressBar = new TaskDialogProgressBar(),
 
-                CommandLinkMode = TaskDialogCommandLinkMode.CommandLinks,
+                CustomButtonStyle = TaskDialogCustomButtonStyle.CommandLinks,
                 EnableHyperlinks = true,
                 AllowCancel = true,
                 CanBeMinimized = true,

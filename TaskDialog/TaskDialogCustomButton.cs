@@ -49,9 +49,9 @@ namespace KPreisser.UI
         /// <summary>
         /// Gets or sets an additional description text that will be displayed in
         /// a separate line of the command link when
-        /// <see cref="TaskDialogPage.CommandLinkMode"/> is set to
-        /// <see cref="TaskDialogCommandLinkMode.CommandLinks"/> or
-        /// <see cref="TaskDialogCommandLinkMode.CommandLinksNoIcon"/>.
+        /// <see cref="TaskDialogPage.CustomButtonStyle"/> is set to
+        /// <see cref="TaskDialogCustomButtonStyle.CommandLinks"/> or
+        /// <see cref="TaskDialogCustomButtonStyle.CommandLinksNoIcon"/>.
         /// </summary>
         public string DescriptionText
         {
@@ -111,8 +111,8 @@ namespace KPreisser.UI
             // LFs with CR, because CR is treated as a line break.
             string text = _text?.Replace("\r\n", "\r").Replace("\n", "\r");
 
-            if ((page?.CommandLinkMode == TaskDialogCommandLinkMode.CommandLinks ||
-                    page?.CommandLinkMode == TaskDialogCommandLinkMode.CommandLinksNoIcon) &&
+            if ((page?.CustomButtonStyle == TaskDialogCustomButtonStyle.CommandLinks ||
+                    page?.CustomButtonStyle == TaskDialogCustomButtonStyle.CommandLinksNoIcon) &&
                     text != null && _descriptionText != null)
                 text += '\n' + _descriptionText;
 

@@ -3,7 +3,7 @@
     /// <summary>
     /// 
     /// </summary>
-    public enum TaskDialogCommandLinkMode
+    public enum TaskDialogCustomButtonStyle
     {
         /// <summary>
         /// Custom buttons should be displayed as normal buttons.

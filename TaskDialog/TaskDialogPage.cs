@@ -53,7 +53,7 @@ namespace KPreisser.UI
         private string _text;
         private TaskDialogIcon _icon;
         private int _width;
-        private TaskDialogCommandLinkMode _commandLinkMode;
+        private TaskDialogCustomButtonStyle _customButtonStyle;
 
         private TaskDialog _boundTaskDialog;
 
@@ -362,19 +362,19 @@ namespace KPreisser.UI
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="TaskDialogCommandLinkMode"/> that specifies how to
+        /// Gets or sets the <see cref="TaskDialogCustomButtonStyle"/> that specifies how to
         /// display custom buttons.
         /// </summary>
-        [DefaultValue(TaskDialogCommandLinkMode.None)]
-        public TaskDialogCommandLinkMode CommandLinkMode
+        [DefaultValue(TaskDialogCustomButtonStyle.None)]
+        public TaskDialogCustomButtonStyle CustomButtonStyle
         {
-            get => _commandLinkMode;
+            get => _customButtonStyle;
 
             set
             {
                 DenyIfBound();
 
-                _commandLinkMode = value;
+                _customButtonStyle = value;
             }
         }
 
@@ -660,9 +660,9 @@ namespace KPreisser.UI
             // otherwise the dialog will not work.
             if (_customButtons.Count > 0)
             {
-                if (_commandLinkMode == TaskDialogCommandLinkMode.CommandLinks)
+                if (_customButtonStyle == TaskDialogCustomButtonStyle.CommandLinks)
                     flags |= TaskDialogFlags.TDF_USE_COMMAND_LINKS;
-                else if (_commandLinkMode == TaskDialogCommandLinkMode.CommandLinksNoIcon)
+                else if (_customButtonStyle == TaskDialogCustomButtonStyle.CommandLinksNoIcon)
                     flags |= TaskDialogFlags.TDF_USE_COMMAND_LINKS_NO_ICON;
             }
 
