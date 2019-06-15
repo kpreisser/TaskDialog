@@ -26,11 +26,9 @@ namespace KPreisser.UI
     /// that contains a dependency to Microsoft.Windows.Common-Controls (6.0.0.0),
     /// and the thread needs to use the single-threaded apartment (STA) model.
     /// </remarks>
-    [ToolboxItem(true)]
-    [DefaultProperty(nameof(Page))]
-    public partial class TaskDialog : Component
+    public partial class TaskDialog
 #if !NET_STANDARD
-        , System.Windows.Forms.IWin32Window
+        : System.Windows.Forms.IWin32Window
 #endif
     {
         /// <summary>
@@ -260,7 +258,6 @@ namespace KPreisser.UI
         /// <see cref="Opened"/> event occurs, and last when the
         /// <see cref="Closed"/> event occurs after which you shouldn't use it any more.
         /// </remarks>
-        [Browsable(false)]
         public IntPtr Handle
         {
             get => _hwndDialog;
@@ -290,9 +287,6 @@ namespace KPreisser.UI
         /// because during that time the task dialog behaves as if it still
         /// showed the controls of the previous page.
         /// </remarks>
-        [Category("Contents")]
-        [Description("Contains the current page of the Task Dialog.")]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
         public TaskDialogPage Page
         {
             get => _page ??
@@ -323,7 +317,6 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
-        [DefaultValue(TaskDialogStartupLocation.CenterParent)]
         public TaskDialogStartupLocation StartupLocation
         {
             get => _startupLocation;
@@ -354,7 +347,6 @@ namespace KPreisser.UI
         /// 
         /// Note: This property only has an effect on Windows 8 and higher.
         /// </remarks>
-        [DefaultValue(false)]
         public bool DoNotSetForeground
         {
             get => _doNotSetForeground;
@@ -472,17 +464,16 @@ namespace KPreisser.UI
                 TaskDialogButtons buttons = TaskDialogButtons.OK,
                 TaskDialogStandardIcon icon = TaskDialogStandardIcon.None)
         {
-            using (var dialog = new TaskDialog(new TaskDialogPage()
+            var dialog = new TaskDialog(new TaskDialogPage()
             {
                 Text = text,
                 Instruction = instruction,
                 Title = title,
                 Icon = icon,
                 StandardButtons = buttons
-            }))
-            {
-                return ((TaskDialogStandardButton)dialog.Show(hwndOwner)).Result;
-            }
+            });
+
+            return ((TaskDialogStandardButton)dialog.Show(hwndOwner)).Result;
         }
 
         private static void FreeConfig(IntPtr ptrToFree)

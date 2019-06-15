@@ -1,5 +1,4 @@
 ﻿using System;
-using System.ComponentModel;
 
 using TaskDialogFlags = KPreisser.UI.TaskDialogNativeMethods.TASKDIALOG_FLAGS;
 using TaskDialogIconElement = KPreisser.UI.TaskDialogNativeMethods.TASKDIALOG_ICON_ELEMENTS;
@@ -10,7 +9,6 @@ namespace KPreisser.UI
     /// <summary>
     /// 
     /// </summary>
-    [TypeConverter(typeof(ExpandableObjectConverter))]
     public sealed class TaskDialogFooter : TaskDialogControl
     {
         private string _text;
@@ -69,7 +67,6 @@ namespace KPreisser.UI
         /// cannot be switched between instances of <see cref="TaskDialogIconHandle"/>
         /// and instances of other icon types).
         /// </remarks>
-        [DefaultValue(null)]
         public TaskDialogIcon Icon
         {
             get => _icon;

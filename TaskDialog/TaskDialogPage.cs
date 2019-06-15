@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 
 using TaskDialogFlags = KPreisser.UI.TaskDialogNativeMethods.TASKDIALOG_FLAGS;
@@ -12,7 +11,6 @@ namespace KPreisser.UI
     /// <summary>
     /// 
     /// </summary>
-    [TypeConverter(typeof(ExpandableObjectConverter))]
     public class TaskDialogPage
     {
         /// <summary>
@@ -107,7 +105,6 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
-        [Category("Controls")]
         public TaskDialogStandardButtonCollection StandardButtons
         {
             get => _standardButtons ??
@@ -126,7 +123,6 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
-        [Category("Controls")]
         public TaskDialogCustomButtonCollection CustomButtons
         {
             get => _customButtons ??
@@ -145,7 +141,6 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
-        [Category("Controls")]
         public TaskDialogRadioButtonCollection RadioButtons
         {
             get => _radioButtons ??
@@ -164,8 +159,6 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
-        [Category("Controls")]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
         public TaskDialogCheckBox CheckBox
         {
             get => _checkBox;
@@ -183,8 +176,6 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
-        [Category("Controls")]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
         public TaskDialogExpander Expander
         {
             get => _expander;
@@ -202,8 +193,6 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
-        [Category("Controls")]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
         public TaskDialogFooter Footer
         {
             get => _footer;
@@ -221,8 +210,6 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
-        [Category("Controls")]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
         public TaskDialogProgressBar ProgressBar
         {
             get => _progressBar;
@@ -311,7 +298,6 @@ namespace KPreisser.UI
         /// cannot be switched between instances of <see cref="TaskDialogIconHandle"/>
         /// and instances of other icon types).
         /// </remarks>
-        [DefaultValue(null)]
         public TaskDialogIcon Icon
         {
             get => _icon;
@@ -345,7 +331,6 @@ namespace KPreisser.UI
         /// when the dialog is is created or navigated.
         /// If <c>0</c>, the width will be automatically calculated by the system.
         /// </summary>
-        [DefaultValue(0)]
         public int Width
         {
             get => _width;
@@ -365,7 +350,6 @@ namespace KPreisser.UI
         /// Gets or sets the <see cref="TaskDialogCustomButtonStyle"/> that specifies how to
         /// display custom buttons.
         /// </summary>
-        [DefaultValue(TaskDialogCustomButtonStyle.None)]
         public TaskDialogCustomButtonStyle CustomButtonStyle
         {
             get => _customButtonStyle;
@@ -381,7 +365,6 @@ namespace KPreisser.UI
         /// <summary>
         /// 
         /// </summary>
-        [DefaultValue(false)]
         public bool EnableHyperlinks
         {
             get => GetFlag(TaskDialogFlags.TDF_ENABLE_HYPERLINKS);
@@ -400,7 +383,6 @@ namespace KPreisser.UI
         /// <see cref="TaskDialogStandardButton.Visible"/> set to <c>false</c> and specifying
         /// a <see cref="TaskDialogResult.Cancel"/> result.
         /// </remarks>
-        [DefaultValue(false)]
         public bool AllowCancel
         {
             get => GetFlag(TaskDialogFlags.TDF_ALLOW_DIALOG_CANCELLATION);
@@ -416,7 +398,6 @@ namespace KPreisser.UI
         /// subsequent navigations to a new <see cref="TaskDialogPage"/> even when
         /// it doesn't have this flag set.
         /// </remarks>
-        [DefaultValue(false)]
         public bool RightToLeftLayout
         {
             get => GetFlag(TaskDialogFlags.TDF_RTL_LAYOUT);
@@ -431,7 +412,6 @@ namespace KPreisser.UI
         /// When setting this property to <c>true</c>, <see cref="AllowCancel"/> is
         /// automatically implied.
         /// </remarks>
-        [DefaultValue(false)]
         public bool CanBeMinimized
         {
             get => GetFlag(TaskDialogFlags.TDF_CAN_BE_MINIMIZED);
@@ -445,7 +425,6 @@ namespace KPreisser.UI
         /// <remarks>
         /// This flag is ignored if <see cref="Width"/> is not set to <c>0</c>.
         /// </remarks>
-        [DefaultValue(false)]
         public bool SizeToContent
         {
             get => GetFlag(TaskDialogFlags.TDF_SIZE_TO_CONTENT);

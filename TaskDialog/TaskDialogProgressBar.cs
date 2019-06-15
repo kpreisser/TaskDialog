@@ -1,5 +1,4 @@
 ﻿using System;
-using System.ComponentModel;
 
 using TaskDialogFlags = KPreisser.UI.TaskDialogNativeMethods.TASKDIALOG_FLAGS;
 
@@ -8,7 +7,6 @@ namespace KPreisser.UI
     /// <summary>
     /// 
     /// </summary>
-    [TypeConverter(typeof(ExpandableObjectConverter))]
     public sealed class TaskDialogProgressBar : TaskDialogControl
     {
         private TaskDialogProgressBarState _state;

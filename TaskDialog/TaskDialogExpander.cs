@@ -1,5 +1,4 @@
 ﻿using System;
-using System.ComponentModel;
 
 using TaskDialogFlags = KPreisser.UI.TaskDialogNativeMethods.TASKDIALOG_FLAGS;
 using TaskDialogTextElement = KPreisser.UI.TaskDialogNativeMethods.TASKDIALOG_ELEMENTS;
@@ -9,7 +8,6 @@ namespace KPreisser.UI
     /// <summary>
     /// 
     /// </summary>
-    [TypeConverter(typeof(ExpandableObjectConverter))]
     public sealed class TaskDialogExpander : TaskDialogControl
     {
         private string _text;

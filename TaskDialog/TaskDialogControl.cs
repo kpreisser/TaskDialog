@@ -1,5 +1,4 @@
 ﻿using System;
-using System.ComponentModel;
 
 using TaskDialogFlags = KPreisser.UI.TaskDialogNativeMethods.TASKDIALOG_FLAGS;
 
@@ -8,7 +7,6 @@ namespace KPreisser.UI
     /// <summary>
     /// 
     /// </summary>
-    [TypeConverter(typeof(ExpandableObjectConverter))]
     public abstract class TaskDialogControl
     {
         // Disallow inheritance by specifying a private protected constructor.
@@ -20,7 +18,6 @@ namespace KPreisser.UI
         /// <summary>
         /// Gets or sets the object that contains data about the control.
         /// </summary>
-        [TypeConverter(typeof(StringConverter))]
         public object Tag
         {
             get;
