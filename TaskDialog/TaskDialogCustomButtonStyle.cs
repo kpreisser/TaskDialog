@@ -8,7 +8,7 @@
         /// <summary>
         /// Custom buttons should be displayed as normal buttons.
         /// </summary>
-        None = 0,
+        Default = 0,
 
         /// <summary>
         /// Custom buttons should be displayed as command links.
