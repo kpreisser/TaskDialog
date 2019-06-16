@@ -32,6 +32,38 @@ namespace KPreisser.UI
 #endif
     {
         /// <summary>
+        /// A self-defined window message that we post to the task dialog when
+        /// handling a <see cref="TaskDialogNotification.TDN_BUTTON_CLICKED"/>
+        /// notification, so that we will ignore further
+        /// <see cref="TaskDialogNotification.TDN_BUTTON_CLICKED"/> notifications
+        /// until we process the posted message.
+        /// </summary>
+        /// <remarks>
+        /// This is used to work-around a bug in the native task dialog, where
+        /// a <see cref="TaskDialogNotification.TDN_BUTTON_CLICKED"/> notification
+        /// seems to be sent twice to the callback when you "click" a button by
+        /// pressing its access key (mnemonic) and the dialog is still open when
+        /// continuing the message loop.
+        /// 
+        /// This work-around should not have negative effects, such as erroneously
+        /// ignoring a valid button clicked notification when the user presses the
+        /// button multiple times while the GUI thread is hangs - this seems
+        /// to work correctly, as our posted message will be processed before
+        /// further (valid) <see cref="TaskDialogNotification.TDN_BUTTON_CLICKED"/>
+        /// notifications are processed.
+        /// 
+        /// See: https://gist.github.com/kpreisser/335fde8934da1e0c150fe71ee5ead433
+        /// 
+        /// Note: We use a WM_APP message with a high value (WM_USER is not
+        /// appropriate as it is private to the control class), in order to avoid
+        /// conflicts with WM_APP messages which other parts of the application
+        /// might want to send when they also subclassed the dialog window, although
+        /// that should be unlikely.
+        /// </remarks>
+        private const int ContinueButtonClickHandlingMessage =
+                TaskDialogNativeMethods.WM_APP + 0x3FFF;
+
+        /// <summary>
         /// The delegate for the callback handler (that calls
         /// <see cref="HandleTaskDialogCallback"/>) from which the native function
         /// pointer <see cref="s_callbackProcDelegatePtr"/> is created. 
@@ -159,6 +191,16 @@ namespace KPreisser.UI
         /// which is not supported.
         /// </remarks>
         private bool _isInNavigate;
+
+        /// <summary>
+        /// Specifies if the <see cref="HandleTaskDialogCallback"/> method should
+        /// currently ignore <see cref="TaskDialogNotification.TDN_BUTTON_CLICKED"/>
+        /// notifications.
+        /// </summary>
+        /// <remarks>
+        /// See <see cref="ContinueButtonClickHandlingMessage"/> for more information.
+        /// </remarks>
+        private bool _ignoreButtonClickedNotifications;
 
         /// <summary>
         /// Occurs after the task dialog has been created but before it is displayed.
@@ -646,8 +688,9 @@ namespace KPreisser.UI
                     _raisedOpened = false;
                     _raisedPageCreated = false;
 
-                    // Clear the cached objects.
+                    // Clear cached objects and other fields.
                     _resultButton = null;
+                    _ignoreButtonClickedNotifications = false;
 
                     // Unbind the page. The 'Destroyed' event of the TaskDialogPage
                     // will already have been called from the callback.
@@ -1088,6 +1131,27 @@ namespace KPreisser.UI
                     break;
 
                 case TaskDialogNotification.TDN_BUTTON_CLICKED:
+                    // Check if we should ignore this notification. If we process
+                    // it, we set a flag to ignore further TDN_BUTTON_CLICKED
+                    // notifications, and we post a message to the task dialog
+                    // that, when we process it, causes us to reset the flag.
+                    // This is used to work-around the access key bug in the
+                    // native task dialog - see the remarks of the 
+                    // "ContinueButtonClickHandlingMessage" for more information.
+                    if (_ignoreButtonClickedNotifications)
+                        return TaskDialogNativeMethods.S_FALSE;
+
+                    // Post the message, and then set the flag to ignore further
+                    // notifications until we receive the posted message.
+                    if (!TaskDialogNativeMethods.PostMessage(
+                            hWnd,
+                            ContinueButtonClickHandlingMessage,
+                            IntPtr.Zero,
+                            IntPtr.Zero))
+                        throw new InvalidOperationException("Could not send message."); // TODO: Exception type
+
+                    _ignoreButtonClickedNotifications = true;
+
                     int buttonID = (int)wParam;
                     TaskDialogButton button = _boundPage.GetBoundButtonByID(buttonID);
 

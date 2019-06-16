@@ -38,6 +38,15 @@ namespace KPreisser.UI
 
                         return result;
 
+                    case ContinueButtonClickHandlingMessage:
+                        // We received the message which we posted earlier when
+                        // handling a TDN_BUTTON_CLICKED notification, so we should
+                        // no longer ignore such notifications.
+                        _taskDialog._ignoreButtonClickedNotifications = false;
+
+                        // Do not forward the message to the base class.
+                        return IntPtr.Zero;
+
                     default:
                         return base.WndProc(msg, wParam, lParam);
                 }
