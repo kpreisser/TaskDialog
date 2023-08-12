@@ -1,6 +1,8 @@
 ﻿# Task Dialog for .NET (Windows) (Archived)
 
-**Note:** This repository is now archived as the task dialog is expected to be included with a future .NET Core (WinForms) version and the work is now done in the PR (https://github.com/dotnet/winforms/pull/1133).
+**Note:** This repository is now archived as the Task Dialog implementation has been merged into **.NET 5.0** with PR https://github.com/dotnet/winforms/pull/1133.
+
+---
 
 The Task Dialog is the successor of a MessageBox and available starting with Windows Vista. For more information,
 see [About Task Dialogs](https://docs.microsoft.com/en-us/windows/desktop/Controls/task-dialogs-overview).
