@@ -1,6 +1,7 @@
 ﻿# Task Dialog for .NET (Windows) (Archived)
 
 **Note:** This repository is now archived as the Task Dialog implementation has been merged into **.NET 5.0** with PR https://github.com/dotnet/winforms/pull/1133.
+You can now use the built-in class [`System.Windows.Forms.TaskDialog`](https://learn.microsoft.com/dotnet/api/system.windows.forms.taskdialog) to show a task dialog.
 
 ---
 
